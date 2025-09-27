@@ -185,6 +185,6 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   lin_features_n <- 9
   mask <- non_zero_stats_mask_generator(lin_features_n)
 
-  expect_true(all(model_space_stats[mask == 1] != 0))
+  expect_true(all(model_space$stats[mask == 1] != 0))
   compare_matrices(actual, expected, tols = tols)
 })
