@@ -68,11 +68,22 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
 non_zero_stats_mask_generator <- function(lin_features_n) {
   ones <- rep(1, lin_features_n)
   lin_features_mask <- t(rje::powerSetMat(lin_features_n))
-  rbind(
+  mask_where_nonzero <- rbind(
     ones, ones, ones,
     lin_features_mask,
     ones,
     lin_features_mask
+  )
+  zeros <- rep(0, lin_features_n)
+  mask_where_greater_than_zero <- rbind(
+    zeros, zeros, zeros,
+    lin_features_mask,
+    zeros,
+    lin_features_mask
+  )
+  list(
+    nonzero = mask_where_nonzero,
+    greater_than_zero = mask_where_greater_than_zero
   )
 }
 
@@ -100,10 +111,13 @@ test_that(paste("compute_model_space_stats computes correct likelihoods and",
                     params        = small_model_space$params
                   )
 
-                  mask <- non_zero_stats_mask_generator(lin_features_n)
+                  masks <- non_zero_stats_mask_generator(lin_features_n)
 
-                  expect_true(all(model_space_stats[mask == 1] != 0))
                   expect_equal(model_space_stats, small_model_space$stats)
+                  expect_true(all(model_space_stats[masks$non_zero == 1] != 0))
+                  expect_true(all(
+                    model_space_stats[masks$greater_than_zero == 1] > 0
+                  ))
                 })
 
 
@@ -183,8 +197,9 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   }
 
   lin_features_n <- 9
-  mask <- non_zero_stats_mask_generator(lin_features_n)
+  masks <- non_zero_stats_mask_generator(lin_features_n)
 
-  expect_true(all(model_space$stats[mask == 1] != 0))
   compare_matrices(actual, expected, tols = tols)
+  expect_true(all(model_space$stats[masks$non_zero == 1] != 0))
+  expect_true(all(model_space$stats[masks$greater_than_zero == 1] > 0))
 })
