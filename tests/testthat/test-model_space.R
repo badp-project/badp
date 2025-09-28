@@ -87,38 +87,41 @@ non_zero_stats_mask_generator <- function(lin_features_n) {
   )
 }
 
-test_that(paste("compute_model_space_stats computes correct likelihoods and",
-                "standard deviations based on small_model_space"), {
-                  set.seed(23)
+test_that(
+  paste(
+    "compute_model_space_stats computes correct likelihoods and standard",
+    "deviations based on small_model_space"
+    ),
+  {
+    set.seed(23)
 
-                  lin_features_n <- 3
+    lin_features_n <- 3
 
-                  data_prepared <- bdsm::economic_growth[, 1:(3+lin_features_n)] %>%
-                    bdsm::feature_standardization(
-                      excluded_cols = c(country, year, gdp)
-                    ) %>%
-                    bdsm::feature_standardization(
-                      group_by_col  = year,
-                      excluded_cols = country,
-                      scale         = FALSE
-                    )
+    data_prepared <- bdsm::economic_growth[, 1:(3+lin_features_n)] %>%
+      bdsm::feature_standardization(
+        excluded_cols = c(country, year, gdp)
+      ) %>%
+      bdsm::feature_standardization(
+        group_by_col  = year,
+        excluded_cols = country,
+        scale         = FALSE
+      )
 
-                  model_space_stats <- compute_model_space_stats(
-                    df            = data_prepared,
-                    dep_var_col   = gdp,
-                    timestamp_col = year,
-                    entity_col    = country,
-                    params        = small_model_space$params
-                  )
+    model_space_stats <- compute_model_space_stats(
+      df            = data_prepared,
+      dep_var_col   = gdp,
+      timestamp_col = year,
+      entity_col    = country,
+      params        = small_model_space$params
+    )
 
-                  masks <- non_zero_stats_mask_generator(lin_features_n)
+    masks <- non_zero_stats_mask_generator(lin_features_n)
 
-                  expect_equal(model_space_stats, small_model_space$stats)
-                  expect_true(all(model_space_stats[masks$non_zero == 1] != 0))
-                  expect_true(all(
-                    model_space_stats[masks$greater_than_zero == 1] > 0
-                  ))
-                })
+    expect_equal(model_space_stats, small_model_space$stats)
+    expect_true(all(model_space_stats[masks$non_zero == 1] != 0))
+    expect_true(all(model_space_stats[masks$greater_than_zero == 1] > 0))
+  }
+)
 
 
 test_that(paste("model_space computes correct model_space list"), {
@@ -186,15 +189,11 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   actual <- bma_results[[1]]
   expected <- bdsm::full_bma_results[[1]]
 
-  if (as.character(getRversion()) != "4.4.2") {
-    # define per-column tolerances
-    tols <- rep(0.003, ncol(expected))
-    tols[4] <- 0.005
-    tols[7] <- 0.006
-    tols[ncol(expected)] <- 0.8
-  } else{
-    tols <- NULL
-  }
+  # define per-column tolerances
+  tols <- rep(0.003, ncol(expected))
+  tols[4] <- 0.005
+  tols[7] <- 0.006
+  tols[ncol(expected)] <- 0.8
 
   lin_features_n <- 9
   masks <- non_zero_stats_mask_generator(lin_features_n)
