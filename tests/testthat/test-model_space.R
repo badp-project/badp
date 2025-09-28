@@ -186,6 +186,12 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   actual <- bma_results[[1]]
   expected <- bdsm::full_bma_results[[1]]
 
+  ms_params_tols <- rep(0.02, ncol(full_model_space$params))
+  ms_stats_tols <- rep(0.02, ncol(full_model_space$stats))
+
+  compare_matrices(model_space$params, full_model_space$params, ms_params_tols)
+  compare_matrices(model_space$stats, full_model_space$stats, ms_stats_tols)
+
   if (as.character(getRversion()) != "4.4.2") {
     # define per-column tolerances
     tols <- rep(0.003, ncol(expected))
