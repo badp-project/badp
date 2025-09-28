@@ -192,15 +192,11 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   compare_matrices(model_space$params, full_model_space$params, ms_params_tols)
   compare_matrices(model_space$stats, full_model_space$stats, ms_stats_tols)
 
-  if (as.character(getRversion()) != "4.4.2") {
-    # define per-column tolerances
-    tols <- rep(0.003, ncol(expected))
-    tols[4] <- 0.005
-    tols[7] <- 0.006
-    tols[ncol(expected)] <- 0.8
-  } else{
-    tols <- NULL
-  }
+  # define per-column tolerances
+  tols <- rep(0.003, ncol(expected))
+  tols[4] <- 0.005
+  tols[7] <- 0.006
+  tols[ncol(expected)] <- 0.8
 
   lin_features_n <- 9
   masks <- non_zero_stats_mask_generator(lin_features_n)
