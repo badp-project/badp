@@ -42,7 +42,10 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
     const arma::mat cur_Y2_mat = as<arma::mat>(cur_Y2);
     U1 = cur_Y2_mat * B2.t() + Y1 * B1.t() - cur_Z * C.t();
   }
-  arma::mat S11_inverse = inv(S1);
+  arma::mat S11_inverse;
+  if (!arma::inv_sympd(S11_inverse, S1)) {
+    return wrap(NumericVector::create(NA_REAL));
+  }
   arma::mat M = Y2 - U1 * S11_inverse * S2;
   arma::mat H = trans(M) * res_maker_matrix * M;
 
@@ -52,15 +55,21 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
   double trace_simplification_term =
       0.5 * n_entities * (periods_n - 1) * tot_regressors_n;
 
-  double S1_sign{}, S1_det{};
-  arma::log_det(S1_det, S1_sign, S1);
-  double H_sign{}, H_det{};
-  arma::log_det(H_det, H_sign, H / n_entities);
-  double likelihood = -static_cast<double>(n_entities) / 2.0 * (S1_det + H_det);
-
-  if (std::isnan(likelihood)) {
-    return wrap(likelihood);
+  double S1_logdet{}, S1_sign{};
+  arma::log_det(S1_logdet, S1_sign, S1);
+  if (!std::isfinite(S1_logdet) || S1_sign <= 0) {
+    return wrap(NumericVector::create(NA_REAL));
   }
+
+  arma::mat H_scaled = H / static_cast<double>(n_entities);
+  double H_logdet{}, H_sign{};
+  arma::log_det(H_logdet, H_sign, H_scaled);
+  if (!std::isfinite(H_logdet) || H_sign <= 0) {
+    return wrap(NumericVector::create(NA_REAL));
+  }
+
+  double likelihood =
+      -static_cast<double>(n_entities) / 2.0 * (S1_logdet + H_logdet);
 
   if (exact_value) {
     likelihood -= gaussian_normalization_const + trace_simplification_term;
