@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.2
+FROM rocker/r-ver:4.5.1
 
 # Install system libraries needed for R package compilation
 RUN apt-get update && apt-get install -y \
