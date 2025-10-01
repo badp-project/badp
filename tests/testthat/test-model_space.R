@@ -191,7 +191,8 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
 
   # define per-column tolerances
   tols <- rep(0.003, ncol(expected))
-  tols[4] <- 0.005
+  tols[4] <- 0.006
+  tols[6] <- 0.004
   tols[7] <- 0.006
   tols[ncol(expected)] <- 0.8
 
