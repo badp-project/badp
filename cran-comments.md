@@ -1,3 +1,10 @@
+# 0.3.0
+
+## Resubmission
+
+* Reimplemented SEM likelihood computation in C++ for improved performance.
+
+
 # 0.2.2
 
 # Resubmission

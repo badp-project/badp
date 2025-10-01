@@ -20,9 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          # Strict check on macOS + R 4.4.2
-          - { os: macos-latest,   r: '4.4.2' }
-          # Regular full-test on the latest macOS R
           - { os: macos-latest,   r: 'release' }
           - { os: windows-latest, r: 'release' }
           - { os: ubuntu-latest,  r: 'devel', http-user-agent: 'release' }

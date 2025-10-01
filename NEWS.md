@@ -1,3 +1,7 @@
+# bdsm 0.3.0
+
+* Reimplemented SEM likelihood computation in C++.
+
 # bdsm 0.2.2
 
 * Modified the method for selecting beta coefficient rows in the `bma` function for improved robustness and compatibility.

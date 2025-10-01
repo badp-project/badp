@@ -7,7 +7,7 @@ bdsm: Bayesian Dynamic Systems Modeling
 
 [![CRAN status
 badge](http://www.r-pkg.org/badges/version/bdsm)](https://CRAN.R-project.org/package=bdsm)
-[![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
 [![R-CMD-check](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml)
 
 ## Overview
@@ -124,6 +124,38 @@ if (is.na(cores)) {
   cores <- min(cores, detectCores())
 }
 cl <- makeCluster(cores)
+clusterEvalQ(cl, library(bdsm))
+#> [[1]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[2]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[3]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[4]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[5]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[6]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[7]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"     
+#> 
+#> [[8]]
+#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
+#> [7] "methods"   "base"
 
 model_space <- bdsm::optim_model_space(
   df             = data_prepared,
@@ -162,9 +194,9 @@ bma_results[[2]]  # BMA stats under binomial-beta prior
 
 # Posterior model sizes:
 bma_results[[16]]
-#>               Prior models size Posterior model size
-#> Binomial                      1                1.424
-#> Binomial-beta                 1                1.533
+#>               Prior model size Posterior model size
+#> Binomial                     1                1.424
+#> Binomial-beta                1                1.533
 ```
 
 Key columns in the BMA output include: - **PIP**: Posterior inclusion

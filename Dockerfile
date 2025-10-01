@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.4.2
+FROM rocker/r-ver:4.5.1
 
 # Install system libraries needed for R package compilation
 RUN apt-get update && apt-get install -y \
@@ -35,7 +35,7 @@ COPY . /package
 RUN Rscript -e "renv::restore(confirm = FALSE)"
 
 # Install additional R packages required for the package check
-RUN R -e "install.packages(c('rmarkdown', 'spelling', 'testthat'), repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages(c('rmarkdown', 'spelling', 'testthat', 'RcppArmadillo'), repos = 'https://cloud.r-project.org')"
 
 # Build the R package
 RUN R CMD build --compact-vignettes=both . && \

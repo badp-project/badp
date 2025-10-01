@@ -16,7 +16,7 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
 
   expect_equal(class(model_graphs), "list")
   expect_equal(length(model_graphs), 3)
-  expect_equal(class(model_graphs[[1]]), c("gg","ggplot"))
-  expect_equal(class(model_graphs[[2]]), c("gg","ggplot"))
-  expect_equal(class(model_graphs[[3]]), c("gg","ggplot","ggarrange"))
+  expect_equal(class(model_graphs[[1]]), c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg"))
+  expect_equal(class(model_graphs[[2]]), c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg"))
+  expect_equal(class(model_graphs[[3]]), c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg", "ggarrange"))
 })

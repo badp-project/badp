@@ -60,3 +60,9 @@ rsconnect/
 tests/testthat/testthat-problems.rds
 inst/doc
 /output
+
+# Rcpp
+*.dll
+*.o
+*.so
+*.tmp

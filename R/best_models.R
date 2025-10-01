@@ -117,28 +117,24 @@ best_models <- function(bma_list, criterion = 1, best = 5, round = 3, estimate =
         models_stdR[i,j] = paste0(bestBetas[i,j]," (",bestSTDRs[i,j],")")
         p_values[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDs[i,j]), df = best_d_free[j,1], lower.tail = FALSE)
         p_valuesR[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDRs[i,j]), df =best_d_free[j,1], lower.tail = FALSE)
-        if (p_values[i,j] >= 0.1){
+
+        if (is.na(p_values[i,j]) || p_values[i,j] >= 0.1){
           asterisks[i,j] = NA
-        }
-        if (p_values[i,j] < 0.1 & p_values[i,j] >= 0.05){
+        } else if (p_values[i,j] >= 0.05){
           asterisks[i,j] = "*"
-        }
-        if (p_values[i,j] < 0.05 & p_values[i,j] >= 0.01){
+        } else if (p_values[i,j] >= 0.01){
           asterisks[i,j] = "**"
-        }
-        if  (p_values[i,j]<0.01){
+        } else {
           asterisks[i,j]="***"
         }
-        if (p_valuesR[i,j] >= 0.1){
+
+        if (is.na(p_valuesR[i,j]) || p_valuesR[i,j] >= 0.1){
           asterisksR[i,j] = NA
-        }
-        if (p_valuesR[i,j] < 0.1 & p_valuesR[i,j] >= 0.05){
+        } else if (p_valuesR[i,j] >= 0.05){
           asterisksR[i,j] = "*"
-        }
-        if (p_valuesR[i,j] < 0.05 & p_valuesR[i,j] >= 0.01){
+        } else if (p_valuesR[i,j] >= 0.01){
           asterisksR[i,j] = "**"
-        }
-        if  (p_values[i,j]<0.01){
+        } else {
           asterisksR[i,j]="***"
         }
       } else{

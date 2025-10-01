@@ -1,3 +1,12 @@
+#' @useDynLib bdsm, .registration = TRUE
+
+# Import C++ dependencies to satisfy CRAN checks.
+# Fixes the following NOTE:
+# Namespace in Imports field not imported from: ‘X’
+#   All declared Imports should be used.
+#' @importFrom Rcpp sourceCpp
+#' @importFrom RcppArmadillo armadillo_version
+
 generate_params_vector <- function(value, timestamps_n, regressors_n,
                                    lin_related_regressors_n) {
   alpha <- value
@@ -226,44 +235,10 @@ sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
     Y2 <- data$Y2
     cur_Y2 <- data$cur_Y2
     cur_Z <- data$cur_Z
-    res_maker_matrix <- residual_maker_matrix(cur_Z)
 
-    n_entities <- nrow(Y1)
-    periods_n <- length(dep_vars)
-    tot_regressors_n <- ncol(data$Y2) / (periods_n - 1)
-    lin_related_regressors_n <- length(beta)
-
-    B <- sem_B_matrix(alpha, periods_n, beta)
-    C <- sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
-    S <- sem_sigma_matrix(err_var, dep_vars, phis, psis)
-
-    U1 <- if (lin_related_regressors_n == 0) {
-      t(tcrossprod(B[[1]], Y1) - tcrossprod(C, cur_Z))
-    } else {
-      t(tcrossprod(B[[1]], Y1) + tcrossprod(B[[2]], cur_Y2) -
-          tcrossprod(C, cur_Z))
-    }
-    S11_inverse <- solve(S[[1]])
-    M <- Y2 - U1 %*% S11_inverse %*% S[[2]]
-    H <- crossprod(M, res_maker_matrix) %*% M
-
-    gaussian_normalization_const <- log(2 * pi) *
-      n_entities * (periods_n + (periods_n-1) * tot_regressors_n) / 2
-    trace_simplification_term <-
-      1/2 * n_entities * (periods_n - 1) * tot_regressors_n
-
-    likelihood <- -n_entities/2 * log(det(S[[1]]) * det(H/n_entities))
-
-    if(exact_value) {
-      likelihood <- likelihood -
-        gaussian_normalization_const - trace_simplification_term
-    }
-
-    likelihood <- if(!per_entity) {
-      likelihood - 1/2 * sum(diag(S11_inverse %*% crossprod(U1)))
-    } else {
-      likelihood / n_entities  - 1/2 * diag(U1 %*% S11_inverse %*% t(U1))
-    }
+    likelihood <- sem_likelihood_calculate(alpha, phi_0, err_var, dep_vars,
+                                           Y1, Y2, cur_Z, cur_Y2, beta, phi_1,
+                                           phis, psis, per_entity, exact_value)
   } else {
     if (is.data.frame(data)) {
       data <- data %>%

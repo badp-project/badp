@@ -1,6 +1,6 @@
 Package: bdsm
 Title: Bayesian Dynamic Systems Modeling
-Version: 0.2.2
+Version: 0.3.0
 Authors@R:
     c(person(given = "Mateusz",
            family = "Wyszynski",
@@ -42,12 +42,17 @@ Imports:
     optimbase,
     parallel,
     pbapply,
+    Rcpp,
+    RcppArmadillo,
     rje,
     rlang,
     rootSolve,
     stats,
     tidyr,
     tidyselect
+LinkingTo:
+    Rcpp,
+    RcppArmadillo
 Depends:
     R (>= 3.5)
 Language: en-US
