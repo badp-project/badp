@@ -711,7 +711,7 @@ The \verb+round+ parameter specifies the decimal place
 to which the BMA statistics should be rounded in the results.
 
 <<>>=
-bma_results <- bma(full_model_space, df = data_prepared, round = 3)
+bma_results <- bma(full_model_space, round = 3)
 @
 
 The \verb+bma+ function returns a list containing 16 elements.
@@ -939,7 +939,7 @@ However, the user can modify the prior model specification by changing the \verb
 First, consider the consequence of concentrating prior probability mass on small models by setting $EMS = 2$.
 
 <<>>=
-bma_results2 <- bma(full_model_space, df = data_prepared, round = 3, EMS = 2)
+bma_results2 <- bma(full_model_space, round = 3, EMS = 2)
 @
 
 \noindent Before turning to the main BMA results, let us focus on the changes in the posterior probability mass with respect to model sizes.
@@ -994,7 +994,7 @@ The measure indicates that population is a substitute for both the investment pr
 
 Next, to consider the consequences of concentrating prior probability mass on large models, \verb+EMS+ was set to eight.
 <<>>=
-bma_results8 <- bma(full_model_space, df = data_prepared, round = 3, EMS = 8)
+bma_results8 <- bma(full_model_space, round = 3, EMS = 8)
 bma_results8[[16]]
 @
 
@@ -1051,7 +1051,6 @@ The default option is \verb+dil.Par = 0.5+, as recommended by \citet{George+2010
 <<>>=
 bma_results_dil <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1
   )
@@ -1071,7 +1070,6 @@ Before moving to the BMA statistics, it is instructive to examine the change in 
 <<fig=TRUE>>=
 bma_results_dil01 <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1,
   dil.Par     = 0.1
@@ -1084,7 +1082,6 @@ Conversely, raising the \verb+dil.Par+ parameter increases the degree of dilutio
 <<fig=TRUE>>=
 bma_results_dil2 <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1,
   dil.Par     = 2

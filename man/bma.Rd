@@ -4,12 +4,10 @@
 \alias{bma}
 \title{Calculation of the bma object}
 \usage{
-bma(model_space, df, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
+bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 }
 \arguments{
 \item{model_space}{List with params and stats from the model space}
-
-\item{df}{Data frame with data for the SEM analysis.}
 
 \item{round}{Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)}
 
