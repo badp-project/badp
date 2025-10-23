@@ -923,6 +923,13 @@ grid.arrange(coef_plots[[1]], coef_plots[[2]], coef_plots2[[1]],
              coef_plots2[[2]], nrow = 2, ncol = 2)
 @
 
+One additional option available to the user with the \verb+coef_hist+ function is weighting coefficients by posterior model probabilities. This can be accomplished using the \verb+weight+ parameter, whose default value is set to \verb+NULL+. Setting \verb+weight+ to \verb+"binomial"+ or \verb+"beta"+ results in plotting histograms based on the binomial or binomial–beta model prior, respectively. For example, in the case of the binomial–beta model prior, it can be observed that the value of the posterior mean is mainly driven by the model characterized by the highest posterior model probability.
+
+<<fig=TRUE>>=
+coef_plots3 <- coef_hist(bma_results, weight = "beta")
+coef_plots3[[1]]
+@
+
 \section{Changes in model priors}\label{priors}
 
 This section provides a more detailed description of the available model prior options.

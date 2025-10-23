@@ -5,6 +5,10 @@
 #' @name coef_hist
 #'
 #' @param bma_list bma object (the result of the bma function)
+#' @param weight Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
+#' 1) NULL - no weighting (default option) \cr
+#' 2) "binomial" - using posterior model probabilities based on binomial model prior \cr
+#' 3) "beta" - using posterior model probabilities based on binomial-beta model prior
 #' @param BW Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
 #' 1) "FD" Freedman-Diaconis method \cr
 #' 2) "SC" Scott method \cr
@@ -48,12 +52,52 @@
 
 utils::globalVariables(".data")
 
-coef_hist <- function(bma_list, BW = "FD", binW = NULL, BN = 0, num = NULL, kernel = 0){
+coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, num = NULL, kernel = 0){
+
+if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
+    stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
+}
 
 x_names <- bma_list[[3]] # names of variables
 K <- bma_list[[4]] + 1 # number of variables
 alpha <- bma_list[[13]]
 betas <- bma_list[[14]]
+
+if (!is.null(weight)){
+  R <- K-1
+  forJointness <- bma_list[[6]]
+  alpha <- bma_list[[13]]
+  numb_of_models <- nrow(forJointness)
+  numb_of_betas <- numb_of_models/2
+  new_betas <- matrix(0, nrow = numb_of_betas, ncol = R)
+  if (weight=="binomial"){
+    alpha1 <- alpha*forJointness[,R+1]
+    for (k in 1:R){
+      j <- 1
+      for (i in 1:numb_of_models){
+        if (forJointness[i,k]==1){
+          new_betas[j,k]=betas[j,k]*forJointness[i,R+1]
+          j <- j+1
+        }
+      }
+    }
+  }
+  if (weight=="beta"){
+    alpha1 <- alpha*forJointness[,R+2]
+    for (k in 1:R){
+      j <- 1
+      for (i in 1:numb_of_models){
+        if (forJointness[i,k]==1){
+          new_betas[j,k]=betas[j,k]*forJointness[i,R+2]
+          j <- j+1
+        }
+      }
+    }
+  }
+  alpha <- alpha1
+  betas <- new_betas
+}
+
 
 # Adding colnames and changing to dataframe
 colnames(alpha) <- x_names[1]

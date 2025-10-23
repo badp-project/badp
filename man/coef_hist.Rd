@@ -6,6 +6,13 @@
 \arguments{
 \item{bma_list}{bma object (the result of the bma function)}
 
+\item{weight}{Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
+\enumerate{
+\item NULL - no weighting (default option) \cr
+\item "binomial" - using posterior model probabilities based on binomial model prior \cr
+\item "beta" - using posterior model probabilities based on binomial-beta model prior
+}}
+
 \item{BW}{Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
 \enumerate{
 \item "FD" Freedman-Diaconis method \cr
