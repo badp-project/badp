@@ -10,7 +10,7 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
       scale         = FALSE
     )
 
-  bma_results <- bma(small_model_space, df = data_prepared, round= 3, dilution = 0)
+  bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
   model_graphs <- model_pmp(bma_results, top = 16)
 

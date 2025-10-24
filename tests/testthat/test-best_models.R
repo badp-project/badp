@@ -10,7 +10,7 @@ test_that(paste("best_models creates correct lists with graphs"), {
       scale         = FALSE
     )
 
-  bma_results <- bma(small_model_space, df = data_prepared, round= 3, dilution = 0)
+  bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
   best <- 5
 

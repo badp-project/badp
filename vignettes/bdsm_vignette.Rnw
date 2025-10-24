@@ -894,16 +894,14 @@ jointness(bma_results, measure = "DW")
 however, these values are very close to zero, indicating unrelated variables.
 Once again, the values for the binomial-beta model prior are higher, demonstrating how the results are influenced by the choice of model prior.
 
-\subsection{Visualizing model coefficients}
+\subsection{Visualizing model coefficients and posterior distribiutions}
 
 The \verb+coef_hist+ function allows the user to plot the distribution of estimated coefficients.
 It returns a list containing a number of objects equal to the number of regressors plus one.
 The first object in the list is a graph of the coefficients for the lagged dependent variable, while the remaining objects are graphs of the coefficients for the other regressors.
 The graph for the lagged dependent variable collects coefficients from the entire model space, whereas the graphs for the other regressors only collect coefficients from the models that include the given regressor (half of the model space).
 
-There are two main options for visualizing the coefficient distributions.
-The first option uses a histogram.
-The \verb+coef_hist+ function provides the user with options for controlling the bin widths of the histogram (\verb+BW+, \verb+binW+, \verb+BN+, and \verb+num+).
+There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The \verb+coef_hist+ function provides the user with options for controlling the bin widths of the histogram (\verb+BW+, \verb+binW+, \verb+BN+, and \verb+num+).
 The default is \verb+BW = FD+, which selects bin widths using the Freedman-Diaconis method.
 <<fig=TRUE>>=
 coef_plots <- coef_hist(bma_results)
@@ -928,6 +926,13 @@ One additional option available to the user with the \verb+coef_hist+ function i
 <<fig=TRUE>>=
 coef_plots3 <- coef_hist(bma_results, weight = "beta")
 coef_plots3[[1]]
+@
+
+The \verb+posterior_dens+ allows the user to plot posterior distributions of coefficients. Similarly, to \verb+coef_hist+ function, \verb+posterior_dens+ returns a list containing a number of objects equal to the number of regressors plus one. The first object in the list is a graph of the posterior distribution for the lagged dependent variable, while the remaining objects are graphs of the posterior distribution for the other regressors. The user needs to specify whether to plot posterior distributions based on the binomial (\verb+prior = "binomial"+) or binomial-beta (\verb+prior = "beta"+) model prior, as well as whether to use regular (\verb+SE = "standard"+) or robust (\verb+SE = "robust"+) standard errors used in the calculation of posterior objects.
+
+<<fig=TRUE>>=
+distPlots <- posterior_dens(bma_results, prior = "binomial", SE = "standard")
+grid.arrange(distPlots[[2]], distPlots[[3]], nrow = 2, ncol = 1)
 @
 
 \section{Changes in model priors}\label{priors}
