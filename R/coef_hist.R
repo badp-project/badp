@@ -52,130 +52,49 @@
 utils::globalVariables(".data")
 
 coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, num = NULL, kernel = 0){
+  if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
+      stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
+  }
 
-if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
-    stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
-}
-
-x_names <- bma_list[[3]] # names of variables
-K <- bma_list[[4]] + 1 # number of variables
-alpha <- bma_list[[13]]
-betas <- bma_list[[14]]
-
-if (!is.null(weight)){
-  R <- K-1
-  forJointness <- bma_list[[6]]
+  x_names <- bma_list[[3]] # names of variables
+  K <- bma_list[[4]] + 1 # number of variables
   alpha <- bma_list[[13]]
-  numb_of_models <- nrow(forJointness)
-  numb_of_betas <- numb_of_models/2
-  new_betas <- matrix(0, nrow = numb_of_betas, ncol = R)
-  column_with_prob_offset = if (weight=='binomial') {1} else {2}
-  alpha1 <- alpha*forJointness[,R+column_with_prob_offset]
-  for (k in 1:R){
-    j <- 1
-    for (i in 1:numb_of_models){
-      if (forJointness[i,k]==1){
-        new_betas[j,k]=betas[j,k]*forJointness[i,R+1]
-        j <- j+1
+  betas <- bma_list[[14]]
+
+  if (!is.null(weight)){
+    R <- K-1
+    forJointness <- bma_list[[6]]
+    alpha <- bma_list[[13]]
+    numb_of_models <- nrow(forJointness)
+    numb_of_betas <- numb_of_models/2
+    new_betas <- matrix(0, nrow = numb_of_betas, ncol = R)
+    column_with_prob_offset = if (weight=='binomial') {1} else {2}
+    alpha1 <- alpha*forJointness[,R+column_with_prob_offset]
+    for (k in 1:R){
+      j <- 1
+      for (i in 1:numb_of_models){
+        if (forJointness[i,k]==1){
+          new_betas[j,k]=betas[j,k]*forJointness[i,R+1]
+          j <- j+1
+        }
       }
     }
-  }
-  alpha <- alpha1
-  betas <- new_betas
-}
-
-
-# Adding colnames and changing to dataframe
-colnames(alpha) <- x_names[1]
-colnames(betas) <- x_names[-1]
-alpha <- as.data.frame(alpha)
-betas <- as.data.frame(betas)
-
-histPlots<-list() # Opening a list  for the histogram plots
-
-# CONDITION for using kernel or regular histogram
-if (kernel==1){
-  histPlots[[1]]<-invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
-                              ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
-                              ggplot2::labs(
-                                title = paste("Distribiution of", x_names[1], "coefficients"),
-                                x = paste0("Coefficients on ",x_names[1]),
-                                y = "Frequency") +
-                              ggplot2::theme_minimal(base_size = 12) +
-                              ggplot2::theme(
-                                plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
-                                axis.title = ggplot2::element_text(face = "bold")))
-  names(histPlots)[[1]] <-x_names[[1]]
-  for (i in 2:K){
-    histPlots[[i]]<-invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
-                                ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
-                                ggplot2::labs(
-                                  title = paste("Distribiution of", x_names[i], "coefficients"),
-                                  x = paste0("Coefficients on ",x_names[i]),
-                                  y = "Frequency") +
-                                ggplot2::theme_minimal(base_size = 12) +
-                                ggplot2::theme(
-                                  plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
-                                  axis.title = ggplot2::element_text(face = "bold")))
-    names(histPlots)[[i]] <-x_names[[i]]
+    alpha <- alpha1
+    betas <- new_betas
   }
 
-}else{# REGULAR HISTOGRAM BELOW
+  # Adding colnames and changing to dataframe
+  colnames(alpha) <- x_names[1]
+  colnames(betas) <- x_names[-1]
+  alpha <- as.data.frame(alpha)
+  betas <- as.data.frame(betas)
 
-  # CONDITION for graphs plotted with binwidth:
-  if (BN==0){### Rules for bin width
-    # 1) Freedman-Diaconis (FD)
-    if (BW=="FD"){BW<-(stats::IQR(alpha[,1])*2)/sqrt(length(alpha[,1]))}
-    # 2) Scott (SC)
-    if (BW=="SC"){BW<-(stats::sd(alpha[,1])*3.5)/(length(alpha[,1])^(1/3))}
-    # 3) Binwidth sizes
-    if(BW=="vec"){
-      if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
-      if (length(binW)!=K){stop("binW is missspecified: binW should have K (number of regressors +1) elements")}
-      BW<-binW[1]
-    }
-    histPlots[[1]] <- invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
-                                  ggplot2::geom_histogram(binwidth = BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
-                                  ggplot2::labs(
-                                    title = paste("Distribiution of", x_names[1], "coefficients"),
-                                    x = paste0("Coefficients on ",x_names[1]),
-                                    y = "Frequency") +
-                                  ggplot2::theme_minimal(base_size = 12) +
-                                  ggplot2::theme(
-                                    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
-                                    axis.title = ggplot2::element_text(face = "bold")))
-    names(histPlots)[[1]] <- x_names[[1]]
-    for (i in 2:K){ # at this LOOP we go through all the regressors
-      # 1) Freedman-Diaconis (FD)
-      if (BW=="FD"){BW<-(stats::IQR(betas[,i])*2)/sqrt(length(betas[,i]))}
-      # 2) Scott (SC)
-      if (BW=="SC"){BW<-(stats::sd(betas[,i])*3.5)/(length(betas[,i])^(1/3))}
-      # 3) Binwidth sizes
-      if(BW=="vec"){
-        if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
-        if (length(binW)!=K){stop("binW is missspecified: binW should have K elements")}
-        BW<-binW[i]
-      }
-      histPlots[[i]] <- invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
-                                    ggplot2::geom_histogram(binwidth=BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
-                                    ggplot2::labs(
-                                      title = paste("Distribiution of", x_names[i], "coefficients"),
-                                      x = paste0("Coefficients on ",x_names[i]),
-                                      y = "Frequency") +
-                                    ggplot2::theme_minimal(base_size = 12) +
-                                    ggplot2::theme(
-                                      plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
-                                      axis.title = ggplot2::element_text(face = "bold")))
-      names(histPlots)[[i]] <- x_names[[i]]
-    }
-  }
+  histPlots<-list() # Opening a list  for the histogram plots
 
-  # CONDITION for graphs plotted with bins - through setting the number of bins:
-  if (BN==1){### Rules for bin width
-    if (is.null(num)){stop("Please provide a vector with number of bins through parameter num")}
-    if (length(num)!=K){stop("num is missspecified: num should have K elements")}
+  # CONDITION for using kernel or regular histogram
+  if (kernel==1){
     histPlots[[1]]<-invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
-                                ggplot2::geom_histogram(bins=num[1], fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
                                 ggplot2::labs(
                                   title = paste("Distribiution of", x_names[1], "coefficients"),
                                   x = paste0("Coefficients on ",x_names[1]),
@@ -187,7 +106,7 @@ if (kernel==1){
     names(histPlots)[[1]] <-x_names[[1]]
     for (i in 2:K){
       histPlots[[i]]<-invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
-                                  ggplot2::geom_histogram(bins=num[i], fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                  ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
                                   ggplot2::labs(
                                     title = paste("Distribiution of", x_names[i], "coefficients"),
                                     x = paste0("Coefficients on ",x_names[i]),
@@ -198,7 +117,86 @@ if (kernel==1){
                                     axis.title = ggplot2::element_text(face = "bold")))
       names(histPlots)[[i]] <-x_names[[i]]
     }
+
+  } else{# REGULAR HISTOGRAM BELOW
+
+    # CONDITION for graphs plotted with binwidth:
+    if (BN==0){### Rules for bin width
+      # 1) Freedman-Diaconis (FD)
+      if (BW=="FD"){BW<-(stats::IQR(alpha[,1])*2)/sqrt(length(alpha[,1]))}
+      # 2) Scott (SC)
+      if (BW=="SC"){BW<-(stats::sd(alpha[,1])*3.5)/(length(alpha[,1])^(1/3))}
+      # 3) Binwidth sizes
+      if(BW=="vec"){
+        if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
+        if (length(binW)!=K){stop("binW is missspecified: binW should have K (number of regressors +1) elements")}
+        BW<-binW[1]
+      }
+      histPlots[[1]] <- invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
+                                    ggplot2::geom_histogram(binwidth = BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                    ggplot2::labs(
+                                      title = paste("Distribiution of", x_names[1], "coefficients"),
+                                      x = paste0("Coefficients on ",x_names[1]),
+                                      y = "Frequency") +
+                                    ggplot2::theme_minimal(base_size = 12) +
+                                    ggplot2::theme(
+                                      plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
+                                      axis.title = ggplot2::element_text(face = "bold")))
+      names(histPlots)[[1]] <- x_names[[1]]
+      for (i in 2:K){ # at this LOOP we go through all the regressors
+        # 1) Freedman-Diaconis (FD)
+        if (BW=="FD"){BW<-(stats::IQR(betas[,i])*2)/sqrt(length(betas[,i]))}
+        # 2) Scott (SC)
+        if (BW=="SC"){BW<-(stats::sd(betas[,i])*3.5)/(length(betas[,i])^(1/3))}
+        # 3) Binwidth sizes
+        if(BW=="vec"){
+          if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
+          if (length(binW)!=K){stop("binW is missspecified: binW should have K elements")}
+          BW<-binW[i]
+        }
+        histPlots[[i]] <- invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
+                                      ggplot2::geom_histogram(binwidth=BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                      ggplot2::labs(
+                                        title = paste("Distribiution of", x_names[i], "coefficients"),
+                                        x = paste0("Coefficients on ",x_names[i]),
+                                        y = "Frequency") +
+                                      ggplot2::theme_minimal(base_size = 12) +
+                                      ggplot2::theme(
+                                        plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
+                                        axis.title = ggplot2::element_text(face = "bold")))
+        names(histPlots)[[i]] <- x_names[[i]]
+      }
+    }
+
+    # CONDITION for graphs plotted with bins - through setting the number of bins:
+    if (BN==1){### Rules for bin width
+      if (is.null(num)){stop("Please provide a vector with number of bins through parameter num")}
+      if (length(num)!=K){stop("num is missspecified: num should have K elements")}
+      histPlots[[1]]<-invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
+                                  ggplot2::geom_histogram(bins=num[1], fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                  ggplot2::labs(
+                                    title = paste("Distribiution of", x_names[1], "coefficients"),
+                                    x = paste0("Coefficients on ",x_names[1]),
+                                    y = "Frequency") +
+                                  ggplot2::theme_minimal(base_size = 12) +
+                                  ggplot2::theme(
+                                    plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
+                                    axis.title = ggplot2::element_text(face = "bold")))
+      names(histPlots)[[1]] <-x_names[[1]]
+      for (i in 2:K){
+        histPlots[[i]]<-invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
+                                    ggplot2::geom_histogram(bins=num[i], fill = "skyblue", color = "skyblue", alpha = 0.8) +
+                                    ggplot2::labs(
+                                      title = paste("Distribiution of", x_names[i], "coefficients"),
+                                      x = paste0("Coefficients on ",x_names[i]),
+                                      y = "Frequency") +
+                                    ggplot2::theme_minimal(base_size = 12) +
+                                    ggplot2::theme(
+                                      plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
+                                      axis.title = ggplot2::element_text(face = "bold")))
+        names(histPlots)[[i]] <-x_names[[i]]
+      }
+    }
   }
-}
-return(histPlots)
+  return(histPlots)
 }
