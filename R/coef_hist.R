@@ -69,27 +69,14 @@ if (!is.null(weight)){
   numb_of_models <- nrow(forJointness)
   numb_of_betas <- numb_of_models/2
   new_betas <- matrix(0, nrow = numb_of_betas, ncol = R)
-  if (weight=="binomial"){
-    alpha1 <- alpha*forJointness[,R+1]
-    for (k in 1:R){
-      j <- 1
-      for (i in 1:numb_of_models){
-        if (forJointness[i,k]==1){
-          new_betas[j,k]=betas[j,k]*forJointness[i,R+1]
-          j <- j+1
-        }
-      }
-    }
-  }
-  if (weight=="beta"){
-    alpha1 <- alpha*forJointness[,R+2]
-    for (k in 1:R){
-      j <- 1
-      for (i in 1:numb_of_models){
-        if (forJointness[i,k]==1){
-          new_betas[j,k]=betas[j,k]*forJointness[i,R+2]
-          j <- j+1
-        }
+  column_with_prob_offset = if (weight=='binomial') {1} else {2}
+  alpha1 <- alpha*forJointness[,R+column_with_prob_offset]
+  for (k in 1:R){
+    j <- 1
+    for (i in 1:numb_of_models){
+      if (forJointness[i,k]==1){
+        new_betas[j,k]=betas[j,k]*forJointness[i,R+1]
+        j <- j+1
       }
     }
   }
