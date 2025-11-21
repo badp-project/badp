@@ -8,6 +8,8 @@
 #'
 #' @return A vector with names of the variables.
 #'
+#' @export
+#'
 #' @examples
 #' \donttest{
 #'  df <- bdsm::economic_growth
