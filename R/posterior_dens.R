@@ -74,10 +74,10 @@ posterior_dens <- function(bma_list, prior = "binomial", SE = "standard"){
     sigma <- post_table[i,error_column]
     x <- seq(mu - 4*sigma, mu + 4*sigma, length = 300)
     df <- data.frame(x = x, y = dnorm(x, mu, sigma))
-    distPlots[[i]]<-invisible(ggplot2::ggplot(df, ggplot2::aes(x, y)) +
+    distPlots[[i]]<-invisible(ggplot2::ggplot(df, ggplot2::aes(.data$x, .data$y)) +
                                 ggplot2::geom_line(color = "blue", size = 1.2) +
                                 ggplot2::geom_area(data = subset(df, x >= mu - sigma & x <= mu + sigma),
-                                                   ggplot2::aes(x, y), fill = "blue", alpha = 0.2) +
+                                                   ggplot2::aes(.data$x, .data$y), fill = "blue", alpha = 0.2) +
 
                                 # Vertical lines: PM (red), ±PSD (blue)
                                 ggplot2::geom_vline(xintercept = mu, color = "red", linetype = "dashed", size = 1) +
