@@ -136,7 +136,6 @@ if (is.na(cores)) {
   cores <- min(cores, detectCores())
 }
 cl <- makeCluster(cores)
-clusterEvalQ(cl, library(bdsm))
 
 model_space <- bdsm::optim_model_space(
   df             = data_prepared,
@@ -160,7 +159,7 @@ posterior inclusion probabilities (PIPs), and other BMA statistics
 under the **binomial** and **binomial-beta** model priors:
 
 ```{r}
-bma_results <- bdsm::bma(model_space, df = data_prepared, round = 3)
+bma_results <- bdsm::bma(model_space, round = 3)
 
 # Inspect the BMA summary (binomial prior results first, binomial-beta second)
 bma_results[[1]]  # BMA stats under binomial prior
@@ -252,8 +251,7 @@ model_space <- bdsm::optim_model_space(
 
 # 3) Run Bayesian Model Averaging
 bma_obj <- bdsm::bma(
-  model_space = model_space,
-  df          = data_prepared
+  model_space = model_space
 )
 
 # 4) Inspect the top 3 models under binomial prior

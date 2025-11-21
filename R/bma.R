@@ -4,7 +4,6 @@
 #' Other objects for furhter analysis are also returned.
 #'
 #' @param model_space List with params and stats from the model space
-#' @param df Data frame with data for the SEM analysis.
 #' @param round Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)
 #' @param EMS Expected model size for model binomial and binomial-beta model prior
 #' @param dilution Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).
@@ -51,30 +50,26 @@
 #'
 #' bma_results <- bma(
 #'   model_space = bdsm::small_model_space,
-#'   df          = data_prepared,
 #'   round       = 3,
 #'   dilution    = 0
 #' )
 #' }
 bma <- function(
     model_space,
-    df,
     round = 4,
     EMS = NULL,
     dilution = 0,
     dil.Par = 0.5
   ){
 
-  reg_names <- colnames(df)
-  reg_names <- reg_names[-(1:2)]
-  reg_names[1] <- paste0(reg_names[1], "_lag")
+  reg_names <- model_space[[3]]
   # Regressors with lag
   K <- length(reg_names)
   # Regressors without lag
   R <- K-1
 
   num_of_models <- 2^R
-  observations_num <- nrow((na.omit(df[,4])))
+  observations_num <- model_space[[4]]
 
   model_space_params <- model_space[[1]]
   like_table <- model_space[[2]]
@@ -133,6 +128,7 @@ bma <- function(
   ###### CONDITION for dilution prior
   if (dilution==1){
     if (!exists("dil.Par")) { dil.Par <- 0.5 } # CONDITION for setting the default value of dil.Par
+    df <- model_space[[5]]
     for_dilut <- df[,-(1:3)]
     for_dilut <- na.omit(for_dilut)
     dilut <- matrix(0, nrow = num_of_models, ncol = 1)

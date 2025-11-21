@@ -45,12 +45,16 @@ List with two objects: \cr
 \enumerate{
 \item params - table with parameters of all estimated models \cr
 \item stats - table with the value of maximized likelihood function, BIC, and
-standard errors for all estimated models
+standard errors for all estimated models \cr
+\item reg_names - vector with the names of the variables \cr
+\item observations_num - number of observations \cr
+\item df - data frame used in estimation
 }
 }
 \description{
 This function calculates model space, values of the maximized likelihood function, BICs, and
-standard deviations of the parameters that will be used in Bayesian model averaging.
+standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
+it provides a vector with the names of the variables for bma function and the number of observations.
 }
 \examples{
 \dontrun{

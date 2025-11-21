@@ -144,7 +144,7 @@ test_that(paste("model_space computes correct model_space list"), {
     init_value    = 0.5
   )
 
-  expect_equal(length(model_space), 2)
+  expect_equal(length(model_space), 5)
   expect_equal(class(model_space), "list")
   expect_equal(class(model_space[[1]]), c("matrix","array"))
   expect_equal(class(model_space[[2]]), c("matrix","array"))
@@ -184,7 +184,7 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
 
   stopCluster(cl)
 
-  bma_results <- bdsm::bma(model_space, df = data_prepared, round = 5)
+  bma_results <- bdsm::bma(model_space, round = 5)
 
   actual <- bma_results[[1]]
   expected <- bdsm::full_bma_results[[1]]

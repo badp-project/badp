@@ -360,7 +360,8 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' Calculation of the model_space object
 #'
 #' This function calculates model space, values of the maximized likelihood function, BICs, and
-#' standard deviations of the parameters that will be used in Bayesian model averaging.
+#' standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
+#' it provides a vector with the names of the variables for bma function and the number of observations.
 #'
 #' @param df Data frame with data for the analysis.
 #' @param timestamp_col The name of the column with time stamps
@@ -385,7 +386,10 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' List with two objects: \cr
 #' 1) params - table with parameters of all estimated models \cr
 #' 2) stats - table with the value of maximized likelihood function, BIC, and
-#' standard errors for all estimated models
+#' standard errors for all estimated models \cr
+#' 3) reg_names - vector with the names of the variables \cr
+#' 4) observations_num - number of observations \cr
+#' 5) df - data frame used in estimation
 #'
 #' @examples
 #' \dontrun{
@@ -436,5 +440,8 @@ optim_model_space <-
       cl            = cl
     )
 
-    list(params = params, stats = stats)
+    reg_names <- extract_names(df)
+    observations_num <- nrow((na.omit(df[,4])))
+
+    list(params = params, stats = stats, reg_names = reg_names, observations_num = observations_num, df = df)
   }

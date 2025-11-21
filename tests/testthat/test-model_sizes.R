@@ -10,7 +10,7 @@ test_that(paste("model_sizes creates correct lists with graphs"), {
       scale         = FALSE
     )
 
-  bma_results <- bma(small_model_space, df = data_prepared, round= 3, dilution = 0)
+  bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
   size_graphs <- model_sizes(bma_results)
 

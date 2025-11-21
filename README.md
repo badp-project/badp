@@ -124,38 +124,6 @@ if (is.na(cores)) {
   cores <- min(cores, detectCores())
 }
 cl <- makeCluster(cores)
-clusterEvalQ(cl, library(bdsm))
-#> [[1]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[2]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[3]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[4]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[5]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[6]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[7]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"     
-#> 
-#> [[8]]
-#> [1] "bdsm"      "stats"     "graphics"  "grDevices" "utils"     "datasets" 
-#> [7] "methods"   "base"
 
 model_space <- bdsm::optim_model_space(
   df             = data_prepared,
@@ -178,7 +146,7 @@ probabilities, posterior inclusion probabilities (PIPs), and other BMA
 statistics under the **binomial** and **binomial-beta** model priors:
 
 ``` r
-bma_results <- bdsm::bma(model_space, df = data_prepared, round = 3)
+bma_results <- bdsm::bma(model_space, round = 3)
 
 # Inspect the BMA summary (binomial prior results first, binomial-beta second)
 bma_results[[1]]  # BMA stats under binomial prior
@@ -257,7 +225,7 @@ top3_binom[[6]]
 |         |       ‘No. 1’       |       ‘No. 2’       |       ‘No. 3’       |
 |:--------|:-------------------:|:-------------------:|:-------------------:|
 | gdp_lag | 1.079 (0.275)\*\*\* | 1.126 (0.151)\*\*\* | 1.027 (0.193)\*\*\* |
-| ish     | 0.119 (0.086)\*\*\* |         NA          | 0.121 (0.082)\*\*\* |
+| ish     |    0.119 (0.086)    |         NA          |    0.121 (0.082)    |
 | sed     |    -0.06 (0.126)    |   -0.077 (0.128)    |         NA          |
 | PMP     |        0.508        |        0.206        |        0.202        |
 
@@ -309,8 +277,7 @@ model_space <- bdsm::optim_model_space(
 
 # 3) Run Bayesian Model Averaging
 bma_obj <- bdsm::bma(
-  model_space = model_space,
-  df          = data_prepared
+  model_space = model_space
 )
 
 # 4) Inspect the top 3 models under binomial prior

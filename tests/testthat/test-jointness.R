@@ -10,7 +10,7 @@ test_that(paste("jointness computes correct jointness table"), {
       scale         = FALSE
     )
 
-  bma_results <- bma(small_model_space, df = data_prepared, round= 3, dilution = 0)
+  bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
   jointness_table <- jointness(bma_results, measure = "HCGHM", rho = 0.5, round= 3)
 

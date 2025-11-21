@@ -711,7 +711,7 @@ The \verb+round+ parameter specifies the decimal place
 to which the BMA statistics should be rounded in the results.
 
 <<>>=
-bma_results <- bma(full_model_space, df = data_prepared, round = 3)
+bma_results <- bma(full_model_space, round = 3)
 @
 
 The \verb+bma+ function returns a list containing 16 elements.
@@ -894,16 +894,14 @@ jointness(bma_results, measure = "DW")
 however, these values are very close to zero, indicating unrelated variables.
 Once again, the values for the binomial-beta model prior are higher, demonstrating how the results are influenced by the choice of model prior.
 
-\subsection{Visualizing model coefficients}
+\subsection{Visualizing model coefficients and posterior distribiutions}
 
 The \verb+coef_hist+ function allows the user to plot the distribution of estimated coefficients.
 It returns a list containing a number of objects equal to the number of regressors plus one.
 The first object in the list is a graph of the coefficients for the lagged dependent variable, while the remaining objects are graphs of the coefficients for the other regressors.
 The graph for the lagged dependent variable collects coefficients from the entire model space, whereas the graphs for the other regressors only collect coefficients from the models that include the given regressor (half of the model space).
 
-There are two main options for visualizing the coefficient distributions.
-The first option uses a histogram.
-The \verb+coef_hist+ function provides the user with options for controlling the bin widths of the histogram (\verb+BW+, \verb+binW+, \verb+BN+, and \verb+num+).
+There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The \verb+coef_hist+ function provides the user with options for controlling the bin widths of the histogram (\verb+BW+, \verb+binW+, \verb+BN+, and \verb+num+).
 The default is \verb+BW = FD+, which selects bin widths using the Freedman-Diaconis method.
 <<fig=TRUE>>=
 coef_plots <- coef_hist(bma_results)
@@ -923,6 +921,20 @@ grid.arrange(coef_plots[[1]], coef_plots[[2]], coef_plots2[[1]],
              coef_plots2[[2]], nrow = 2, ncol = 2)
 @
 
+One additional option available to the user with the \verb+coef_hist+ function is weighting coefficients by posterior model probabilities. This can be accomplished using the \verb+weight+ parameter, whose default value is set to \verb+NULL+. Setting \verb+weight+ to \verb+"binomial"+ or \verb+"beta"+ results in plotting histograms based on the binomial or binomial–beta model prior, respectively. For example, in the case of the binomial–beta model prior, it can be observed that the value of the posterior mean is mainly driven by the model characterized by the highest posterior model probability.
+
+<<fig=TRUE>>=
+coef_plots3 <- coef_hist(bma_results, weight = "beta")
+coef_plots3[[1]]
+@
+
+The \verb+posterior_dens+ allows the user to plot posterior distributions of coefficients. Similarly, to \verb+coef_hist+ function, \verb+posterior_dens+ returns a list containing a number of objects equal to the number of regressors plus one. The first object in the list is a graph of the posterior distribution for the lagged dependent variable, while the remaining objects are graphs of the posterior distribution for the other regressors. The user needs to specify whether to plot posterior distributions based on the binomial (\verb+prior = "binomial"+) or binomial-beta (\verb+prior = "beta"+) model prior, as well as whether to use regular (\verb+SE = "standard"+) or robust (\verb+SE = "robust"+) standard errors used in the calculation of posterior objects.
+
+<<fig=TRUE>>=
+distPlots <- posterior_dens(bma_results, prior = "binomial", SE = "standard")
+grid.arrange(distPlots[[2]], distPlots[[3]], nrow = 2, ncol = 1)
+@
+
 \section{Changes in model priors}\label{priors}
 
 This section provides a more detailed description of the available model prior options.
@@ -939,7 +951,7 @@ However, the user can modify the prior model specification by changing the \verb
 First, consider the consequence of concentrating prior probability mass on small models by setting $EMS = 2$.
 
 <<>>=
-bma_results2 <- bma(full_model_space, df = data_prepared, round = 3, EMS = 2)
+bma_results2 <- bma(full_model_space, round = 3, EMS = 2)
 @
 
 \noindent Before turning to the main BMA results, let us focus on the changes in the posterior probability mass with respect to model sizes.
@@ -994,7 +1006,7 @@ The measure indicates that population is a substitute for both the investment pr
 
 Next, to consider the consequences of concentrating prior probability mass on large models, \verb+EMS+ was set to eight.
 <<>>=
-bma_results8 <- bma(full_model_space, df = data_prepared, round = 3, EMS = 8)
+bma_results8 <- bma(full_model_space, round = 3, EMS = 8)
 bma_results8[[16]]
 @
 
@@ -1051,7 +1063,6 @@ The default option is \verb+dil.Par = 0.5+, as recommended by \citet{George+2010
 <<>>=
 bma_results_dil <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1
   )
@@ -1071,7 +1082,6 @@ Before moving to the BMA statistics, it is instructive to examine the change in 
 <<fig=TRUE>>=
 bma_results_dil01 <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1,
   dil.Par     = 0.1
@@ -1084,7 +1094,6 @@ Conversely, raising the \verb+dil.Par+ parameter increases the degree of dilutio
 <<fig=TRUE>>=
 bma_results_dil2 <- bma(
   model_space = full_model_space,
-  df          = data_prepared,
   round       = 3,
   dilution    = 1,
   dil.Par     = 2

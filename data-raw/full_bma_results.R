@@ -12,6 +12,6 @@ data_prepared <- bdsm::economic_growth %>%
     scale         = FALSE
   )
 
-full_bma_results <- bdsm::bma(full_model_space, df = data_prepared, round = 5)
+full_bma_results <- bdsm::bma(full_model_space, round = 5)
 
 usethis::use_data(full_bma_results, overwrite = TRUE)
