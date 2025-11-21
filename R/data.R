@@ -77,14 +77,14 @@
 #'      Finally, the rows 8-12 are robust standard deviations.
 #'    }
 #'    \item{reg_names}{
-#'        A vector with the names of the variables.
-#'        }
-#'        \item{observations_num}{
-#'          A total number of observations in the panel (292).
-#'          }
-#'          \item{df}{
-#'          Data frame used in the analysis.
-#'          }
+#'      A vector with the names of the variables.
+#'      }
+#'    \item{observations_num}{
+#'      A total number of observations in the panel (292).
+#'      }
+#'    \item{df}{
+#'      Data frame used in the analysis.
+#'      }
 #' }
 "small_model_space"
 
@@ -111,15 +111,15 @@
 #'      The rows 3-7 are standard deviations.
 #'      Finally, the rows 8-12 are robust standard deviations.
 #'      }
-#'      \item{reg_names}{
-#'        A vector with the names of the variables.
-#'        }
-#'        \item{observations_num}{
-#'          A total number of observations in the panel (292).
-#'          }
-#'          \item{df}{
-#'          Data frame used in the analysis.
-#'          }
+#'    \item{reg_names}{
+#'      A vector with the names of the variables.
+#'      }
+#'    \item{observations_num}{
+#'      A total number of observations in the panel (292).
+#'      }
+#'    \item{df}{
+#'      Data frame used in the analysis.
+#'      }
 #' }
 "full_model_space"
 
