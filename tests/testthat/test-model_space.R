@@ -184,7 +184,7 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
 
   stopCluster(cl)
 
-  bma_results <- bdsm::bma(model_space, df = data_prepared, round = 5)
+  bma_results <- bdsm::bma(model_space, round = 5)
 
   actual <- bma_results[[1]]
   expected <- bdsm::full_bma_results[[1]]
