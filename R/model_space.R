@@ -136,16 +136,41 @@ regressor_names_from_params_vector <- function(params) {
 #' @importFrom pbapply pbapply
 #'
 #' @export
-optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col, init_value,
-                                     exact_value = FALSE, cl = NULL,
-                                     control = list(trace = 0, maxit = 10000,
-                                                    fnscale = -1, REPORT = 100,
-                                                    scale = 0.05)) {
-  matrices_shared_across_models <- df %>%
-    matrices_from_df(timestamp_col = {{ timestamp_col }},
-                     entity_col = {{ entity_col }},
-                     dep_var_col = {{ dep_var_col }},
-                     which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
+optim_model_space_params <- function(
+  df,
+  timestamp_col,
+  entity_col,
+  dep_var_col,
+  init_value,
+  nested,
+  exact_value = FALSE, cl = NULL,
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  ) {
+
+  all_regressors <- df %>%
+    dplyr::select(
+      -c(
+        {{timestamp_col}},
+        {{entity_col}},
+        {{dep_var_col}},
+      )
+    )
+
+  all_regressors_n = ncol(all_regressors)
+  timestamp_n = df %>%
+    dplyr::distinct({{timestamp_col}}) %>%
+    nrow() - 1
+
+  # nested approach - use model space with shared matrices
+  matrices_shared_across_models <-
+    if(nested) {
+      df %>% matrices_from_df(timestamp_col = {{ timestamp_col }},
+               entity_col = {{ entity_col }},
+               dep_var_col = {{ dep_var_col }},
+               which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
+    } else {
+      NULL # no shared matrices for non-nested version
+    }
 
   init_params <- df %>%
     init_model_space_params(timestamp_col = {{ timestamp_col }},
@@ -153,37 +178,102 @@ optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col,
                             dep_var_col = {{ dep_var_col }},
                             init_value = init_value)
 
-  optimization_wrapper <- function(params, data) {
-    regressors_subset <- regressor_names_from_params_vector(params)
+  optimization_wrapper <- NULL
 
-    model_specific_matrices <- df %>%
-      matrices_from_df(timestamp_col = {{ timestamp_col }},
-                       entity_col = {{ entity_col }},
-                       dep_var_col = {{ dep_var_col }},
-                       lin_related_regressors = regressors_subset,
-                       which_matrices = c("cur_Y2", "cur_Z"))
+  if (nested) {
+    # optimization performed for nested version
+    optimization_wrapper <- function(params, data) {
+      regressors_subset <- regressor_names_from_params_vector(params)
 
-    data$cur_Z <- model_specific_matrices$cur_Z
-    data$cur_Y2 <- model_specific_matrices$cur_Y2
+      model_specific_matrices <- df %>%
+        matrices_from_df(timestamp_col = {{ timestamp_col }},
+                         entity_col = {{ entity_col }},
+                         dep_var_col = {{ dep_var_col }},
+                         lin_related_regressors = regressors_subset,
+                         which_matrices = c("cur_Y2", "cur_Z"))
 
-    params_no_na <- stats::na.omit(params)
+      data$cur_Z <- model_specific_matrices$cur_Z
+      data$cur_Y2 <- model_specific_matrices$cur_Y2
 
-    # Adjust the optimization control parameters.
-    control$parscale <- control$scale * params_no_na
-    control$scale <- NULL
+      params_no_na <- stats::na.omit(params)
 
-    optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                              exact_value = exact_value,
-                              method = "BFGS",
-                              control = control)
+      # Adjust the optimization control parameters.
+      control$parscale <- control$scale * params_no_na
+      control$scale <- NULL
 
-    params[!is.na(params)] <- optimized[[1]]
-    params
+      optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                                exact_value = exact_value,
+                                method = "BFGS",
+                                control = control)
+
+      params[!is.na(params)] <- optimized[[1]]
+      params
+    }
+  } else {
+    # optimization performed for non-nested version
+    optimization_wrapper <- function(params, data) {
+      # derive the set of all matrices needed, based on reduced df
+      regressors_subset <- regressor_names_from_params_vector(params)
+      # reduced data-frame: it will not work if regressors_subset empty
+
+      if (length(regressors_subset) == 0) {
+        df_loc <- df
+      } else {
+        df_loc <- df %>% dplyr::select(
+          {{ timestamp_col }},
+          {{ entity_col }},
+          {{ dep_var_col }},
+          dplyr::all_of(regressors_subset)
+        )
+      }
+
+      data <- df_loc %>%
+        matrices_from_df(
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{ dep_var_col }},
+          lin_related_regressors = regressors_subset,
+          which_matrices = c(
+            "Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+      # set last n params to NA, for n - difference model params
+      # for full matrix & model params for current setup
+      if (length(regressors_subset) > 0) {
+        curr_n_regressors <- length(regressors_subset)
+        curr_n_phi <- curr_n_regressors * (timestamp_n - 1)
+        curr_n_psi <- curr_n_regressors * (timestamp_n - 1) * timestamp_n / 2
+
+        full_n_phi <- all_regressors_n * (timestamp_n - 1)
+        full_n_psi <- all_regressors_n * (timestamp_n - 1) * timestamp_n / 2
+
+        num_new_na <- (full_n_phi + full_n_psi) - (curr_n_phi + curr_n_psi)
+
+        if (num_new_na != 0) {
+          params[(length(params) - num_new_na + 1):length(params)] <- NA_real_
+        }
+      }
+
+      params_no_na <- stats::na.omit(params)
+
+      # Adjust the optimization control parameters.
+      control$parscale <- control$scale * params_no_na
+      control$scale <- NULL
+
+      optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                                exact_value = exact_value,
+                                method = "BFGS",
+                                control = control)
+
+      params[!is.na(params)] <- optimized[[1]]
+      params
+    }
   }
 
-  pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
-    optimization_wrapper(x, matrices_shared_across_models)
-  }, cl = cl)
+  return(
+    pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+      optimization_wrapper(x, matrices_shared_across_models)
+    }, cl = cl)
+  )
 }
 
 
@@ -243,7 +333,7 @@ optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col,
 #' }
 #'
 compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col,
-                              params, exact_value = FALSE,
+                              params, nested = TRUE, exact_value = FALSE,
                               model_prior = 'uniform', cl = NULL) {
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},
@@ -271,7 +361,8 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
   # parameter for beta (random) distribution of the prior inclusion probability
   b <- (regressors_n - prior_exp_model_size) / prior_exp_model_size
 
-  std_dev_from_params <- function(params, data) {
+  if (nested) {
+    std_dev_from_params <- function(params, data) {
     regressors_subset <-
       regressor_names_from_params_vector(params)
 
@@ -351,9 +442,110 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
     c(likelihood, bic, stdh, stdr)
   }
 
-  pbapply::pbapply(params, MARGIN = 2,  function(x) {
-    std_dev_from_params(x, matrices_shared_across_models)
-  }, cl = cl)
+    return(
+      pbapply::pbapply(params, MARGIN = 2,  function(x) {
+        std_dev_from_params(x, matrices_shared_across_models)
+      }, cl = cl)
+    )
+  } else {
+    # in non-nested version, shared matrices are not meant to be used,
+    # instead generate model-specific matrices
+    std_dev_from_params <- function(params) {
+      regressors_subset <-
+        regressor_names_from_params_vector(params)
+
+      # reduced data-frame: it will not work if regressors_subset empty
+      if (length(regressors_subset) == 0) {
+        df_loc <- df
+      } else {
+        df_loc <- df %>% dplyr::select(
+          {{ timestamp_col }},
+          {{ entity_col }},
+          {{ dep_var_col }},
+          dplyr::all_of(regressors_subset)
+        )
+      }
+
+      data <- df_loc %>%
+        matrices_from_df(
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{ dep_var_col }},
+          lin_related_regressors = regressors_subset,
+          which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+      lin_features_n <- length(regressors_subset) + 1
+      features_n <- ncol(data$Z)
+
+      params_no_na <- params %>% stats::na.omit()
+
+      likelihood <-
+        sem_likelihood(params = params_no_na, data = data,
+                       exact_value = TRUE)
+
+      hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+
+      likelihood_per_entity <-
+        sem_likelihood(params_no_na, data = data, per_entity = TRUE)
+
+      # TODO: how to interpret the Gmat and Imat
+      Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
+                                  per_entity = TRUE)
+      Imat <- crossprod(Gmat)
+
+      # Section 2.3.3 in Moral-Benito
+      # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
+      # "Finally, each model-specific posterior is given by a normal distribution
+      # with mean at the MLE and dispersion matrix equal to the inverse of the
+      # Fisher information."
+      # This is most likely why hessian is used to compute standard errors.
+      # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
+      # all this works
+      stdr <- rep(0, features_n)
+      stdh <- rep(0, features_n)
+
+      . <- NULL
+      linear_params <- t(params) %>% as.data.frame() %>%
+        dplyr::select(tidyselect::matches('alpha'),
+                      tidyselect::matches('beta')) %>%
+        as.matrix() %>% t()
+
+      betas_first_ind <- 4 + periods_n
+      betas_last_ind <- betas_first_ind + lin_features_n - 2
+      inds <- if (betas_first_ind > betas_last_ind) {
+        c(1)
+      } else {
+        c(1, betas_first_ind:betas_last_ind)
+      }
+
+      stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
+      stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
+
+      # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
+      # in Social Research eq. 19. The part with reference model M_1 is skipped,
+      # because we use this formula to compute exp(logl) which is in turn used to
+      # compute posterior probabilities using eqs. 34/35. Since the part connected
+      # with M_1 model would be present in all posteriors it cancels out. Hence
+      # the important part is the one computed below.
+      #
+      # TODO: Why everything is divided by n_entities?
+
+      # Eq. 19
+      loglikelihood <-
+        (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+
+      # Eq. 35
+      bic <- exp(loglikelihood)
+
+      c(likelihood, bic, stdh, stdr)
+    }
+
+    return(
+      pbapply::pbapply(params, MARGIN = 2,  function(x) {
+        std_dev_from_params(x)
+      }, cl = cl)
+    )
+  }
 }
 
 
@@ -416,16 +608,24 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @export
 #
 optim_model_space <-
-  function(df, timestamp_col, entity_col, dep_var_col, init_value,
-           exact_value = FALSE, cl = NULL,
-           control = list(trace = 0, maxit = 10000, fnscale = -1,
-                          REPORT = 100, scale = 0.05)){
+  function(
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    init_value,
+    nested = TRUE,
+    exact_value = FALSE,
+    cl = NULL,
+    control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  ) {
     params <- optim_model_space_params(
       df            = df,
       timestamp_col = {{timestamp_col}},
       entity_col    = {{entity_col}},
       dep_var_col   = {{dep_var_col}},
       init_value    = init_value,
+      nested        = nested,
       exact_value   = exact_value,
       cl            = cl,
       control       = control
@@ -437,6 +637,7 @@ optim_model_space <-
       timestamp_col = {{timestamp_col}},
       entity_col    = {{entity_col}},
       params        = params,
+      nested        = nested,
       cl            = cl
     )
 

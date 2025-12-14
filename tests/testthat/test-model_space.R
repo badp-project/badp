@@ -59,7 +59,8 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
     dep_var_col   = gdp,
     timestamp_col = year,
     entity_col    = country,
-    init_value    = 0.5
+    init_value    = 0.5,
+    nested        = TRUE
   )
 
   compare_matrices(params, small_model_space$params, tols = rep(0.001, 8))
