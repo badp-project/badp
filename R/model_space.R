@@ -106,6 +106,146 @@ regressor_names_from_params_vector <- function(params) {
   names(regressors_subset)
 }
 
+#' Helper-function - finds parameters minimizing log-likelihood function
+#' for the nested version of the SEM setup, using BFGS method
+#'
+#' @param params Vector of the initial parameters
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col Column which determines time periods. For now only
+#' natural numbers can be used as timestamps
+#' @param entity_col Column which determines entities (e.g. countries, people)
+#' @param dep_var_col Column with dependent variable
+#' @param data List of SEM setup matrices shared along the models
+#' @param exact_value Whether the exact value of the likelihood should be
+#' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
+#' \link[bdsm]{sem_likelihood} for details.
+#' @param control a list of control parameters for the optimization which are
+#' passed to \link[stats]{optim}. Default is
+#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#'
+#' @returns List (or matrix) of parameters describing analyzed models.
+#' @export
+#'
+nested_optimization_wrapper <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    data,
+    exact_value,
+    control
+    ) {
+  regressors_subset <- regressor_names_from_params_vector(params)
+
+  model_specific_matrices <- df %>%
+    matrices_from_df(timestamp_col = {{ timestamp_col }},
+                     entity_col = {{ entity_col }},
+                     dep_var_col = {{ dep_var_col }},
+                     lin_related_regressors = regressors_subset,
+                     which_matrices = c("cur_Y2", "cur_Z"))
+
+  data$cur_Z <- model_specific_matrices$cur_Z
+  data$cur_Y2 <- model_specific_matrices$cur_Y2
+
+  params_no_na <- stats::na.omit(params)
+
+  # Adjust the optimization control parameters.
+  control$parscale <- control$scale * params_no_na
+  control$scale <- NULL
+
+  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                            exact_value = exact_value,
+                            method = "BFGS",
+                            control = control)
+
+  params[!is.na(params)] <- optimized[[1]]
+  params
+}
+
+
+#' Helper-function - finds parameters minimizing log-likelihood function
+#' for the non-nested version of the SEM setup, using BFGS method
+#'
+#' @param params Vector of the initial parameters
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col Column which determines time periods. For now only
+#' natural numbers can be used as timestamps
+#' @param entity_col Column which determines entities (e.g. countries, people)
+#' @param dep_var_col Column with dependent variable
+#' @param exact_value Whether the exact value of the likelihood should be
+#' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
+#' \link[bdsm]{sem_likelihood} for details.
+#' @param control a list of control parameters for the optimization which are
+#' passed to \link[stats]{optim}. Default is
+#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#'
+#' @returns List (or matrix) of parameters describing analyzed models.
+#' @export
+#'
+non_nested_optimization_wrapper <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    exact_value,
+    n_all_regressors,
+    n_timestamp,
+    control
+  ) {
+  # derive the set of all matrices needed, based on reduced df
+  regressors_subset <- regressor_names_from_params_vector(params)
+  # reduced data-frame: it will not work if regressors_subset empty
+
+  df_loc <- df %>% dplyr::select(
+    {{ timestamp_col }},
+    {{ entity_col }},
+    {{ dep_var_col }},
+    dplyr::all_of(regressors_subset)
+  )
+
+  data <- df_loc %>%
+    matrices_from_df(
+      timestamp_col = {{ timestamp_col }},
+      entity_col = {{ entity_col }},
+      dep_var_col = {{ dep_var_col }},
+      lin_related_regressors = regressors_subset,
+      which_matrices = c(
+        "Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+  # set last n params to NA, for n - difference model params
+  # for full matrix & model params for current setup
+  curr_n_regressors <- length(regressors_subset)
+  curr_n_phi <- curr_n_regressors * (n_timestamp - 1)
+  curr_n_psi <- curr_n_regressors * (n_timestamp - 1) * n_timestamp / 2
+
+  full_n_phi <- n_all_regressors * (n_timestamp - 1)
+  full_n_psi <- n_all_regressors * (n_timestamp - 1) * n_timestamp / 2
+
+  num_new_na <- (full_n_phi + full_n_psi) - (curr_n_phi + curr_n_psi)
+
+  if (num_new_na != 0) {
+    params[(length(params) - num_new_na + 1):length(params)] <- NA_real_
+  }
+
+
+  params_no_na <- stats::na.omit(params)
+
+  # Adjust the optimization control parameters.
+  control$parscale <- control$scale * params_no_na
+  control$scale <- NULL
+
+  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                            exact_value = exact_value,
+                            method = "BFGS",
+                            control = control)
+
+  params[!is.na(params)] <- optimized[[1]]
+  params
+}
+
+
 
 #' Finds MLE parameters for each model in the given model space
 #'
@@ -156,119 +296,58 @@ optim_model_space_params <- function(
       )
     )
 
-  all_regressors_n = ncol(all_regressors)
-  timestamp_n = df %>%
-    dplyr::distinct({{timestamp_col}}) %>%
-    nrow() - 1
-
-  # nested approach - use model space with shared matrices
-  matrices_shared_across_models <-
-    if(nested) {
-      df %>% matrices_from_df(timestamp_col = {{ timestamp_col }},
-               entity_col = {{ entity_col }},
-               dep_var_col = {{ dep_var_col }},
-               which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
-    } else {
-      NULL # no shared matrices for non-nested version
-    }
-
   init_params <- df %>%
     init_model_space_params(timestamp_col = {{ timestamp_col }},
                             entity_col = {{ entity_col }},
                             dep_var_col = {{ dep_var_col }},
                             init_value = init_value)
 
-  optimization_wrapper <- NULL
-
   if (nested) {
+    matrices_shared_across_models <- df %>%
+      matrices_from_df(timestamp_col = {{ timestamp_col }},
+                       entity_col = {{ entity_col }},
+                       dep_var_col = {{ dep_var_col }},
+                       which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
+
     # optimization performed for nested version
-    optimization_wrapper <- function(params, data) {
-      regressors_subset <- regressor_names_from_params_vector(params)
-
-      model_specific_matrices <- df %>%
-        matrices_from_df(timestamp_col = {{ timestamp_col }},
-                         entity_col = {{ entity_col }},
-                         dep_var_col = {{ dep_var_col }},
-                         lin_related_regressors = regressors_subset,
-                         which_matrices = c("cur_Y2", "cur_Z"))
-
-      data$cur_Z <- model_specific_matrices$cur_Z
-      data$cur_Y2 <- model_specific_matrices$cur_Y2
-
-      params_no_na <- stats::na.omit(params)
-
-      # Adjust the optimization control parameters.
-      control$parscale <- control$scale * params_no_na
-      control$scale <- NULL
-
-      optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                                exact_value = exact_value,
-                                method = "BFGS",
-                                control = control)
-
-      params[!is.na(params)] <- optimized[[1]]
-      params
-    }
-  } else {
-    # optimization performed for non-nested version
-    optimization_wrapper <- function(params, data) {
-      # derive the set of all matrices needed, based on reduced df
-      regressors_subset <- regressor_names_from_params_vector(params)
-      # reduced data-frame: it will not work if regressors_subset empty
-
-      df_loc <- df %>% dplyr::select(
-        {{ timestamp_col }},
-        {{ entity_col }},
-        {{ dep_var_col }},
-        dplyr::all_of(regressors_subset)
-      )
-
-      data <- df_loc %>%
-        matrices_from_df(
+    return(
+      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+        nested_optimization_wrapper(
+          x,
+          df = df,
           timestamp_col = {{ timestamp_col }},
           entity_col = {{ entity_col }},
           dep_var_col = {{ dep_var_col }},
-          lin_related_regressors = regressors_subset,
-          which_matrices = c(
-            "Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
-
-      # set last n params to NA, for n - difference model params
-      # for full matrix & model params for current setup
-      curr_n_regressors <- length(regressors_subset)
-      curr_n_phi <- curr_n_regressors * (timestamp_n - 1)
-      curr_n_psi <- curr_n_regressors * (timestamp_n - 1) * timestamp_n / 2
-
-      full_n_phi <- all_regressors_n * (timestamp_n - 1)
-      full_n_psi <- all_regressors_n * (timestamp_n - 1) * timestamp_n / 2
-
-      num_new_na <- (full_n_phi + full_n_psi) - (curr_n_phi + curr_n_psi)
-
-      if (num_new_na != 0) {
-        params[(length(params) - num_new_na + 1):length(params)] <- NA_real_
-      }
+          data = matrices_shared_across_models,
+          exact_value = exact_value,
+          control = control
+          )
+      }, cl = cl)
+    )
+  } else {
+    # optimization performed for non-nested version
+    n_all_regressors = ncol(all_regressors)
+    n_timestamp = df %>%
+      dplyr::distinct({{timestamp_col}}) %>%
+      nrow() - 1
 
 
-      params_no_na <- stats::na.omit(params)
-
-      # Adjust the optimization control parameters.
-      control$parscale <- control$scale * params_no_na
-      control$scale <- NULL
-
-      optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                                exact_value = exact_value,
-                                method = "BFGS",
-                                control = control)
-
-      params[!is.na(params)] <- optimized[[1]]
-      params
-    }
+    return(
+      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+        non_nested_optimization_wrapper(
+          x,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{ dep_var_col }},
+          exact_value = exact_value,
+          n_all_regressors = n_all_regressors,
+          n_timestamp = n_timestamp,
+          control = control
+          )
+      }, cl = cl)
+    )
   }
-
-  return(
-    pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
-      optimization_wrapper(x, matrices_shared_across_models)
-    }, cl = cl)
-  )
 }
 
 
