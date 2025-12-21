@@ -350,6 +350,236 @@ optim_model_space_params <- function(
   }
 }
 
+#' Helper function - wraps single execution of the log-likelihood & deviation
+#' parameters calculations. Used for non nested version of SEM likelihood.
+#'
+#' @param params A matrix (with named rows) with each column corresponding
+#' to a model. Each row specifies model parameters. Compare with
+#' \link[bdsm]{optim_model_space_params}
+#' @param data List of the SEM setup matrices, shared along different models
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col The name of the column with timestamps
+#' @param entity_col Column with entities (e.g. countries)
+#' @param dep_var_col Column with the dependent variable
+#' @param n_entities Number of entities - passed to save calc. time
+#' @param periods_n Number of periods - passed to save calc. time
+#'
+#' @returns
+#' #' Matrix with columns describing likelihood and standard deviations for each
+#' model. The first row is the likelihood for the model (computed using the
+#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
+#' in the code below). The third row is model posterior probability. Then there
+#' are rows with standard deviations for each parameter. After that we have rows
+#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' @export
+#'
+nested_std_dev_from_params <- function(
+    params,
+    data,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    n_entities,
+    periods_n
+    ) {
+  regressors_subset <-
+    regressor_names_from_params_vector(params)
+
+  lin_features_n <- length(regressors_subset) + 1
+  features_n <- ncol(data$Z)
+
+  model_specific_matrices <- df %>%
+    matrices_from_df(timestamp_col = {{ timestamp_col }},
+                     entity_col = {{ entity_col }},
+                     dep_var_col = {{ dep_var_col }},
+                     lin_related_regressors = regressors_subset,
+                     which_matrices = c("cur_Y2", "cur_Z"))
+
+  data$cur_Z <- model_specific_matrices$cur_Z
+  data$cur_Y2 <- model_specific_matrices$cur_Y2
+
+  params_no_na <- params %>% stats::na.omit()
+
+  likelihood <-
+    sem_likelihood(params = params_no_na, data = data,
+                   exact_value = TRUE)
+
+  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+
+  likelihood_per_entity <-
+    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
+
+  # TODO: how to interpret the Gmat and Imat
+  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
+                              per_entity = TRUE)
+  Imat <- crossprod(Gmat)
+
+  # Section 2.3.3 in Moral-Benito
+  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
+  # "Finally, each model-specific posterior is given by a normal distribution
+  # with mean at the MLE and dispersion matrix equal to the inverse of the
+  # Fisher information."
+  # This is most likely why hessian is used to compute standard errors.
+  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
+  # all this works
+  stdr <- rep(0, features_n)
+  stdh <- rep(0, features_n)
+
+  . <- NULL
+  linear_params <- t(params) %>% as.data.frame() %>%
+    dplyr::select(tidyselect::matches('alpha'),
+                  tidyselect::matches('beta')) %>%
+    as.matrix() %>% t()
+
+  betas_first_ind <- 4 + periods_n
+  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  inds <- if (betas_first_ind > betas_last_ind) {
+    c(1)
+  } else {
+    c(1, betas_first_ind:betas_last_ind)
+  }
+
+  stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
+  stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
+
+  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
+  # in Social Research eq. 19. The part with reference model M_1 is skipped,
+  # because we use this formula to compute exp(logl) which is in turn used to
+  # compute posterior probabilities using eqs. 34/35. Since the part connected
+  # with M_1 model would be present in all posteriors it cancels out. Hence
+  # the important part is the one computed below.
+  #
+  # TODO: Why everything is divided by n_entities?
+
+  # Eq. 19
+  loglikelihood <-
+    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+
+  # Eq. 35
+  bic <- exp(loglikelihood)
+
+  c(likelihood, bic, stdh, stdr)
+}
+
+
+#' Helper function - wraps single execution of the log-likelihood & deviation
+#' parameters calculations. Used for non nested version of SEM likelihood.
+#'
+#' @param params A matrix (with named rows) with each column corresponding
+#' to a model. Each row specifies model parameters. Compare with
+#' \link[bdsm]{optim_model_space_params}
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col The name of the column with timestamps
+#' @param entity_col Column with entities (e.g. countries)
+#' @param dep_var_col Column with the dependent variable
+#' @param n_entities Number of entities - passed to save calc. time
+#' @param periods_n Number of periods - passed to save calc. time
+#'
+#' @returns
+#' #' Matrix with columns describing likelihood and standard deviations for each
+#' model. The first row is the likelihood for the model (computed using the
+#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
+#' in the code below). The third row is model posterior probability. Then there
+#' are rows with standard deviations for each parameter. After that we have rows
+#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' @export
+#'
+non_nested_std_dev_from_params <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    n_entities,
+    periods_n) {
+
+  regressors_subset <-
+    regressor_names_from_params_vector(params)
+
+  df_loc <- df %>% dplyr::select(
+    {{ timestamp_col }},
+    {{ entity_col }},
+    {{ dep_var_col }},
+    dplyr::all_of(regressors_subset)
+  )
+
+  data <- df_loc %>%
+    matrices_from_df(
+      timestamp_col = {{ timestamp_col }},
+      entity_col = {{ entity_col }},
+      dep_var_col = {{ dep_var_col }},
+      lin_related_regressors = regressors_subset,
+      which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+  lin_features_n <- length(regressors_subset) + 1
+  features_n <- ncol(data$Z)
+
+  params_no_na <- params %>% stats::na.omit()
+  likelihood <-
+    sem_likelihood(params = params_no_na, data = data,
+                   exact_value = TRUE)
+
+  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+
+  likelihood_per_entity <-
+    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
+
+  # TODO: how to interpret the Gmat and Imat
+  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
+                              per_entity = TRUE)
+  Imat <- crossprod(Gmat)
+
+  # Section 2.3.3 in Moral-Benito
+  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
+  # "Finally, each model-specific posterior is given by a normal distribution
+  # with mean at the MLE and dispersion matrix equal to the inverse of the
+  # Fisher information."
+  # This is most likely why hessian is used to compute standard errors.
+  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
+  # all this works
+  stdr <- rep(0, features_n)
+  stdh <- rep(0, features_n)
+
+  . <- NULL
+  linear_params <- t(params) %>% as.data.frame() %>%
+    dplyr::select(tidyselect::matches('alpha'),
+                  tidyselect::matches('beta')) %>%
+    as.matrix() %>% t()
+
+  betas_first_ind <- 4 + periods_n
+  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  inds <- if (betas_first_ind > betas_last_ind) {
+    c(1)
+  } else {
+    c(1, betas_first_ind:betas_last_ind)
+  }
+
+  stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
+  stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
+
+  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
+  # in Social Research eq. 19. The part with reference model M_1 is skipped,
+  # because we use this formula to compute exp(logl) which is in turn used to
+  # compute posterior probabilities using eqs. 34/35. Since the part connected
+  # with M_1 model would be present in all posteriors it cancels out. Hence
+  # the important part is the one computed below.
+  #
+  # TODO: Why everything is divided by n_entities?
+
+  # Eq. 19
+  loglikelihood <-
+    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+
+  # Eq. 35
+  bic <- exp(loglikelihood)
+
+  c(likelihood, bic, stdh, stdr)
+
+}
+
 
 #' Approximate standard deviations for the models
 #'
@@ -436,181 +666,32 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
   b <- (regressors_n - prior_exp_model_size) / prior_exp_model_size
 
   if (nested) {
-    std_dev_from_params <- function(params, data) {
-      regressors_subset <-
-        regressor_names_from_params_vector(params)
-
-      lin_features_n <- length(regressors_subset) + 1
-      features_n <- ncol(data$Z)
-
-      model_specific_matrices <- df %>%
-        matrices_from_df(timestamp_col = {{ timestamp_col }},
-                         entity_col = {{ entity_col }},
-                         dep_var_col = {{ dep_var_col }},
-                         lin_related_regressors = regressors_subset,
-                         which_matrices = c("cur_Y2", "cur_Z"))
-
-      data$cur_Z <- model_specific_matrices$cur_Z
-      data$cur_Y2 <- model_specific_matrices$cur_Y2
-
-      params_no_na <- params %>% stats::na.omit()
-
-      likelihood <-
-        sem_likelihood(params = params_no_na, data = data,
-                       exact_value = TRUE)
-
-      hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
-
-      likelihood_per_entity <-
-        sem_likelihood(params_no_na, data = data, per_entity = TRUE)
-
-      # TODO: how to interpret the Gmat and Imat
-      Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
-                                  per_entity = TRUE)
-      Imat <- crossprod(Gmat)
-
-      # Section 2.3.3 in Moral-Benito
-      # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
-      # "Finally, each model-specific posterior is given by a normal distribution
-      # with mean at the MLE and dispersion matrix equal to the inverse of the
-      # Fisher information."
-      # This is most likely why hessian is used to compute standard errors.
-      # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
-      # all this works
-      stdr <- rep(0, features_n)
-      stdh <- rep(0, features_n)
-
-      . <- NULL
-      linear_params <- t(params) %>% as.data.frame() %>%
-        dplyr::select(tidyselect::matches('alpha'),
-                      tidyselect::matches('beta')) %>%
-        as.matrix() %>% t()
-
-      betas_first_ind <- 4 + periods_n
-      betas_last_ind <- betas_first_ind + lin_features_n - 2
-      inds <- if (betas_first_ind > betas_last_ind) {
-        c(1)
-      } else {
-        c(1, betas_first_ind:betas_last_ind)
-      }
-
-      stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
-      stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
-
-      # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
-      # in Social Research eq. 19. The part with reference model M_1 is skipped,
-      # because we use this formula to compute exp(logl) which is in turn used to
-      # compute posterior probabilities using eqs. 34/35. Since the part connected
-      # with M_1 model would be present in all posteriors it cancels out. Hence
-      # the important part is the one computed below.
-      #
-      # TODO: Why everything is divided by n_entities?
-
-      # Eq. 19
-      loglikelihood <-
-        (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
-
-      # Eq. 35
-      bic <- exp(loglikelihood)
-
-      c(likelihood, bic, stdh, stdr)
-    }
-
     return(
       pbapply::pbapply(params, MARGIN = 2,  function(x) {
-        std_dev_from_params(x, matrices_shared_across_models)
+        nested_std_dev_from_params(
+          x,
+          data = matrices_shared_across_models,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{  dep_var_col}},
+          n_entities = n_entities,
+          periods_n = periods_n
+          )
       }, cl = cl)
     )
   } else {
-    # in non-nested version, shared matrices are not meant to be used,
-    # instead generate model-specific matrices
-    std_dev_from_params <- function(params) {
-      regressors_subset <-
-        regressor_names_from_params_vector(params)
-
-      df_loc <- df %>% dplyr::select(
-        {{ timestamp_col }},
-        {{ entity_col }},
-        {{ dep_var_col }},
-        dplyr::all_of(regressors_subset)
-      )
-
-      data <- df_loc %>%
-        matrices_from_df(
-          timestamp_col = {{ timestamp_col }},
-          entity_col = {{ entity_col }},
-          dep_var_col = {{ dep_var_col }},
-          lin_related_regressors = regressors_subset,
-          which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
-
-      lin_features_n <- length(regressors_subset) + 1
-      features_n <- ncol(data$Z)
-
-      params_no_na <- params %>% stats::na.omit()
-      likelihood <-
-        sem_likelihood(params = params_no_na, data = data,
-                       exact_value = TRUE)
-
-      hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
-
-      likelihood_per_entity <-
-        sem_likelihood(params_no_na, data = data, per_entity = TRUE)
-
-      # TODO: how to interpret the Gmat and Imat
-      Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
-                                  per_entity = TRUE)
-      Imat <- crossprod(Gmat)
-
-      # Section 2.3.3 in Moral-Benito
-      # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
-      # "Finally, each model-specific posterior is given by a normal distribution
-      # with mean at the MLE and dispersion matrix equal to the inverse of the
-      # Fisher information."
-      # This is most likely why hessian is used to compute standard errors.
-      # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
-      # all this works
-      stdr <- rep(0, features_n)
-      stdh <- rep(0, features_n)
-
-      . <- NULL
-      linear_params <- t(params) %>% as.data.frame() %>%
-        dplyr::select(tidyselect::matches('alpha'),
-                      tidyselect::matches('beta')) %>%
-        as.matrix() %>% t()
-
-      betas_first_ind <- 4 + periods_n
-      betas_last_ind <- betas_first_ind + lin_features_n - 2
-      inds <- if (betas_first_ind > betas_last_ind) {
-        c(1)
-      } else {
-        c(1, betas_first_ind:betas_last_ind)
-      }
-
-      stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
-      stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
-
-      # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
-      # in Social Research eq. 19. The part with reference model M_1 is skipped,
-      # because we use this formula to compute exp(logl) which is in turn used to
-      # compute posterior probabilities using eqs. 34/35. Since the part connected
-      # with M_1 model would be present in all posteriors it cancels out. Hence
-      # the important part is the one computed below.
-      #
-      # TODO: Why everything is divided by n_entities?
-
-      # Eq. 19
-      loglikelihood <-
-        (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
-
-      # Eq. 35
-      bic <- exp(loglikelihood)
-
-      c(likelihood, bic, stdh, stdr)
-    }
-
     return(
       pbapply::pbapply(params, MARGIN = 2,  function(x) {
-        std_dev_from_params(x)
+        non_nested_std_dev_from_params(
+          x,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{  dep_var_col}},
+          n_entities = n_entities,
+          periods_n = periods_n
+          )
       }, cl = cl)
     )
   }
