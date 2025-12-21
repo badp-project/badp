@@ -145,7 +145,7 @@ test_that(paste("model_space computes correct model_space list"), {
     init_value    = 0.5
   )
 
-  expect_equal(length(model_space), 5)
+  expect_equal(length(model_space), 6)
   expect_equal(class(model_space), "list")
   expect_equal(class(model_space[[1]]), c("matrix","array"))
   expect_equal(class(model_space[[2]]), c("matrix","array"))
