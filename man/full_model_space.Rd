@@ -3,35 +3,30 @@
 \docType{data}
 \name{full_model_space}
 \alias{full_model_space}
-\title{Example output of the optim_model_space function}
+\title{Example output of \code{\link{optim_model_space}}}
 \format{
-\subsection{\code{full_model_space}}{
-
-A list with two elements.
+A list with 5 elements:
 \describe{
 \item{params}{
-A double matrix with 40 rows and \code{2^9 = 512} columns with the
-parameters for the model space.
-Each column represents a different model.
+A numeric matrix with 40 rows and 512 columns, containing parameter
+values for the full model space. Each column represents a different model.
 }
 \item{stats}{
-A matrix representing the statistics computed with
-\code{compute_model_space_stats} based on \code{params}.
-The first row contains likelihoods for the models.
-The second row are almost 1/2 * BIC_k
-as in Raftery's Bayesian Model Selection in Social Research, eq. 19.
-The rows 3-7 are standard deviations.
-Finally, the rows 8-12 are robust standard deviations.
+A numeric matrix of statistics computed by
+\code{\link{compute_model_space_stats}} based on \code{params}.
+Row 1 contains model likelihoods. Row 2 contains a quantity proportional
+to \code{0.5 * BIC} (cf. Raftery, Bayesian Model Selection in Social Research,
+Eq. 19). Rows 3--7 contain standard deviations, and rows 8--12 contain
+robust standard deviations.
 }
 \item{reg_names}{
-A vector with the names of the variables.
+A character vector with the names of the variables.
 }
 \item{observations_num}{
-A total number of observations in the panel (292).
+The total number of observations in the panel (292).
 }
 \item{df}{
-Data frame used in the analysis.
-}
+The data frame used in the analysis.
 }
 }
 }
@@ -39,7 +34,7 @@ Data frame used in the analysis.
 full_model_space
 }
 \description{
-A list with two elements: \code{params} and \code{stats} computed using the
-\code{optim_model_space} function and the \code{economic_growth} dataset.
+A list created with \code{\link{optim_model_space}} using the
+\code{\link{economic_growth}} dataset.
 }
 \keyword{datasets}
