@@ -33,6 +33,16 @@ natural numbers can be used as timestamps}
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 \link[bdsm]{sem_likelihood} for details.}
 
+\item{n_all_regressors}{Integer. Total number of potential regressors in the
+full (maximal) model space. Used to compute the full parameter dimension
+(for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
+regressors can be padded with \code{NA} in the non-nested setup.}
+
+\item{n_timestamp}{Integer. Number of time periods in the panel (i.e. the
+number of distinct values in \code{timestamp_col}). Used to determine the
+required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
+and for the full model.}
+
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
 \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
