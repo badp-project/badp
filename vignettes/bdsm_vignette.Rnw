@@ -16,14 +16,15 @@
 
 \DeclareMathAlphabet{\mathbbold}{U}{bbold}{m}{n}
 
-\title{\texttt{bdsm}: Bayesian dynamic systems modelling. \\
-Bayesian model averaging for dynamic panels \\
+\title{\texttt{badp}: Bayesian model averaging for dynamic panels \\
 with weakly exogenous regressors$^{1}$}
 
 \author{%
-  Mateusz Wyszyński$^{2, 3}$\and
   Krzysztof Beck$^{2}$ \and
-  Marcin Dubel$^{2}$
+  Piotr Cukier$^{2}$ \and
+  Marcin Dubel$^{2}$ \and
+  Mariusz Szczepańczyk$^{2}$ \and
+  Mateusz Wyszyński$^{3}$
 }
 
 \date{}
@@ -42,9 +43,9 @@ knitr::opts_chunk$set(
 
 \footnotetext[1]{This article was prepared within the research project “Bayesian simultaneous equations model averaging - theoretical development and R package,” funded by the Polish National Science Centre, on the basis of the decision No. DEC-2021/43/B/HS4/01745, $^{2}$Lazarski University, $^{3}$University of Warsaw}
 %\setpapersize{A4}
-% \VignetteIndexEntry{bdsm: Bayesian dynamic systems modelling}
+% \VignetteIndexEntry{badp: Bayesian dynamic systems modelling}
 \maketitle
-\abstract{This manuscript introduces the \verb+bdsm+ package,
+\abstract{This manuscript introduces the \verb+badp+ package,
 which enables Bayesian model averaging
 for dynamic panels with weakly exogenous regressors
 — a methodology developed by \citet{Moral+2016}.
@@ -89,14 +90,14 @@ Consequently, a new line of research relaxed the assumption of exogenous regress
 However, these methods have not found their way into mainstream research.
 The code to implement them is only available upon request from the authors and is provided exclusively for \verb+MATLAB+ and \verb+GAUSS+.
 
-The \verb+bdsm+ package was developed to address this gap.
+The \verb+badp+ package was developed to address this gap.
 It offers tools for performing Bayesian model averaging on dynamic panels with weakly exogenous regressors.
 As a result, it enables researchers to address both model uncertainty and reverse causality.
 The core of the code is based on the methodological approach developed by \citet{Moral+2012,Moral+2013,Moral+2016}.
 While the main aspects of the method are described in the manuscript, interested readers should refer to the original articles for further details.
-In addition to the key features developed by \citet{Moral+2016}, the \verb+bdsm+ package offers a wide range of additional functionalities.
+In addition to the key features developed by \citet{Moral+2016}, the \verb+badp+ package offers a wide range of additional functionalities.
 The package enables users to employ flexible model prior options, along with a dilution prior, which helps account for multicollinearity.
-The \verb+bdsm+ package provides users with graphical options for plotting prior and posterior model probabilities across model sizes and the model space.
+The \verb+badp+ package provides users with graphical options for plotting prior and posterior model probabilities across model sizes and the model space.
 Additionally, users can utilize Bayesian model selection to thoroughly examine the best models based on posterior model probability.
 The package calculates jointness measures developed by \citet{Doppelhofer+2009,Ley+2007,Hofmarcher+2018}.
 Finally, it offers users the option to plot histograms or kernel densities of the estimated coefficients for the examined regressors.
@@ -104,7 +105,7 @@ Finally, it offers users the option to plot histograms or kernel densities of th
 The remainder of the manuscript is structured as follows.
 Section \ref{ms_bma} describes the dynamic panel setup considered by \citet{Moral+2013} and outlines the Bayesian model averaging approach used in the package.
 Data preparation is detailed in Section \ref{data}, while Section \ref{model_space} addresses the estimation of the model space.
-Section \ref{using_bma} provides an overview of the \verb+bdsm+ functions related to performing Bayesian model averaging, calculating jointness measures, and presenting the estimation results.
+Section \ref{using_bma} provides an overview of the \verb+badp+ functions related to performing Bayesian model averaging, calculating jointness measures, and presenting the estimation results.
 The details of the model prior choices are described in Section \ref{priors}.
 Finally, Section \ref{sum} offers some concluding remarks.
 
@@ -113,7 +114,7 @@ Finally, Section \ref{sum} offers some concluding remarks.
 \section{Model setup and Bayesian model averaging}\label{ms_bma}
 This section outlines the model setup, describes the approach to Bayesian model averaging implemented in the package, summarizes the main BMA statistics, and discusses model priors and jointness measures.
 
-\subsection{Model setup}
+\subsection{Model setup}\label{model_setup}
 \noindent \citet{Moral+2016} considers the following model specification:
 \begin{equation}\label{eq1}
     y_{it}=\alpha y_{it-1}+\beta x_{it}+\eta_{i}+\zeta_{t}+v_{it}
@@ -219,6 +220,32 @@ Then the formula for the likelihood function can be simplified to:
             \end{bmatrix}.
 \end{equation}
 \noindent and $H = (R_2 + U_1 F_{12})' Q (R_2 + U_1 F_{12})$ with $R_2$ being a matrix of regressor vectors $[x'_{i2}, x'_{i3}, ..., x'_{iT}]$ and $F_{12} = - \Sigma_{11}^{-1} \Sigma_{12}$.
+
+\indent As shown in \cite{Moral+2013}, the calculation of the likelihood function requires only the knowledge of $\Sigma_{11}$ and $\Sigma_{12}$.   $\Sigma_{11}=\sigma^{2}_{\epsilon}\iota\iota'+diag\{\sigma^{2}_{\upsilon 1},\dots,\sigma^{2}_{\upsilon T}\}$ is a classical error-component, where $\iota$ denotes $T\times1$ vector of ones. Finally, the $T\times (T-1)k$ matrix capturing the feedback process is given by:
+\begin{equation}
+ \Sigma_{12}=\begin{bmatrix}
+            \phi'_{2}+\psi'_{21}&\phi'_{3}+\psi'_{31}&\dots&\phi'_{T}+\psi'_{T1}\\
+            \phi'_{2}&\phi'_{3}+\psi'_{32}&\dots&\phi'_{T}+\psi'_{T2}\\
+            \phi'_{2}&\phi'_{3}&\dots&\phi'_{T}+\psi'_{T3}\\
+            \vdots&\vdots&\ddots&\vdots\\
+            \phi'_{2}&\phi'_{3}&\dots&\phi'_{T}+\psi'_{T,T-1}\\
+            \phi'_{2}&\phi'_{3}&\dots&\phi'_{T}\\
+            \end{bmatrix}
+\end{equation}
+where:
+\begin{equation}
+    cov(\epsilon_{t},\xi_{it})=\phi_{t}
+\end{equation}
+\begin{equation}
+    cov(v_{ih},\xi_{it})=\begin{cases}
+      \text{$\psi_{ht}$ if $h<t$}\\
+      \text{\textbf{0} otherwise}\\
+    \end{cases}
+\end{equation}
+and $\phi_{t}$, $\psi_{th}$, and \textbf{0} are $k\times1$ vectors.\\
+\indent Within the BMA approach developed by \cite{Moral+2016}, the matrix $\Sigma_{12}$ is computed for each model using all considered regressors. This framework treats each estimated model as nested within the model that includes all covariates. Consequently, the matrix $R$ contains regressors that are excluded from the model being estimated.
+
+\indent However, the package also allows the user to employ a non-nested approach, i.e., an approach that utilizes the $\Sigma_{12}$ matrix and the matrix $R$ constructed only from the regressors included in the model being estimated. This approach has two advantages. First, the optimization problem is simpler and therefore less error-prone, as the number of parameters to be estimated is smaller. In addition, it substantially improves the speed of maximum likelihood estimation. Second, this approach may be more appropriate in cases where some regressors are unrelated to others, as using the complete set of regressors may lead to overspecification. The implementation of the non-nested approach is described in Section~\ref{model_space}.
 
 \subsection{Bayesian model averaging}\label{bma}
 \noindent Given the likelihood function in (\ref{eq17}), henceforth denoted as $L(\text{data}|\theta_{i}, M_{i})$ for a specific model $i$, it is possible to utilize Bayesian model averaging\footnote{For an introduction to BMA see \citet{Raftery+1995,Raftery+1997,Kass+1995b,Doppelhofer+2009,amini2011bayesian,Beck+2017,Fragoso+2018}.} (BMA).
@@ -506,7 +533,7 @@ as explained in \autoref{ms_bma}.
 We refer to the object that consolidates both the parameters and the statistics
 as the \textbf{model space}.
 The core function of the package, \verb+optim_model_space+,
-is used to estimate the optimal model space using numerical optimization:
+is used to estimate the model space using numerical optimization:
 
 <<eval=FALSE>>=
 full_model_space <- optim_model_space(
@@ -522,12 +549,27 @@ full_model_space <- optim_model_space(
 which are explained in the subsections below.
 A progress bar is displayed to easily track the ongoing computation.
 
-Since the MLEs for the parameters are found through numerical optimization,
+\indent Since the MLEs for the parameters are found through numerical optimization,
 more advanced users can use the \verb+control+ parameter
 to control the way the optimization is performed.
 We refer to the function manual for more details
 and \verb+stats+ package for more details.
 
+\indent As an alternative to the approach developed by \cite{Moral+2016}, the user may estimate the model space using the non-nested approach described at the end of Subsection~\ref{model_setup}. To do so, the user needs to set the parameter \verb+nested+ to \verb+FALSE+.
+
+
+<<eval=FALSE>>=
+model_space_nonnested <- optim_model_space(
+  df            = data_prepared,
+  dep_var_col   = gdp,
+  timestamp_col = year,
+  entity_col    = country,
+  init_value    = 0.5,
+  nested = FALSE
+)
+@
+
+\noindent In the remainder of the manuscript, we use the results obtained under the nested approach. However, all functionalities in the package operate in the same way under the non-nested approach.
 
 \subsection{Model space parameters}
 
@@ -689,7 +731,7 @@ model_space <- optim_model_space(
 \subsection{Precomputed model spaces}
 
 Even with parallelization, \verb+optim_model_space+ call may be time-consuming.
-Hence, for users who want to quickly start practicing using the \verb+bdsm+,
+Hence, for users who want to quickly start practicing using the \verb+badp+,
 we provide already computed model space objects included with the package:
 
 \begin{itemize}
@@ -1112,7 +1154,7 @@ Hence, we see that \citet{Moral+2016}’s claim about the fragility of growth re
 
 \section{Concluding remarks}\label{sum}
 
-This manuscript introduces the \verb+bdsm+ package, which enables Bayesian model averaging for dynamic panels with weakly exogenous regressors — a methodology developed by \citet{Moral+2012,Moral+2013,Moral+2016}.
+This manuscript introduces the \verb+badp+ package, which enables Bayesian model averaging for dynamic panels with weakly exogenous regressors — a methodology developed by \citet{Moral+2012,Moral+2013,Moral+2016}.
 This package allows researchers to simultaneously address model uncertainty and reverse causality and is the only \verb+R+ package offering these capabilities.
 It provides flexible options for specifying model priors, including dilution prior that accounts for multicollinearity.
 The package also includes graphical tools for visualizing prior and posterior model probabilities across model space and model sizes, as well as functions for plotting histograms and kernel densities of the estimated coefficients.
