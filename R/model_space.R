@@ -305,7 +305,7 @@ optim_model_space_params <- function(
       -c(
         {{timestamp_col}},
         {{entity_col}},
-        {{dep_var_col}},
+        {{dep_var_col}}
       )
     )
 
