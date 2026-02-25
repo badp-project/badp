@@ -10,6 +10,7 @@ compute_model_space_stats(
   timestamp_col,
   entity_col,
   params,
+  nested = TRUE,
   exact_value = FALSE,
   model_prior = "uniform",
   cl = NULL
@@ -27,6 +28,12 @@ compute_model_space_stats(
 \item{params}{A matrix (with named rows) with each column corresponding
 to a model. Each column specifies model parameters. Compare with
 \link[bdsm]{optim_model_space_params}}
+
+\item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
+deviations using the nested-model approach via
+\code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+approximation routine is used for each model in \code{params}.}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check

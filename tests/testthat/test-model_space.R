@@ -59,7 +59,8 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
     dep_var_col   = gdp,
     timestamp_col = year,
     entity_col    = country,
-    init_value    = 0.5
+    init_value    = 0.5,
+    nested        = TRUE
   )
 
   compare_matrices(params, small_model_space$params, tols = rep(0.001, 8))
@@ -144,7 +145,7 @@ test_that(paste("model_space computes correct model_space list"), {
     init_value    = 0.5
   )
 
-  expect_equal(length(model_space), 5)
+  expect_equal(length(model_space), 6)
   expect_equal(class(model_space), "list")
   expect_equal(class(model_space[[1]]), c("matrix","array"))
   expect_equal(class(model_space[[2]]), c("matrix","array"))

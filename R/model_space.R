@@ -106,6 +106,154 @@ regressor_names_from_params_vector <- function(params) {
   names(regressors_subset)
 }
 
+#' Helper-function - finds parameters minimizing log-likelihood function
+#' for the nested version of the SEM setup, using BFGS method
+#'
+#' @param params Vector of the initial parameters
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col Column which determines time periods. For now only
+#' natural numbers can be used as timestamps
+#' @param entity_col Column which determines entities (e.g. countries, people)
+#' @param dep_var_col Column with dependent variable
+#' @param data List of SEM setup matrices shared along the models
+#' @param exact_value Whether the exact value of the likelihood should be
+#' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
+#' \link[bdsm]{sem_likelihood} for details.
+#' @param control a list of control parameters for the optimization which are
+#' passed to \link[stats]{optim}. Default is
+#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#'
+#' @returns List (or matrix) of parameters describing analyzed models.
+#' @export
+#'
+nested_optimization_wrapper <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    data,
+    exact_value,
+    control
+    ) {
+  regressors_subset <- regressor_names_from_params_vector(params)
+
+  model_specific_matrices <- df %>%
+    matrices_from_df(timestamp_col = {{ timestamp_col }},
+                     entity_col = {{ entity_col }},
+                     dep_var_col = {{ dep_var_col }},
+                     lin_related_regressors = regressors_subset,
+                     which_matrices = c("cur_Y2", "cur_Z"))
+
+  data$cur_Z <- model_specific_matrices$cur_Z
+  data$cur_Y2 <- model_specific_matrices$cur_Y2
+
+  params_no_na <- stats::na.omit(params)
+
+  # Adjust the optimization control parameters.
+  control$parscale <- control$scale * params_no_na
+  control$scale <- NULL
+
+  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                            exact_value = exact_value,
+                            method = "BFGS",
+                            control = control)
+
+  params[!is.na(params)] <- optimized[[1]]
+  params
+}
+
+
+#' Helper-function - finds parameters minimizing log-likelihood function
+#' for the non-nested version of the SEM setup, using BFGS method
+#'
+#' @param params Vector of the initial parameters
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col Column which determines time periods. For now only
+#' natural numbers can be used as timestamps
+#' @param entity_col Column which determines entities (e.g. countries, people)
+#' @param dep_var_col Column with dependent variable
+#' @param exact_value Whether the exact value of the likelihood should be
+#' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
+#' \link[bdsm]{sem_likelihood} for details.
+#' @param control a list of control parameters for the optimization which are
+#' passed to \link[stats]{optim}. Default is
+#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' @param n_all_regressors Integer. Total number of potential regressors in the
+#' full (maximal) model space. Used to compute the full parameter dimension
+#' (for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
+#' regressors can be padded with \code{NA} in the non-nested setup.
+#' @param n_timestamp Integer. Number of time periods in the panel (i.e. the
+#' number of distinct values in \code{timestamp_col}). Used to determine the
+#' required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
+#' and for the full model.
+#'
+#' @returns List (or matrix) of parameters describing analyzed models.
+#' @export
+#'
+non_nested_optimization_wrapper <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    exact_value,
+    n_all_regressors,
+    n_timestamp,
+    control
+  ) {
+  # derive the set of all matrices needed, based on reduced df
+  regressors_subset <- regressor_names_from_params_vector(params)
+  # reduced data-frame: it will not work if regressors_subset empty
+
+  df_loc <- df %>% dplyr::select(
+    {{ timestamp_col }},
+    {{ entity_col }},
+    {{ dep_var_col }},
+    dplyr::all_of(regressors_subset)
+  )
+
+  data <- df_loc %>%
+    matrices_from_df(
+      timestamp_col = {{ timestamp_col }},
+      entity_col = {{ entity_col }},
+      dep_var_col = {{ dep_var_col }},
+      lin_related_regressors = regressors_subset,
+      which_matrices = c(
+        "Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+  # set last n params to NA, for n - difference model params
+  # for full matrix & model params for current setup
+  curr_n_regressors <- length(regressors_subset)
+  curr_n_phi <- curr_n_regressors * (n_timestamp - 1)
+  curr_n_psi <- curr_n_regressors * (n_timestamp - 1) * n_timestamp / 2
+
+  full_n_phi <- n_all_regressors * (n_timestamp - 1)
+  full_n_psi <- n_all_regressors * (n_timestamp - 1) * n_timestamp / 2
+
+  num_new_na <- (full_n_phi + full_n_psi) - (curr_n_phi + curr_n_psi)
+
+  if (num_new_na != 0) {
+    params[(length(params) - num_new_na + 1):length(params)] <- NA_real_
+  }
+
+
+  params_no_na <- stats::na.omit(params)
+
+  # Adjust the optimization control parameters.
+  control$parscale <- control$scale * params_no_na
+  control$scale <- NULL
+
+  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
+                            exact_value = exact_value,
+                            method = "BFGS",
+                            control = control)
+
+  params[!is.na(params)] <- optimized[[1]]
+  params
+}
+
+
 
 #' Finds MLE parameters for each model in the given model space
 #'
@@ -129,6 +277,11 @@ regressor_names_from_params_vector <- function(params) {
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
+#' deviations using the nested-model approach via
+#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+#' approximation routine is used for each model in \code{params}.
 #'
 #' @return
 #' List (or matrix) of parameters describing analyzed models.
@@ -136,16 +289,25 @@ regressor_names_from_params_vector <- function(params) {
 #' @importFrom pbapply pbapply
 #'
 #' @export
-optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col, init_value,
-                                     exact_value = FALSE, cl = NULL,
-                                     control = list(trace = 0, maxit = 10000,
-                                                    fnscale = -1, REPORT = 100,
-                                                    scale = 0.05)) {
-  matrices_shared_across_models <- df %>%
-    matrices_from_df(timestamp_col = {{ timestamp_col }},
-                     entity_col = {{ entity_col }},
-                     dep_var_col = {{ dep_var_col }},
-                     which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
+optim_model_space_params <- function(
+  df,
+  timestamp_col,
+  entity_col,
+  dep_var_col,
+  init_value,
+  nested,
+  exact_value = FALSE, cl = NULL,
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  ) {
+
+  all_regressors <- df %>%
+    dplyr::select(
+      -c(
+        {{timestamp_col}},
+        {{entity_col}},
+        {{dep_var_col}}
+      )
+    )
 
   init_params <- df %>%
     init_model_space_params(timestamp_col = {{ timestamp_col }},
@@ -153,37 +315,282 @@ optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col,
                             dep_var_col = {{ dep_var_col }},
                             init_value = init_value)
 
-  optimization_wrapper <- function(params, data) {
-    regressors_subset <- regressor_names_from_params_vector(params)
-
-    model_specific_matrices <- df %>%
+  if (nested) {
+    matrices_shared_across_models <- df %>%
       matrices_from_df(timestamp_col = {{ timestamp_col }},
                        entity_col = {{ entity_col }},
                        dep_var_col = {{ dep_var_col }},
-                       lin_related_regressors = regressors_subset,
-                       which_matrices = c("cur_Y2", "cur_Z"))
+                       which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
 
-    data$cur_Z <- model_specific_matrices$cur_Z
-    data$cur_Y2 <- model_specific_matrices$cur_Y2
+    # optimization performed for nested version
+    return(
+      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+        nested_optimization_wrapper(
+          x,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{ dep_var_col }},
+          data = matrices_shared_across_models,
+          exact_value = exact_value,
+          control = control
+          )
+      }, cl = cl)
+    )
+  } else {
+    # optimization performed for non-nested version
+    n_all_regressors = ncol(all_regressors)
+    n_timestamp = df %>%
+      dplyr::distinct({{timestamp_col}}) %>%
+      nrow() - 1
 
-    params_no_na <- stats::na.omit(params)
 
-    # Adjust the optimization control parameters.
-    control$parscale <- control$scale * params_no_na
-    control$scale <- NULL
+    return(
+      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+        non_nested_optimization_wrapper(
+          x,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{ dep_var_col }},
+          exact_value = exact_value,
+          n_all_regressors = n_all_regressors,
+          n_timestamp = n_timestamp,
+          control = control
+          )
+      }, cl = cl)
+    )
+  }
+}
 
-    optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                              exact_value = exact_value,
-                              method = "BFGS",
-                              control = control)
+#' Helper function - wraps single execution of the log-likelihood & deviation
+#' parameters calculations. Used for non nested version of SEM likelihood.
+#'
+#' @param params A matrix (with named rows) with each column corresponding
+#' to a model. Each row specifies model parameters. Compare with
+#' \link[bdsm]{optim_model_space_params}
+#' @param data List of the SEM setup matrices, shared along different models
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col The name of the column with timestamps
+#' @param entity_col Column with entities (e.g. countries)
+#' @param dep_var_col Column with the dependent variable
+#' @param n_entities Number of entities - passed to save calc. time
+#' @param periods_n Number of periods - passed to save calc. time
+#'
+#' @returns
+#' #' Matrix with columns describing likelihood and standard deviations for each
+#' model. The first row is the likelihood for the model (computed using the
+#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
+#' in the code below). The third row is model posterior probability. Then there
+#' are rows with standard deviations for each parameter. After that we have rows
+#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' @export
+#'
+nested_std_dev_from_params <- function(
+    params,
+    data,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    n_entities,
+    periods_n
+    ) {
+  regressors_subset <-
+    regressor_names_from_params_vector(params)
 
-    params[!is.na(params)] <- optimized[[1]]
-    params
+  lin_features_n <- length(regressors_subset) + 1
+  features_n <- ncol(data$Z)
+
+  model_specific_matrices <- df %>%
+    matrices_from_df(timestamp_col = {{ timestamp_col }},
+                     entity_col = {{ entity_col }},
+                     dep_var_col = {{ dep_var_col }},
+                     lin_related_regressors = regressors_subset,
+                     which_matrices = c("cur_Y2", "cur_Z"))
+
+  data$cur_Z <- model_specific_matrices$cur_Z
+  data$cur_Y2 <- model_specific_matrices$cur_Y2
+
+  params_no_na <- params %>% stats::na.omit()
+
+  likelihood <-
+    sem_likelihood(params = params_no_na, data = data,
+                   exact_value = TRUE)
+
+  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+
+  likelihood_per_entity <-
+    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
+
+  # TODO: how to interpret the Gmat and Imat
+  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
+                              per_entity = TRUE)
+  Imat <- crossprod(Gmat)
+
+  # Section 2.3.3 in Moral-Benito
+  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
+  # "Finally, each model-specific posterior is given by a normal distribution
+  # with mean at the MLE and dispersion matrix equal to the inverse of the
+  # Fisher information."
+  # This is most likely why hessian is used to compute standard errors.
+  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
+  # all this works
+  stdr <- rep(0, features_n)
+  stdh <- rep(0, features_n)
+
+  . <- NULL
+  linear_params <- t(params) %>% as.data.frame() %>%
+    dplyr::select(tidyselect::matches('alpha'),
+                  tidyselect::matches('beta')) %>%
+    as.matrix() %>% t()
+
+  betas_first_ind <- 4 + periods_n
+  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  inds <- if (betas_first_ind > betas_last_ind) {
+    c(1)
+  } else {
+    c(1, betas_first_ind:betas_last_ind)
   }
 
-  pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
-    optimization_wrapper(x, matrices_shared_across_models)
-  }, cl = cl)
+  stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
+  stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
+
+  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
+  # in Social Research eq. 19. The part with reference model M_1 is skipped,
+  # because we use this formula to compute exp(logl) which is in turn used to
+  # compute posterior probabilities using eqs. 34/35. Since the part connected
+  # with M_1 model would be present in all posteriors it cancels out. Hence
+  # the important part is the one computed below.
+  #
+  # TODO: Why everything is divided by n_entities?
+
+  # Eq. 19
+  loglikelihood <-
+    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+
+  # Eq. 35
+  bic <- exp(loglikelihood)
+
+  c(likelihood, bic, stdh, stdr)
+}
+
+
+#' Helper function - wraps single execution of the log-likelihood & deviation
+#' parameters calculations. Used for non nested version of SEM likelihood.
+#'
+#' @param params A matrix (with named rows) with each column corresponding
+#' to a model. Each row specifies model parameters. Compare with
+#' \link[bdsm]{optim_model_space_params}
+#' @param df Data frame with data for the SEM analysis.
+#' @param timestamp_col The name of the column with timestamps
+#' @param entity_col Column with entities (e.g. countries)
+#' @param dep_var_col Column with the dependent variable
+#' @param n_entities Number of entities - passed to save calc. time
+#' @param periods_n Number of periods - passed to save calc. time
+#'
+#' @returns
+#' #' Matrix with columns describing likelihood and standard deviations for each
+#' model. The first row is the likelihood for the model (computed using the
+#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
+#' in the code below). The third row is model posterior probability. Then there
+#' are rows with standard deviations for each parameter. After that we have rows
+#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' @export
+#'
+non_nested_std_dev_from_params <- function(
+    params,
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    n_entities,
+    periods_n) {
+
+  regressors_subset <-
+    regressor_names_from_params_vector(params)
+
+  df_loc <- df %>% dplyr::select(
+    {{ timestamp_col }},
+    {{ entity_col }},
+    {{ dep_var_col }},
+    dplyr::all_of(regressors_subset)
+  )
+
+  data <- df_loc %>%
+    matrices_from_df(
+      timestamp_col = {{ timestamp_col }},
+      entity_col = {{ entity_col }},
+      dep_var_col = {{ dep_var_col }},
+      lin_related_regressors = regressors_subset,
+      which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
+
+  lin_features_n <- length(regressors_subset) + 1
+  features_n <- ncol(data$Z)
+
+  params_no_na <- params %>% stats::na.omit()
+  likelihood <-
+    sem_likelihood(params = params_no_na, data = data,
+                   exact_value = TRUE)
+
+  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+
+  likelihood_per_entity <-
+    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
+
+  # TODO: how to interpret the Gmat and Imat
+  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
+                              per_entity = TRUE)
+  Imat <- crossprod(Gmat)
+
+  # Section 2.3.3 in Moral-Benito
+  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
+  # "Finally, each model-specific posterior is given by a normal distribution
+  # with mean at the MLE and dispersion matrix equal to the inverse of the
+  # Fisher information."
+  # This is most likely why hessian is used to compute standard errors.
+  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
+  # all this works
+  stdr <- rep(0, features_n)
+  stdh <- rep(0, features_n)
+
+  . <- NULL
+  linear_params <- t(params) %>% as.data.frame() %>%
+    dplyr::select(tidyselect::matches('alpha'),
+                  tidyselect::matches('beta')) %>%
+    as.matrix() %>% t()
+
+  betas_first_ind <- 4 + periods_n
+  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  inds <- if (betas_first_ind > betas_last_ind) {
+    c(1)
+  } else {
+    c(1, betas_first_ind:betas_last_ind)
+  }
+
+  stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
+  stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
+
+  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
+  # in Social Research eq. 19. The part with reference model M_1 is skipped,
+  # because we use this formula to compute exp(logl) which is in turn used to
+  # compute posterior probabilities using eqs. 34/35. Since the part connected
+  # with M_1 model would be present in all posteriors it cancels out. Hence
+  # the important part is the one computed below.
+  #
+  # TODO: Why everything is divided by n_entities?
+
+  # Eq. 19
+  loglikelihood <-
+    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+
+  # Eq. 35
+  bic <- exp(loglikelihood)
+
+  c(likelihood, bic, stdh, stdr)
+
 }
 
 
@@ -207,6 +614,11 @@ optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col,
 #' @param cl An optional cluster object. If supplied, the function will use this
 #' cluster for parallel processing. If \code{NULL} (the default),
 #' \code{pbapply::pblapply} will run sequentially.
+#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
+#' deviations using the nested-model approach via
+#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+#' approximation routine is used for each model in \code{params}.
 #'
 #' @return
 #' Matrix with columns describing likelihood and standard deviations for each
@@ -243,7 +655,7 @@ optim_model_space_params <- function(df, timestamp_col, entity_col, dep_var_col,
 #' }
 #'
 compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col,
-                              params, exact_value = FALSE,
+                              params, nested = TRUE, exact_value = FALSE,
                               model_prior = 'uniform', cl = NULL) {
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},
@@ -271,89 +683,36 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
   # parameter for beta (random) distribution of the prior inclusion probability
   b <- (regressors_n - prior_exp_model_size) / prior_exp_model_size
 
-  std_dev_from_params <- function(params, data) {
-    regressors_subset <-
-      regressor_names_from_params_vector(params)
-
-    lin_features_n <- length(regressors_subset) + 1
-    features_n <- ncol(data$Z)
-
-    model_specific_matrices <- df %>%
-      matrices_from_df(timestamp_col = {{ timestamp_col }},
-                       entity_col = {{ entity_col }},
-                       dep_var_col = {{ dep_var_col }},
-                       lin_related_regressors = regressors_subset,
-                       which_matrices = c("cur_Y2", "cur_Z"))
-
-    data$cur_Z <- model_specific_matrices$cur_Z
-    data$cur_Y2 <- model_specific_matrices$cur_Y2
-
-    params_no_na <- params %>% stats::na.omit()
-
-    likelihood <-
-      sem_likelihood(params = params_no_na, data = data,
-                     exact_value = TRUE)
-
-    hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
-
-    likelihood_per_entity <-
-      sem_likelihood(params_no_na, data = data, per_entity = TRUE)
-
-    # TODO: how to interpret the Gmat and Imat
-    Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
-                                per_entity = TRUE)
-    Imat <- crossprod(Gmat)
-
-    # Section 2.3.3 in Moral-Benito
-    # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
-    # "Finally, each model-specific posterior is given by a normal distribution
-    # with mean at the MLE and dispersion matrix equal to the inverse of the
-    # Fisher information."
-    # This is most likely why hessian is used to compute standard errors.
-    # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
-    # all this works
-    stdr <- rep(0, features_n)
-    stdh <- rep(0, features_n)
-
-    . <- NULL
-    linear_params <- t(params) %>% as.data.frame() %>%
-      dplyr::select(tidyselect::matches('alpha'),
-                    tidyselect::matches('beta')) %>%
-      as.matrix() %>% t()
-
-    betas_first_ind <- 4 + periods_n
-    betas_last_ind <- betas_first_ind + lin_features_n - 2
-    inds <- if (betas_first_ind > betas_last_ind) {
-      c(1)
-    } else {
-      c(1, betas_first_ind:betas_last_ind)
-    }
-
-    stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
-    stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
-
-    # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
-    # in Social Research eq. 19. The part with reference model M_1 is skipped,
-    # because we use this formula to compute exp(logl) which is in turn used to
-    # compute posterior probabilities using eqs. 34/35. Since the part connected
-    # with M_1 model would be present in all posteriors it cancels out. Hence
-    # the important part is the one computed below.
-    #
-    # TODO: Why everything is divided by n_entities?
-
-    # Eq. 19
-    loglikelihood <-
-      (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
-
-    # Eq. 35
-    bic <- exp(loglikelihood)
-
-    c(likelihood, bic, stdh, stdr)
+  if (nested) {
+    return(
+      pbapply::pbapply(params, MARGIN = 2,  function(x) {
+        nested_std_dev_from_params(
+          x,
+          data = matrices_shared_across_models,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{  dep_var_col}},
+          n_entities = n_entities,
+          periods_n = periods_n
+          )
+      }, cl = cl)
+    )
+  } else {
+    return(
+      pbapply::pbapply(params, MARGIN = 2,  function(x) {
+        non_nested_std_dev_from_params(
+          x,
+          df = df,
+          timestamp_col = {{ timestamp_col }},
+          entity_col = {{ entity_col }},
+          dep_var_col = {{  dep_var_col}},
+          n_entities = n_entities,
+          periods_n = periods_n
+          )
+      }, cl = cl)
+    )
   }
-
-  pbapply::pbapply(params, MARGIN = 2,  function(x) {
-    std_dev_from_params(x, matrices_shared_across_models)
-  }, cl = cl)
 }
 
 
@@ -379,6 +738,16 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
 #' that \code{scale} is used only for adjusting the \code{parscale} element added later in the function code.
+#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
+#' deviations using the nested-model approach via
+#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+#' approximation routine is used for each model in \code{params}.
+#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
+#' deviations using the nested-model approach via
+#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+#' approximation routine is used for each model in \code{params}.
 #'
 #' @importFrom parallel parApply
 #'
@@ -416,16 +785,24 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @export
 #
 optim_model_space <-
-  function(df, timestamp_col, entity_col, dep_var_col, init_value,
-           exact_value = FALSE, cl = NULL,
-           control = list(trace = 0, maxit = 10000, fnscale = -1,
-                          REPORT = 100, scale = 0.05)){
+  function(
+    df,
+    timestamp_col,
+    entity_col,
+    dep_var_col,
+    init_value,
+    nested = TRUE,
+    exact_value = FALSE,
+    cl = NULL,
+    control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  ) {
     params <- optim_model_space_params(
       df            = df,
       timestamp_col = {{timestamp_col}},
       entity_col    = {{entity_col}},
       dep_var_col   = {{dep_var_col}},
       init_value    = init_value,
+      nested        = nested,
       exact_value   = exact_value,
       cl            = cl,
       control       = control
@@ -437,11 +814,12 @@ optim_model_space <-
       timestamp_col = {{timestamp_col}},
       entity_col    = {{entity_col}},
       params        = params,
+      nested        = nested,
       cl            = cl
     )
 
     reg_names <- extract_names(df)
     observations_num <- nrow((na.omit(df[,4])))
 
-    list(params = params, stats = stats, reg_names = reg_names, observations_num = observations_num, df = df)
+    list(params = params, stats = stats, reg_names = reg_names, observations_num = observations_num, df = df, is_nested = nested)
   }
