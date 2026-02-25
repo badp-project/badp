@@ -315,53 +315,53 @@ The posterior inclusion probability (PIP) for the regressor is given by:
 where the indicator function $\mathbbold{1}$ is equal to one if the regressor is part of the model $M_j$ and zero otherwise.
 In other words, the PIP tells us how likely it is that the given regressor has impact on the variable of interest.
 
-Another interesting statistic is the posterior mean (PM) of a given parameter $\beta$.
+Another interesting statistic is the posterior mean (PM) of a given parameter $\beta_k$.
 Let's denote by $\pi_{\beta}$ the random variable which is equal to one if the given parameter is present in the model, and zero otherwise.
 The posterior mean of $\beta$ is given by:
 
 \begin{equation}\label{pm}
-\mathbb{E}(\beta|\text{data})=\sum_{j=1}^{2^K}\widehat{\beta}_{j} \cdot \mathbb{P}(M_{j}, \pi_{\beta} = 1 |\text{data})
+\mathbb{E}(\beta_k|\text{data})=\sum_{j=1}^{2^K}\widehat{\beta_k}_{j} \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})
 \end{equation}
 
-\noindent where $\widehat{\beta}_{j}$ is the value of the coefficient $\beta$ in model $j$.
+\noindent where $\widehat{\beta_k}_{j}$ is the value of the coefficient $\beta_k$ in model $j$.
 It tells us what is the mean (or expected) value for the parameter taking into account all considered models.
-Note that if $\beta$ is not present in the given model $j$ we can assign any value to $\widehat{\beta}_{j}$,
-because the probability $\mathbb{P}(M_{j}, \pi_{\beta} = 1 |\text{data})$ wil be zero anyway.
+Note that if $\beta_k$ is not present in the given model $j$ we can assign any value to $\widehat{\beta_k}_{j}$,
+because the probability $\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ wil be zero anyway.
 
-The posterior variance of the parameter $\beta$ is equal to:
+The posterior variance of the parameter $\beta_k$ is equal to:
 
 \begin{equation}
 \begin{split}
-Var(\beta|\text{data}) =\ &\sum_{j=1}^{2^K}Var(\beta_{j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta} = 1 |\text{data})\\[1ex]
-&+\sum_{j=1}^{2^K}\Bigl[\widehat{\beta}_{j}-\mathbb{E}(\beta|\text{data})\Bigr]^{2} \cdot \mathbb{P}(M_{j}, \pi_{\beta} = 1 |\text{data})
+Var(\beta_k|\text{data}) =\ &\sum_{j=1}^{2^K}Var(\beta_{k,j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})\\[1ex]
+&+\sum_{j=1}^{2^K}\Bigl[\widehat{\beta}_{k,j}-\mathbb{E}(\beta_k|\text{data})\Bigr]^{2} \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})
 \end{split}
 \end{equation}
 
-\noindent where $Var(\beta_{j}|\text{data},M_{j})$ denotes the conditional variance of the coefficient $\beta$ in model $M_{j}$
+\noindent where $Var(\beta_{k,j}|\text{data},M_{j})$ denotes the conditional variance of the coefficient $\beta_k$ in model $M_{j}$
 (in other words assuming that the model $M_j$ is the true model).
-Posterior standard deviation (PSD) of $\beta$ is then defined as the square root of the variance:
+Posterior standard deviation (PSD) of $\beta_k$ is then defined as the square root of the variance:
 
 \begin{equation}\label{psd}
-SD(\beta | \text{data}) = \sqrt{ Var(\beta | \text{data}) }
+SD(\beta_k | \text{data}) = \sqrt{ Var(\beta_k | \text{data}) }
 \end{equation}
 
 \indent Alternatively, one might be interested in the values of the mean and variance on the condition of inclusion of a given parameter,
 i.e. assuming that it is definitely a part of the model.
 Note that this is usually determined by the presence of a related regressor.
-The conditional posterior mean (PMcon) for a parameter $\beta$ is given by:
+The conditional posterior mean (PMcon) for a parameter $\beta_k$ is given by:
 \begin{equation}
-\mathbb{E}(\beta | \pi_{\beta}=1,\text{data})=\frac{\mathbb{E}(\beta|\text{data})}{\mathbb{P}(\pi_{\beta} = 1|\text{data})}.
+\mathbb{E}(\beta_k | \pi_{\beta_k}=1,\text{data})=\frac{\mathbb{E}(\beta_k|\text{data})}{\mathbb{P}(\pi_{\beta_k} = 1|\text{data})}.
 \end{equation}
 Similarly, the conditional variance is:
 
 \begin{equation}
-    Var(\beta|\pi_{\beta}=1,\text{data})=\frac{Var(\beta|\text{data})+\mathbb{E}(\beta|\text{data})^2}{\mathbb{P}(\pi_{\beta}=1|\text{data})}-\mathbb{E}(\beta|\pi_{\beta}=1,\text{data})^2
+    Var(\beta_k|\pi_{\beta_k}=1,\text{data})=\frac{Var(\beta_k|\text{data})+\mathbb{E}(\beta_k|\text{data})^2}{\mathbb{P}(\pi_{\beta_k}=1|\text{data})}-\mathbb{E}(\beta_k|\pi_{\beta_k}=1,\text{data})^2
 \end{equation}
 
 \noindent and so the conditional standard deviation (PSDcon) is:
 
 \begin{equation}
-SD(\beta | \pi_{k}=1,\text{data}) = \sqrt{ Var(\beta | \pi_{k}=1,\text{data}) }
+SD(\beta_k | \pi_{k}=1,\text{data}) = \sqrt{ Var(\beta_k | \pi_{k}=1,\text{data}) }
 \end{equation}
 
 \indent The BMA statistics allow the assessment of the robustness of the examined regressors.
