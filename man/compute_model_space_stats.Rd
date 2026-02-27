@@ -60,7 +60,7 @@ Approximate standard deviations are computed for the models in the given
 model space. Two versions are computed.
 }
 \examples{
-[badp]onttest{
+\donttest{
  library(magrittr)
  data_prepared <- badp::economic_growth[, 1:6] \%>\%
    badp::feature_standardization(

@@ -633,7 +633,7 @@ non_nested_std_dev_from_params <- function(
 #' @export
 #'
 #' @examples
-#' [badp]onttest{
+#' \donttest{
 #'  library(magrittr)
 #'  data_prepared <- badp::economic_growth[, 1:6] %>%
 #'    badp::feature_standardization(
@@ -761,7 +761,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' 5) df - data frame used in estimation
 #'
 #' @examples
-#' [badp]ontrun{
+#' \dontrun{
 #' library(magrittr)
 #'
 #' data_prepared <- badp::economic_growth[, 1:5] %>%
