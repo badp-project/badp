@@ -545,7 +545,7 @@ full_model_space <- optim_model_space(
 )
 @
 
-\noindent The function returns a list with two named arguments
+\noindent The function returns a list with five named arguments
 which are explained in the subsections below.
 A progress bar is displayed to easily track the ongoing computation.
 
