@@ -3,7 +3,7 @@ badp: Bayesian Averaging for Dynamic Panels
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# badp: Bayesian Averaging for Dynamic Panels
+# badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
 
 [![CRAN status
 badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)

@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# badp: Bayesian Averaging for Dynamic Panels
+# badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
 
 [![CRAN status badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
 [![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)

@@ -10,3 +10,6 @@
 ^\.github$
 ^Dockerfile
 ^output$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
