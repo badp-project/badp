@@ -2,19 +2,27 @@ Package: badp
 Title: Bayesian Averaging for Dynamic Panels
 Version: 0.4.0
 Authors@R:
-    c(person(given = "Mateusz",
-           family = "Wyszynski",
+    c(person(given = "Krzysztof",
+           family = "Beck",
            role = "aut",
-           email = "mat.wyszynski@gmail.com"),
+           email = "beckkrzysztof@gmail.com"),
+      person(given = "Piotr",
+           family = "Cukier",
+           role = "aut"
+      ),
       person(given = "Marcin",
            family = "Dubel",
-           role = c("ctb", "cre"),
+           role = c("aut", "cre"),
            email = "marcindubel@gmail.com"
       ),
-      person(given = "Krzysztof",
-           family = "Beck",
-           role = "ctb",
-           email = "beckkrzysztof@gmail.com"
+      person(given = "Mariusz",
+           family = "Szczepanczyk",
+           role = "aut"
+      ),
+      person(given = "Mateusz",
+           family = "Wyszynski",
+           role = "aut",
+           email = "mat.wyszynski@gmail.com"
       ))
 Description: Implements Bayesian model averaging for dynamic panels with weakly
     exogenous regressors as described in the paper by
