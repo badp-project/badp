@@ -1,6 +1,6 @@
-Package: bdsm
-Title: Bayesian Dynamic Systems Modeling
-Version: 0.3.0
+Package: badp
+Title: Bayesian Averaging for Dynamic Panels
+Version: 0.4.0
 Authors@R:
     c(person(given = "Mateusz",
            family = "Wyszynski",
@@ -16,12 +16,14 @@ Authors@R:
            role = "ctb",
            email = "beckkrzysztof@gmail.com"
       ))
-Description: Implements methods for building and analyzing models based on panel
-    data as described in the paper by 
+Description: Implements Bayesian model averaging for dynamic panels with weakly
+    exogenous regressors as described in the paper by
     Moral-Benito (2013, <doi:10.1080/07350015.2013.818003>).
     The package provides functions to estimate dynamic panel data models
     and analyze the results of the estimation.
 License: MIT + file LICENSE
+URL: https://github.com/mateuszwyszynski/bdsm
+BugReports: https://github.com/mateuszwyszynski/bdsm/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)

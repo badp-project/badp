@@ -19,7 +19,7 @@ regressors and the dependent variable.
 }
 \details{
 The vector needs to have named rows, i.e. it is assumed it comes from a
-model space (see \link[bdsm]{init_model_space_params} for details).
+model space (see \link[badp]{init_model_space_params} for details).
 }
 \examples{
 params <- c(alpha = 1, beta_gdp = 1, beta_gdp_lagged = 1, phi_0 = 1, err_var = 1)

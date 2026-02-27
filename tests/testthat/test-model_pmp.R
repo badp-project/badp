@@ -1,10 +1,10 @@
 test_that(paste("model_pmp creates correct lists with graphs"), {
 
-  data_prepared <- bdsm::economic_growth[,1:6] %>%
-    bdsm::feature_standardization(
+  data_prepared <- badp::economic_growth[,1:6] %>%
+    badp::feature_standardization(
       excluded_cols = c(country, year, gdp)
     ) %>%
-    bdsm::feature_standardization(
+    badp::feature_standardization(
       group_by_col  = year,
       excluded_cols = country,
       scale         = FALSE

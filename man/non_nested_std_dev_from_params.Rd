@@ -18,7 +18,7 @@ non_nested_std_dev_from_params(
 \arguments{
 \item{params}{A matrix (with named rows) with each column corresponding
 to a model. Each row specifies model parameters. Compare with
-\link[bdsm]{optim_model_space_params}}
+\link[badp]{optim_model_space_params}}
 
 \item{df}{Data frame with data for the SEM analysis.}
 

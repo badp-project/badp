@@ -32,7 +32,7 @@ natural numbers can be used as timestamps}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is

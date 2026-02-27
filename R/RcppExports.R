@@ -2,7 +2,7 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2, cur_Z, cur_Y2 = NULL, beta = NULL, phi_1 = NULL, phis = NULL, psis = NULL, per_entity = FALSE, exact_value = TRUE) {
-    .Call(`_bdsm_sem_likelihood_calculate`, alpha, phi_0, err_var, dep_vars, Y1, Y2, cur_Z, cur_Y2, beta, phi_1, phis, psis, per_entity, exact_value)
+    .Call(`_badp_sem_likelihood_calculate`, alpha, phi_0, err_var, dep_vars, Y1, Y2, cur_Z, cur_Y2, beta, phi_1, phis, psis, per_entity, exact_value)
 }
 
 #' Residual Maker Matrix
@@ -20,7 +20,7 @@ sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2, cu
 #' @examples
 #' residual_maker_matrix(matrix(c(1,2,3,4), nrow = 2))
 residual_maker_matrix <- function(m) {
-    .Call(`_bdsm_residual_maker_matrix`, m)
+    .Call(`_badp_residual_maker_matrix`, m)
 }
 
 #' Coefficients matrix for SEM representation
@@ -38,7 +38,7 @@ residual_maker_matrix <- function(m) {
 #' @examples
 #' sem_B_matrix(3, 4, 4:6)
 sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
-    .Call(`_bdsm_sem_B_matrix`, alpha, periods_n, beta)
+    .Call(`_badp_sem_B_matrix`, alpha, periods_n, beta)
 }
 
 #' Coefficients matrix for initial conditions
@@ -65,7 +65,7 @@ sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
 #' periods_n <- 4
 #' sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
 sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
-    .Call(`_bdsm_sem_C_matrix`, alpha, phi_0, periods_n, beta, phi_1)
+    .Call(`_badp_sem_C_matrix`, alpha, phi_0, periods_n, beta, phi_1)
 }
 
 #' Matrix with psi parameters for SEM representation
@@ -85,7 +85,7 @@ sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
 #' @examples
 #' sem_psi_matrix(1:30, 4, 5)
 sem_psi_matrix <- function(psis, timestamps_n, features_n) {
-    .Call(`_bdsm_sem_psi_matrix`, psis, timestamps_n, features_n)
+    .Call(`_badp_sem_psi_matrix`, psis, timestamps_n, features_n)
 }
 
 #' Covariance matrix for SEM representation
@@ -109,6 +109,6 @@ sem_psi_matrix <- function(psis, timestamps_n, features_n) {
 #' psis <- c(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112)
 #' sem_sigma_matrix(err_var, dep_vars, phis, psis)
 sem_sigma_matrix <- function(err_var, dep_vars, phis = NULL, psis = NULL) {
-    .Call(`_bdsm_sem_sigma_matrix`, err_var, dep_vars, phis, psis)
+    .Call(`_badp_sem_sigma_matrix`, err_var, dep_vars, phis, psis)
 }
 

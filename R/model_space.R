@@ -26,11 +26,11 @@
 #' @examples
 #' library(magrittr)
 #'
-#' data_prepared <- bdsm::economic_growth[, 1:5] %>%
-#'   bdsm::feature_standardization(
+#' data_prepared <- badp::economic_growth[, 1:5] %>%
+#'   badp::feature_standardization(
 #'     excluded_cols = c(country, year, gdp)
 #'   ) %>%
-#'   bdsm::feature_standardization(
+#'   badp::feature_standardization(
 #'     group_by_col  = year,
 #'     excluded_cols = country,
 #'     scale         = FALSE
@@ -84,7 +84,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
 #' regressors and the dependent variable.
 #'
 #' The vector needs to have named rows, i.e. it is assumed it comes from a
-#' model space (see \link[bdsm]{init_model_space_params} for details).
+#' model space (see \link[badp]{init_model_space_params} for details).
 #'
 #' @param params a vector with parameters describing the model
 #'
@@ -118,7 +118,7 @@ regressor_names_from_params_vector <- function(params) {
 #' @param data List of SEM setup matrices shared along the models
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-#' \link[bdsm]{sem_likelihood} for details.
+#' \link[badp]{sem_likelihood} for details.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
@@ -175,7 +175,7 @@ nested_optimization_wrapper <- function(
 #' @param dep_var_col Column with dependent variable
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-#' \link[bdsm]{sem_likelihood} for details.
+#' \link[badp]{sem_likelihood} for details.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
@@ -270,7 +270,7 @@ non_nested_optimization_wrapper <- function(
 #' This will be the starting point for the numerical optimization.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-#' \link[bdsm]{sem_likelihood} for details.
+#' \link[badp]{sem_likelihood} for details.
 #' @param cl An optional cluster object. If supplied, the function will use this
 #' cluster for parallel processing. If \code{NULL} (the default),
 #' \code{pbapply::pblapply} will run sequentially.
@@ -368,7 +368,7 @@ optim_model_space_params <- function(
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with
-#' \link[bdsm]{optim_model_space_params}
+#' \link[badp]{optim_model_space_params}
 #' @param data List of the SEM setup matrices, shared along different models
 #' @param df Data frame with data for the SEM analysis.
 #' @param timestamp_col The name of the column with timestamps
@@ -482,7 +482,7 @@ nested_std_dev_from_params <- function(
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with
-#' \link[bdsm]{optim_model_space_params}
+#' \link[badp]{optim_model_space_params}
 #' @param df Data frame with data for the SEM analysis.
 #' @param timestamp_col The name of the column with timestamps
 #' @param entity_col Column with entities (e.g. countries)
@@ -605,12 +605,12 @@ non_nested_std_dev_from_params <- function(
 #' @param entity_col Column with entities (e.g. countries)
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each column specifies model parameters. Compare with
-#' \link[bdsm]{optim_model_space_params}
+#' \link[badp]{optim_model_space_params}
 #' @param model_prior Which model prior to use. For now there are two options:
 #' \code{'uniform'} and \code{'binomial-beta'}. Default is \code{'uniform'}.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-#' \link[bdsm]{sem_likelihood} for details.
+#' \link[badp]{sem_likelihood} for details.
 #' @param cl An optional cluster object. If supplied, the function will use this
 #' cluster for parallel processing. If \code{NULL} (the default),
 #' \code{pbapply::pblapply} will run sequentially.
@@ -633,13 +633,13 @@ non_nested_std_dev_from_params <- function(
 #' @export
 #'
 #' @examples
-#' \donttest{
+#' [badp]onttest{
 #'  library(magrittr)
-#'  data_prepared <- bdsm::economic_growth[, 1:6] %>%
-#'    bdsm::feature_standardization(
+#'  data_prepared <- badp::economic_growth[, 1:6] %>%
+#'    badp::feature_standardization(
 #'      excluded_cols = c(country, year, gdp)
 #'    ) %>%
-#'    bdsm::feature_standardization(
+#'    badp::feature_standardization(
 #'      group_by_col  = year,
 #'      excluded_cols = country,
 #'      scale         = FALSE
@@ -730,7 +730,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' This will be the starting point for the numerical optimization.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-#' \link[bdsm]{sem_likelihood} for details.
+#' \link[badp]{sem_likelihood} for details.
 #' @param cl An optional cluster object. If supplied, the function will use this
 #' cluster for parallel processing. If \code{NULL} (the default),
 #' \code{pbapply::pblapply} will run sequentially.
@@ -761,14 +761,14 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' 5) df - data frame used in estimation
 #'
 #' @examples
-#' \dontrun{
+#' [badp]ontrun{
 #' library(magrittr)
 #'
-#' data_prepared <- bdsm::economic_growth[, 1:5] %>%
-#'   bdsm::feature_standardization(
+#' data_prepared <- badp::economic_growth[, 1:5] %>%
+#'   badp::feature_standardization(
 #'     excluded_cols = c(country, year, gdp)
 #'   ) %>%
-#'   bdsm::feature_standardization(
+#'   badp::feature_standardization(
 #'     group_by_col  = year,
 #'     excluded_cols = country,
 #'     scale         = FALSE

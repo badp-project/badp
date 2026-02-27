@@ -18,7 +18,7 @@ places them in a vector.
 }
 \examples{
 \donttest{
- df <- bdsm::economic_growth
+ df <- badp::economic_growth
 
  reg_names <- extract_names(df)
 

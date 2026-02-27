@@ -2,11 +2,11 @@
 
 library(magrittr)
 
-data_prepared <- bdsm::economic_growth %>%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth %>%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) %>%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE

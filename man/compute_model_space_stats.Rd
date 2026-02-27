@@ -27,7 +27,7 @@ compute_model_space_stats(
 
 \item{params}{A matrix (with named rows) with each column corresponding
 to a model. Each column specifies model parameters. Compare with
-\link[bdsm]{optim_model_space_params}}
+\link[badp]{optim_model_space_params}}
 
 \item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
 deviations using the nested-model approach via
@@ -37,7 +37,7 @@ approximation routine is used for each model in \code{params}.}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{model_prior}{Which model prior to use. For now there are two options:
 \code{'uniform'} and \code{'binomial-beta'}. Default is \code{'uniform'}.}
@@ -60,13 +60,13 @@ Approximate standard deviations are computed for the models in the given
 model space. Two versions are computed.
 }
 \examples{
-\donttest{
+[badp]onttest{
  library(magrittr)
- data_prepared <- bdsm::economic_growth[, 1:6] \%>\%
-   bdsm::feature_standardization(
+ data_prepared <- badp::economic_growth[, 1:6] \%>\%
+   badp::feature_standardization(
      excluded_cols = c(country, year, gdp)
    ) \%>\%
-   bdsm::feature_standardization(
+   badp::feature_standardization(
      group_by_col  = year,
      excluded_cols = country,
      scale         = FALSE

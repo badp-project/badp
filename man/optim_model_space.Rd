@@ -36,7 +36,7 @@ approximation routine is used for each model in \code{params}.}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{cl}{An optional cluster object. If supplied, the function will use this
 cluster for parallel processing. If \code{NULL} (the default),
@@ -64,14 +64,14 @@ standard deviations of the parameters that will be used in Bayesian model averag
 it provides a vector with the names of the variables for bma function and the number of observations.
 }
 \examples{
-\dontrun{
+[badp]ontrun{
 library(magrittr)
 
-data_prepared <- bdsm::economic_growth[, 1:5] \%>\%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:5] \%>\%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) \%>\%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE

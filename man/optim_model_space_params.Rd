@@ -36,7 +36,7 @@ approximation routine is used for each model in \code{params}.}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{cl}{An optional cluster object. If supplied, the function will use this
 cluster for parallel processing. If \code{NULL} (the default),

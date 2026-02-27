@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // sem_likelihood_calculate
 SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var, const arma::vec& dep_vars, const arma::mat& Y1, const arma::mat& Y2, const arma::mat& cur_Z, Rcpp::Nullable<arma::mat> cur_Y2, Rcpp::Nullable<arma::vec> beta, Rcpp::Nullable<arma::vec> phi_1, Rcpp::Nullable<arma::vec> phis, Rcpp::Nullable<arma::vec> psis, bool per_entity, bool exact_value);
-RcppExport SEXP _bdsm_sem_likelihood_calculate(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP err_varSEXP, SEXP dep_varsSEXP, SEXP Y1SEXP, SEXP Y2SEXP, SEXP cur_ZSEXP, SEXP cur_Y2SEXP, SEXP betaSEXP, SEXP phi_1SEXP, SEXP phisSEXP, SEXP psisSEXP, SEXP per_entitySEXP, SEXP exact_valueSEXP) {
+RcppExport SEXP _badp_sem_likelihood_calculate(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP err_varSEXP, SEXP dep_varsSEXP, SEXP Y1SEXP, SEXP Y2SEXP, SEXP cur_ZSEXP, SEXP cur_Y2SEXP, SEXP betaSEXP, SEXP phi_1SEXP, SEXP phisSEXP, SEXP psisSEXP, SEXP per_entitySEXP, SEXP exact_valueSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,7 +37,7 @@ END_RCPP
 }
 // residual_maker_matrix
 arma::mat residual_maker_matrix(const arma::mat& m);
-RcppExport SEXP _bdsm_residual_maker_matrix(SEXP mSEXP) {
+RcppExport SEXP _badp_residual_maker_matrix(SEXP mSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,7 +48,7 @@ END_RCPP
 }
 // sem_B_matrix
 Rcpp::List sem_B_matrix(double alpha, int periods_n, Rcpp::Nullable<arma::vec> beta);
-RcppExport SEXP _bdsm_sem_B_matrix(SEXP alphaSEXP, SEXP periods_nSEXP, SEXP betaSEXP) {
+RcppExport SEXP _badp_sem_B_matrix(SEXP alphaSEXP, SEXP periods_nSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +61,7 @@ END_RCPP
 }
 // sem_C_matrix
 arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n, Rcpp::Nullable<arma::vec> beta, Rcpp::Nullable<arma::vec> phi_1);
-RcppExport SEXP _bdsm_sem_C_matrix(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP periods_nSEXP, SEXP betaSEXP, SEXP phi_1SEXP) {
+RcppExport SEXP _badp_sem_C_matrix(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP periods_nSEXP, SEXP betaSEXP, SEXP phi_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -76,7 +76,7 @@ END_RCPP
 }
 // sem_psi_matrix
 arma::mat sem_psi_matrix(const arma::vec& psis, int timestamps_n, int features_n);
-RcppExport SEXP _bdsm_sem_psi_matrix(SEXP psisSEXP, SEXP timestamps_nSEXP, SEXP features_nSEXP) {
+RcppExport SEXP _badp_sem_psi_matrix(SEXP psisSEXP, SEXP timestamps_nSEXP, SEXP features_nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -89,7 +89,7 @@ END_RCPP
 }
 // sem_sigma_matrix
 Rcpp::List sem_sigma_matrix(double err_var, const arma::vec& dep_vars, Rcpp::Nullable<arma::vec> phis, Rcpp::Nullable<arma::vec> psis);
-RcppExport SEXP _bdsm_sem_sigma_matrix(SEXP err_varSEXP, SEXP dep_varsSEXP, SEXP phisSEXP, SEXP psisSEXP) {
+RcppExport SEXP _badp_sem_sigma_matrix(SEXP err_varSEXP, SEXP dep_varsSEXP, SEXP phisSEXP, SEXP psisSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,16 +103,16 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_bdsm_sem_likelihood_calculate", (DL_FUNC) &_bdsm_sem_likelihood_calculate, 14},
-    {"_bdsm_residual_maker_matrix", (DL_FUNC) &_bdsm_residual_maker_matrix, 1},
-    {"_bdsm_sem_B_matrix", (DL_FUNC) &_bdsm_sem_B_matrix, 3},
-    {"_bdsm_sem_C_matrix", (DL_FUNC) &_bdsm_sem_C_matrix, 5},
-    {"_bdsm_sem_psi_matrix", (DL_FUNC) &_bdsm_sem_psi_matrix, 3},
-    {"_bdsm_sem_sigma_matrix", (DL_FUNC) &_bdsm_sem_sigma_matrix, 4},
+    {"_badp_sem_likelihood_calculate", (DL_FUNC) &_badp_sem_likelihood_calculate, 14},
+    {"_badp_residual_maker_matrix", (DL_FUNC) &_badp_residual_maker_matrix, 1},
+    {"_badp_sem_B_matrix", (DL_FUNC) &_badp_sem_B_matrix, 3},
+    {"_badp_sem_C_matrix", (DL_FUNC) &_badp_sem_C_matrix, 5},
+    {"_badp_sem_psi_matrix", (DL_FUNC) &_badp_sem_psi_matrix, 3},
+    {"_badp_sem_sigma_matrix", (DL_FUNC) &_badp_sem_sigma_matrix, 4},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_bdsm(DllInfo *dll) {
+RcppExport void R_init_badp(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

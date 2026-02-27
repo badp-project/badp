@@ -1,3 +1,17 @@
+# 0.4.0
+
+## New submission
+
+This package was previously published on CRAN as `bdsm` (versions 0.1.0 through 0.3.0).
+It has been renamed to `badp` (Bayesian Averaging for Dynamic Panels).
+We kindly request that the old `bdsm` package be archived.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* This is a new release.
+
 # 0.3.0
 
 ## Resubmission

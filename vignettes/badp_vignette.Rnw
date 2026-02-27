@@ -440,11 +440,11 @@ This section demonstrates how to prepare the data for estimation.
 The first step involves installing the package and subsequently loading it into the R session.
 
 <<eval=FALSE>>=
-install.packages("bdsm")
+install.packages("badp")
 @
 
 <<>>=
-library(bdsm)
+library(badp)
 @
 
 % This part below will be changed when CRAN version is up to date

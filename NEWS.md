@@ -1,3 +1,12 @@
+# badp 0.4.0
+
+* Renamed package from `bdsm` to `badp` (Bayesian Averaging for Dynamic Panels).
+* Removed the `df` argument from the `bma` function; data is no longer required at the BMA stage.
+* Added `posterior_dens` function for plotting posterior densities of coefficients.
+* Added weighted coefficient histograms in `coef_hist` via the `weight` parameter (based on posterior model probabilities).
+* Exported `extract_names` function.
+* Recomputed bundled datasets to be consistent with updated `optim_model_space`.
+
 # bdsm 0.3.0
 
 * Reimplemented SEM likelihood computation in C++.
