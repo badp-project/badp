@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 [![CRAN status badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
 [![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
-[![R-CMD-check](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml)
+[![R-CMD-check](https://github.com/badp-project/bdsm/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/badp-project/bdsm/actions/workflows/R-CMD-check-main.yaml)
 
 
 ## Overview
@@ -58,7 +58,7 @@ And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("mateuszwyszynski/bdsm")
+devtools::install_github("badp-project/bdsm")
 ```
 
 Once installed, simply load the package:
@@ -299,7 +299,7 @@ With properly configured system environment everything should work fine.
 
 We welcome bug reports, feature requests, and contributions.
 Feel free to open an issue or pull request on
-[GitHub](https://github.com/mateuszwyszynski/bdsm).
+[GitHub](https://github.com/badp-project/bdsm).
 
 ## License
 

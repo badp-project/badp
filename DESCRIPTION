@@ -30,8 +30,8 @@ Description: Implements Bayesian model averaging for dynamic panels with weakly
     The package provides functions to estimate dynamic panel data models
     and analyze the results of the estimation.
 License: MIT + file LICENSE
-URL: https://github.com/mateuszwyszynski/bdsm
-BugReports: https://github.com/mateuszwyszynski/bdsm/issues
+URL: https://badp-project.github.io/bdsm/, https://github.com/badp-project/bdsm
+BugReports: https://github.com/badp-project/bdsm/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
