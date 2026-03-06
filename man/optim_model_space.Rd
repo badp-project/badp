@@ -64,7 +64,7 @@ standard deviations of the parameters that will be used in Bayesian model averag
 it provides a vector with the names of the variables for bma function and the number of observations.
 }
 \examples{
-\dontrun{
+\donttest{
 library(magrittr)
 
 data_prepared <- badp::economic_growth[, 1:5] \%>\%

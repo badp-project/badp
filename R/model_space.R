@@ -761,7 +761,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' 5) df - data frame used in estimation
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' library(magrittr)
 #'
 #' data_prepared <- badp::economic_growth[, 1:5] %>%
