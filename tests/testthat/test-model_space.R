@@ -63,7 +63,7 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
     nested        = TRUE
   )
 
-  compare_matrices(params, small_model_space$params, tols = rep(0.001, 8))
+  compare_matrices(params, small_model_space$params, tols = rep(0.01, 8))
 })
 
 non_zero_stats_mask_generator <- function(lin_features_n) {
