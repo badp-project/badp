@@ -19,8 +19,8 @@ home:
         title: Links
         text: |
           - [View on CRAN](https://CRAN.R-project.org/package=badp)
-          - [Browse source code](https://github.com/badp-project/bdsm)
-          - [Report a bug](https://github.com/badp-project/bdsm/issues)
+          - [Browse source code](https://github.com/badp-project/badp)
+          - [Report a bug](https://github.com/badp-project/badp/issues)
 
 navbar:
   structure:
@@ -29,7 +29,7 @@ navbar:
   components:
     github:
       icon: fa-github
-      href: https://github.com/badp-project/bdsm
+      href: https://github.com/badp-project/badp
       aria-label: GitHub
 
 reference:
