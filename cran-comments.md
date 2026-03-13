@@ -1,3 +1,21 @@
+# 0.4.0.1
+
+## Patch release
+
+Addresses two issues found during additional CRAN checks on 0.4.0:
+
+* Added `-DARMA_NO_DEBUG` compiler flag to reduce compiled library size,
+  addressing installed package size NOTE on r-oldrel-macos-x86_64.
+* Relaxed numerical tolerance in test for `optim_model_space_params` to
+  accommodate differences across BLAS/LAPACK implementations (ATLAS, MKL).
+  The optimization involves matrix inversions and determinants via
+  RcppArmadillo that can produce slightly different results depending
+  on the BLAS backend.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
 # 0.4.0
 
 ## New submission
