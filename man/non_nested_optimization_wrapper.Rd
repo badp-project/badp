@@ -31,7 +31,7 @@ natural numbers can be used as timestamps}
 
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{n_all_regressors}{Integer. Total number of potential regressors in the
 full (maximal) model space. Used to compute the full parameter dimension

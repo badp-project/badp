@@ -1,18 +1,18 @@
-bdsm: Bayesian Dynamic Systems Modeling
+badp: Bayesian Averaging for Dynamic Panels
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# bdsm: Bayesian Dynamic Systems Modeling
+# badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
 
 [![CRAN status
-badge](http://www.r-pkg.org/badges/version/bdsm)](https://CRAN.R-project.org/package=bdsm)
+badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
 [![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
-[![R-CMD-check](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/mateuszwyszynski/bdsm/actions/workflows/R-CMD-check-main.yaml)
+[![R-CMD-check](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml)
 
 ## Overview
 
-The **bdsm** package implements Bayesian model averaging (BMA) for
+The **badp** package implements Bayesian model averaging (BMA) for
 dynamic panels with weakly exogenous regressors, following the
 methodology of [Moral-Benito (2016)](#references). This addresses both:
 
@@ -37,24 +37,24 @@ The package features:
 
 ## Installation
 
-You can install the released version of bdsm from
+You can install the released version of badp from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
-install.packages("bdsm")
+install.packages("badp")
 ```
 
 And the development version from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("mateuszwyszynski/bdsm")
+devtools::install_github("badp-project/badp")
 ```
 
 Once installed, simply load the package:
 
 ``` r
-library(bdsm)
+library(badp)
 ```
 
 ## Getting Started
@@ -84,11 +84,11 @@ set.seed(20)
 
 # Features are scaled and demeaned,
 # then centralized around the mean within cross-sections (fixed time effects)
-data_prepared <- bdsm::economic_growth[, 1:5] %>%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:5] %>%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) %>%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE
@@ -102,7 +102,7 @@ possible subset of regressors) via maximum likelihood, storing the
 results in a list object. For small to moderately sized datasets:
 
 ``` r
-model_space <- bdsm::optim_model_space(
+model_space <- badp::optim_model_space(
   df             = data_prepared,
   dep_var_col    = gdp,      # Dependent variable
   timestamp_col  = year,
@@ -125,7 +125,7 @@ if (is.na(cores)) {
 }
 cl <- makeCluster(cores)
 
-model_space <- bdsm::optim_model_space(
+model_space <- badp::optim_model_space(
   df             = data_prepared,
   timestamp_col  = year,
   entity_col     = country,
@@ -146,7 +146,7 @@ probabilities, posterior inclusion probabilities (PIPs), and other BMA
 statistics under the **binomial** and **binomial-beta** model priors:
 
 ``` r
-bma_results <- bdsm::bma(model_space, round = 3)
+bma_results <- badp::bma(model_space, round = 3)
 
 # Inspect the BMA summary (binomial prior results first, binomial-beta second)
 bma_results[[1]]  # BMA stats under binomial prior
@@ -183,7 +183,7 @@ parameter estimate is positive.
 
 ``` r
 # Plot prior vs. posterior model probabilities
-pmp_graphs <- bdsm::model_pmp(bma_results, top = 3)  # Show top 3 models
+pmp_graphs <- badp::model_pmp(bma_results, top = 3)  # Show top 3 models
 ```
 
 <img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
@@ -191,7 +191,7 @@ pmp_graphs <- bdsm::model_pmp(bma_results, top = 3)  # Show top 3 models
 ``` r
 
 # Plot probabilities by model size
-size_graphs <- bdsm::model_sizes(bma_results)
+size_graphs <- badp::model_sizes(bma_results)
 ```
 
 <img src="man/figures/README-unnamed-chunk-6-2.png" width="100%" />
@@ -203,7 +203,7 @@ models:
 
 ``` r
 # Retrieve the 5 best models according to binomial prior
-top3_binom <- bdsm::best_models(bma_results, criterion = 1, best = 3)
+top3_binom <- badp::best_models(bma_results, criterion = 1, best = 3)
 ```
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
@@ -236,7 +236,7 @@ each other (substitutes) using `jointness()`. By default, it calculates
 the Hofmarcher et al. (2018) measure:
 
 ``` r
-joint_measures <- bdsm::jointness(bma_results)
+joint_measures <- badp::jointness(bma_results)
 head(joint_measures)
 #>       ish   sed
 #> ish    NA 0.159
@@ -247,7 +247,7 @@ You can also specify older measures, such as `"LS"` (Ley & Steel) or
 `"DW"` (Doppelhofer & Weeks):
 
 ``` r
-joint_measures_ls <- bdsm::jointness(bma_results, measure = "LS")
+joint_measures_ls <- badp::jointness(bma_results, measure = "LS")
 ```
 
 ## Example
@@ -256,18 +256,18 @@ Below is a minimal reproducible workflow:
 
 ``` r
 # 1) Data preparation
-data_prepared <- bdsm::economic_growth[, 1:5] %>%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:5] %>%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) %>%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE
   )
 
 # 2) Estimate model space
-model_space <- bdsm::optim_model_space(
+model_space <- badp::optim_model_space(
   df            = data_prepared,
   dep_var_col   = gdp,
   timestamp_col = year,
@@ -276,12 +276,12 @@ model_space <- bdsm::optim_model_space(
 )
 
 # 3) Run Bayesian Model Averaging
-bma_obj <- bdsm::bma(
+bma_obj <- badp::bma(
   model_space = model_space
 )
 
 # 4) Inspect the top 3 models under binomial prior
-best_3 <- bdsm::best_models(
+best_3 <- badp::best_models(
   bma_list = bma_obj,
   criterion = 1,
   best = 3
@@ -345,7 +345,7 @@ package vignette.)
 
 We welcome bug reports, feature requests, and contributions. Feel free
 to open an issue or pull request on
-[GitHub](https://github.com/mateuszwyszynski/bdsm).
+[GitHub](https://github.com/badp-project/badp).
 
 ## License
 

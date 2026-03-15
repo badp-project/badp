@@ -1,6 +1,6 @@
 test_that(paste("coef_hist creates correct lists with graphs"), {
 
-  bma_results <- bma(bdsm::small_model_space, round= 3, dilution = 0)
+  bma_results <- bma(badp::small_model_space, round= 3, dilution = 0)
 
   coef_plots <- coef_hist(bma_results, kernel = 1)
 

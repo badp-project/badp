@@ -1,6 +1,6 @@
 test_that(paste("posterior_dens creates correct lists with graphs"), {
 
-  bma_results <- bma(bdsm::small_model_space, round= 3, dilution = 0)
+  bma_results <- bma(badp::small_model_space, round= 3, dilution = 0)
 
   distPlots <- posterior_dens(bma_results, prior = "binomial", SE = "standard")
 

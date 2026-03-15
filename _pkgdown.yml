@@ -1,0 +1,109 @@
+url: https://badp-project.github.io/bdsm/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1a7abf"
+    border-radius: 0.5rem
+    btn-border-radius: 0.25rem
+
+home:
+  title: "badp - Bayesian Averaging for Dynamic Panels"
+  description: >
+    R package implementing Bayesian model averaging for dynamic panels
+    with weakly exogenous regressors.
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+    components:
+      links:
+        title: Links
+        text: |
+          - [View on CRAN](https://CRAN.R-project.org/package=badp)
+          - [Browse source code](https://github.com/badp-project/badp)
+          - [Report a bug](https://github.com/badp-project/badp/issues)
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/badp-project/badp
+      aria-label: GitHub
+
+reference:
+  - title: "Data Preparation"
+    desc: "Functions for preparing panel data for SEM-based BMA estimation."
+    contents:
+      - feature_standardization
+      - join_lagged_col
+      - matrices_from_df
+      - exogenous_matrix
+
+  - title: "Model Space Estimation"
+    desc: >
+      Core functions for estimating the full model space via maximum likelihood
+      and computing BIC, posterior probabilities, and standard deviations.
+    contents:
+      - optim_model_space
+      - optim_model_space_params
+      - init_model_space_params
+      - compute_model_space_stats
+
+  - title: "Optimization Internals"
+    desc: "Low-level wrappers for the nested and non-nested SEM optimization."
+    contents:
+      - nested_optimization_wrapper
+      - non_nested_optimization_wrapper
+      - nested_std_dev_from_params
+      - non_nested_std_dev_from_params
+
+  - title: "Bayesian Model Averaging"
+    desc: >
+      Perform BMA and inspect results: posterior inclusion probabilities,
+      best models, jointness measures, and regressor names.
+    contents:
+      - bma
+      - best_models
+      - model_pmp
+      - model_sizes
+      - jointness
+      - extract_names
+      - regressor_names_from_params_vector
+
+  - title: "Visualization"
+    desc: "Functions for visualizing BMA results."
+    contents:
+      - coef_hist
+      - posterior_dens
+
+  - title: "SEM Likelihood"
+    desc: >
+      Structural Equation Model likelihood computation and matrix building blocks.
+      These are used internally but exported for advanced users.
+    contents:
+      - sem_likelihood
+      - sem_B_matrix
+      - sem_C_matrix
+      - sem_psi_matrix
+      - sem_sigma_matrix
+      - sem_dep_var_matrix
+      - sem_regressors_matrix
+      - residual_maker_matrix
+      - hessian
+
+  - title: "Datasets"
+    desc: "Bundled example datasets and pre-computed model spaces."
+    contents:
+      - economic_growth
+      - original_economic_growth
+      - small_model_space
+      - full_model_space
+      - full_bma_results
+      - model_space_nonnested
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with

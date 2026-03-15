@@ -26,11 +26,11 @@ test_that(
   {
     lin_features_n <- 3
 
-    data_prepared <- bdsm::economic_growth[, 1:(3+lin_features_n)] %>%
-      bdsm::feature_standardization(
+    data_prepared <- badp::economic_growth[, 1:(3+lin_features_n)] %>%
+      badp::feature_standardization(
         excluded_cols = c(country, year, gdp)
       ) %>%
-      bdsm::feature_standardization(
+      badp::feature_standardization(
         group_by_col  = year,
         excluded_cols = country,
         scale         = FALSE
@@ -48,11 +48,11 @@ test_that(
   {
     lin_features_n <- 9
 
-    data_prepared <- bdsm::economic_growth[, 1:(3+lin_features_n)] %>%
-      bdsm::feature_standardization(
+    data_prepared <- badp::economic_growth[, 1:(3+lin_features_n)] %>%
+      badp::feature_standardization(
         excluded_cols = c(country, year, gdp)
       ) %>%
-      bdsm::feature_standardization(
+      badp::feature_standardization(
         group_by_col  = year,
         excluded_cols = country,
         scale         = FALSE

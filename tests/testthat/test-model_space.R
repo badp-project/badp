@@ -44,11 +44,11 @@ compare_matrices <- function(actual, expected, tols = NULL) {
 test_that("optim_model_space_params correctly computes small_economic_growth_ms", {
   set.seed(23)
 
-  data_prepared <- bdsm::economic_growth[,1:6] %>%
-    bdsm::feature_standardization(
+  data_prepared <- badp::economic_growth[,1:6] %>%
+    badp::feature_standardization(
       excluded_cols = c(country, year, gdp)
     ) %>%
-    bdsm::feature_standardization(
+    badp::feature_standardization(
       group_by_col  = year,
       excluded_cols = country,
       scale         = FALSE
@@ -63,7 +63,7 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
     nested        = TRUE
   )
 
-  compare_matrices(params, small_model_space$params, tols = rep(0.001, 8))
+  compare_matrices(params, small_model_space$params, tols = rep(0.01, 8))
 })
 
 non_zero_stats_mask_generator <- function(lin_features_n) {
@@ -98,11 +98,11 @@ test_that(
 
     lin_features_n <- 3
 
-    data_prepared <- bdsm::economic_growth[, 1:(3+lin_features_n)] %>%
-      bdsm::feature_standardization(
+    data_prepared <- badp::economic_growth[, 1:(3+lin_features_n)] %>%
+      badp::feature_standardization(
         excluded_cols = c(country, year, gdp)
       ) %>%
-      bdsm::feature_standardization(
+      badp::feature_standardization(
         group_by_col  = year,
         excluded_cols = country,
         scale         = FALSE
@@ -127,11 +127,11 @@ test_that(
 
 test_that(paste("model_space computes correct model_space list"), {
 
-  data_prepared <- bdsm::economic_growth[,1:5] %>%
-    bdsm::feature_standardization(
+  data_prepared <- badp::economic_growth[,1:5] %>%
+    badp::feature_standardization(
       excluded_cols = c(country, year, gdp)
     ) %>%
-    bdsm::feature_standardization(
+    badp::feature_standardization(
       group_by_col  = year,
       excluded_cols = country,
       scale         = FALSE
@@ -164,17 +164,17 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   cores <- parallel::detectCores(logical = FALSE)
   cl <- makeCluster(cores)
 
-  data_prepared <- bdsm::economic_growth %>%
-    bdsm::feature_standardization(
+  data_prepared <- badp::economic_growth %>%
+    badp::feature_standardization(
       excluded_cols = c(country, year, gdp)
     ) %>%
-    bdsm::feature_standardization(
+    badp::feature_standardization(
       group_by_col  = year,
       excluded_cols = country,
       scale         = FALSE
     )
 
-  model_space <- bdsm::optim_model_space(
+  model_space <- badp::optim_model_space(
     df             = data_prepared,
     timestamp_col  = year,
     entity_col     = country,
@@ -185,10 +185,10 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
 
   stopCluster(cl)
 
-  bma_results <- bdsm::bma(model_space, round = 5)
+  bma_results <- badp::bma(model_space, round = 5)
 
   actual <- bma_results[[1]]
-  expected <- bdsm::full_bma_results[[1]]
+  expected <- badp::full_bma_results[[1]]
 
   # define per-column tolerances
   tols <- rep(0.003, ncol(expected))

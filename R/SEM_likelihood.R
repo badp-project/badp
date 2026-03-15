@@ -1,4 +1,4 @@
-#' @useDynLib bdsm, .registration = TRUE
+#' @useDynLib badp, .registration = TRUE
 
 # Import C++ dependencies to satisfy CRAN checks.
 # Fixes the following NOTE:
