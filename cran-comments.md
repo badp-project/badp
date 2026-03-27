@@ -49,14 +49,13 @@ We kindly request that the old `bdsm` package be archived.
 # Resubmission
 
 Added only vignette as it was causing issues for auto check in previous version.
-The PDF file size shouldn't be a problem, but auto check claims it can be 
-vastly reduced, which does not seem to be the case.
+The PDF file size shouldn't be a problem, but auto check claims it can be vastly reduced, which does not seem to be the case.
 
 # 0.2.0
 
 # Resubmission
 
-Re-factored functions for calling the BSM summary.
+Re-factored functions for calling the BMA summary.
 Expanded package documentation and README as preparing for the publication.
 
 # 0.1.0

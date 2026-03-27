@@ -1,4 +1,4 @@
-#' Calculation of of the jointness measures
+#' Calculation of the jointness measures
 #'
 #' This function calculates four types of the jointness measures based on the posterior model probabilities calculated using binomial and binomial-beta model prior. The four measures are: \cr
 #' 1) HCGHM - for Hofmarcher et al. (2018) measure; \cr
@@ -58,7 +58,7 @@ jointness <- function(bma_list, measure = "HCGHM", rho = 0.5, round = 3){
   M <- bma_list[[5]] # size of the mode space from bma object
   forJointness <- bma_list[[6]] # matrix from bma object
   reg_ID <- forJointness[,1:R] # we extract regressor IDs
-  PMP_uniform <- as.matrix(forJointness[,R+1]) # PMP under unifrom prior
+  PMP_uniform <- as.matrix(forJointness[,R+1]) # PMP under uniform prior
   PMP_random <- as.matrix(forJointness[,R+2]) # PMP under random prior
 
   reg_ID2 <- matrix(0, nrow = M, ncol = R)
@@ -74,7 +74,7 @@ jointness <- function(bma_list, measure = "HCGHM", rho = 0.5, round = 3){
   reg_ID <-reg_ID2
 
   # Information about pairs of regressors: number of pairs, list of all possible regressors pairs
-  c = choose(R,2) # number of pairs e.i. jointness measures
+  c = choose(R,2) # number of pairs i.e. jointness measures
   Pairs <- as.matrix(utils::combn(1:R,2)) # a list of all possible pairs of regressors
 
   # introducing notation a matrices to store posterior objects
@@ -97,19 +97,19 @@ jointness <- function(bma_list, measure = "HCGHM", rho = 0.5, round = 3){
         if (reg_ID[i,t]==a){aIN <- 1} # CONDITION for presence of the regressors a in the model
         if (reg_ID[i,t]==b){bIN <- 1} # CONDITION for presence of the regressors b in the model
       }
-      if (aIN==1&bIN==1){# CONDNION for both variables being included in the model
+      if (aIN==1&bIN==1){# CONDITION for both variables being included in the model
         PMP_uniform_a_b[j,1] = PMP_uniform_a_b[j,1] + PMP_uniform[i,1]
         PMP_random_a_b[j,1] = PMP_random_a_b[j,1] + PMP_random[i,1]
       }
-      else if(aIN==0&bIN==1) {# CONDNION for only regressor b being included in the model
+      else if(aIN==0&bIN==1) {# CONDITION for only regressor b being included in the model
         PMP_uniform_Na_b[j,1] = PMP_uniform_Na_b[j,1] + PMP_uniform[i,1]
         PMP_random_Na_b[j,1] = PMP_random_Na_b[j,1] + PMP_random[i,1]
       }
-      else if(aIN==1&bIN==0) {# CONDNION for only regressor a being included in the model
+      else if(aIN==1&bIN==0) {# CONDITION for only regressor a being included in the model
         PMP_uniform_a_Nb[j,1] = PMP_uniform_a_Nb[j,1] + PMP_uniform[i,1]
         PMP_random_a_Nb[j,1] = PMP_random_a_Nb[j,1] + PMP_random[i,1]
       }
-      else if(aIN==0&bIN==0) {# CONDNION for both variables being excluded from the model
+      else if(aIN==0&bIN==0) {# CONDITION for both variables being excluded from the model
         PMP_uniform_Na_Nb[j,1] = PMP_uniform_Na_Nb[j,1] + PMP_uniform[i,1]
         PMP_random_Na_Nb[j,1] = PMP_random_Na_Nb[j,1] + PMP_random[i,1]
       }

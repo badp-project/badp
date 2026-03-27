@@ -45,7 +45,7 @@ and for the full model.}
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
-\code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+\code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
 }
 \value{
 List (or matrix) of parameters describing analyzed models.

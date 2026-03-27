@@ -44,7 +44,7 @@ cluster for parallel processing. If \code{NULL} (the default),
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
-\code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
+\code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
 that \code{scale} is used only for adjusting the \code{parscale} element added later in the function code.}
 }
 \value{
