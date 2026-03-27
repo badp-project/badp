@@ -21,13 +21,13 @@ bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 A list with 16 elements.
 
 \describe{
-\item{uniform_table}{A table containing the results based on the binomialmodel prior.}
+\item{uniform_table}{A table containing the results based on the binomial model prior.}
 \item{random_table}{A table containing the results based on the binomial-beta model prior.}
 \item{reg_names}{A vector containing the names of the regressors, used by the functions.}
 \item{R}{The total number of regressors.}
 \item{num_of_models}{The number of models present in the model space.}
-\item{forJointnes}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-\item{forBestModels}{A table containing model IDs, PMPs, coefficients, standard deviations,and standardized regression coefficients (stdRs) for the best_models function.}
+\item{forJointness}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
+\item{forBestModels}{A table containing model IDs, PMPs, coefficients, standard deviations, and standardized regression coefficients (stdRs) for the best_models function.}
 \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
 \item{sizePriors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
 \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
@@ -41,7 +41,7 @@ A list with 16 elements.
 }
 \description{
 This function calculates BMA statistics based on the provided model space.
-Other objects for furhter analysis are also returned.
+Other objects for further analysis are also returned.
 }
 \examples{
 \donttest{

@@ -25,10 +25,10 @@ best_models(
 \item{round}{Parameter indicating the decimal place to which number in the tables should be rounded (default round = 3)}
 
 \item{estimate}{A parameter with values TRUE or FALSE indicating which table should be displayed when
-TRUE - table with estimation to the results \cr
+TRUE - table with the estimation results \cr
 FALSE - table with the inclusion of regressors in the best models}
 
-\item{robust}{A parameter with values TRUE or FALSE indicating which type of stanrdard errors should be displayed
+\item{robust}{A parameter with values TRUE or FALSE indicating which type of standard errors should be displayed
 when the function finishes calculations. Works only if estimate = TRUE. Works well when best is small.\cr
 TRUE - robust standard errors \cr
 FALSE - regular standard errors}

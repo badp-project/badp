@@ -10,9 +10,9 @@
 #' @param best The number of the best models to be considered
 #' @param round Parameter indicating the decimal place to which number in the tables should be rounded (default round = 3)
 #' @param estimate A parameter with values TRUE or FALSE indicating which table should be displayed when
-#' TRUE - table with estimation to the results \cr
+#' TRUE - table with the estimation results \cr
 #' FALSE - table with the inclusion of regressors in the best models
-#' @param robust A parameter with values TRUE or FALSE indicating which type of stanrdard errors should be displayed
+#' @param robust A parameter with values TRUE or FALSE indicating which type of standard errors should be displayed
 #' when the function finishes calculations. Works only if estimate = TRUE. Works well when best is small.\cr
 #' TRUE - robust standard errors \cr
 #' FALSE - regular standard errors
@@ -60,17 +60,17 @@ best_models <- function(bma_list, criterion = 1, best = 5, round = 3, estimate =
   reg_names <- matrix(bma_list[[3]], nrow = K, ncol = 1) # vector with names of the regressors from bma object
   M <- bma_list[[5]] # size of the mode space from bma object
   info <- bma_list[[7]][,1:(R+3*K)]
-  PMP_unifrom <- matrix(bma_list[[7]][,R+3*K+1], nrow = M, ncol = 1)
+  PMP_uniform <- matrix(bma_list[[7]][,R+3*K+1], nrow = M, ncol = 1)
   PMP_random <- matrix(bma_list[[7]][,R+3*K+2], nrow = M, ncol = 1)
   d_free <-bma_list[[15]]
 
   if (best>M){
-    message("best > M - number of best models cannot be bigger than the total number of models. We set best = M and continiue :)")
+    message("best > M - number of best models cannot be bigger than the total number of models. We set best = M and continue :)")
     best = M
   }
 
   # check for the criterion chosen by the user
-  if (criterion==1){ranking <- PMP_unifrom}
+  if (criterion==1){ranking <- PMP_uniform}
   if (criterion==2){ranking <- PMP_random}
 
   Ranking<-cbind(ranking,info,d_free) # we add ranking criterion based on the users choice

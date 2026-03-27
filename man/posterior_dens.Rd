@@ -22,7 +22,7 @@
 A list with the graphs of the posterior densities of coefficients for all the considered regressors.
 }
 \description{
-This function draws graphs of the posterior densities of all the coeffcients of interest.
+This function draws graphs of the posterior densities of all the coefficients of interest.
 }
 \examples{
 \donttest{

@@ -13,7 +13,7 @@ A list with three graphs with prior and posterior model probabilities for indivi
 \enumerate{
 \item The results with binomial model prior (based on PMP - posterior model probability) \cr
 \item The results with binomial-beta model prior (based on PMP - posterior model probability) \cr
-\item On graph combining the aforementioned graphs
+\item One graph combining the aforementioned graphs
 }
 }
 \description{
