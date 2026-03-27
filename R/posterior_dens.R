@@ -1,6 +1,6 @@
 #' Graphs of the posterior densities of the coefficients
 #'
-#' This function draws graphs of the posterior densities of all the coeffcients of interest.
+#' This function draws graphs of the posterior densities of all the coefficients of interest.
 #'
 #' @name posterior_dens
 #'
@@ -48,7 +48,7 @@ posterior_dens <- function(bma_list, prior = "binomial", SE = "standard"){
   }
 
   if (!(SE %in% c("standard", "robust"))) {
-    stop("weight is wrongly specified: 'standard', or 'robust'")
+    stop("SE is wrongly specified: 'standard', or 'robust'")
   }
 
   if (prior=="binomial"){

@@ -32,7 +32,7 @@ A dataframe with two columns merged, i.e. just one column with the desired
 quantity is left.
 }
 \description{
-This function allows to turn data in the format with lagged values for a
+This function allows the user to turn data in the format with lagged values for a
 chosen column (i.e. there are two columns with the same quantity, but one
 column is lagged in time) into the format with just one column
 }

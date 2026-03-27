@@ -12,7 +12,7 @@
 #' @return A list with three graphs with prior and posterior model probabilities for individual models:\cr
 #' 1) The results with binomial model prior (based on PMP - posterior model probability) \cr
 #' 2) The results with binomial-beta model prior (based on PMP - posterior model probability) \cr
-#' 3) On graph combining the aforementioned graphs
+#' 3) One graph combining the aforementioned graphs
 #'
 #' @export
 #'
@@ -59,7 +59,7 @@ if (is.null(top)){
 
 if (top>M){# CONDITION about what to do if the user sets top that is higher than M
   # we tell the user that we are setting top = R
-  message("The number of the best models (top) cannot be higher than the total number of models. We set top = R (total number of regressors) and continiue :)")
+  message("The number of the best models (top) cannot be higher than the total number of models. We set top = R (total number of regressors) and continue :)")
   top = M
 }
 
@@ -95,13 +95,13 @@ Graph1 <- ggplot2::ggplot(forGraph1, ggplot2::aes(x = ID, y = Value)) +
   ggplot2::geom_line(ggplot2::aes(color = Probability, linetype = Probability)) +
   ggplot2::scale_color_manual(values = c("darkred", "steelblue")) +
   ggplot2::ylab("Prior, Posterior") +
-  ggplot2::xlab("Model number in the raniking")
+  ggplot2::xlab("Model number in the ranking")
 
 Graph2 <- ggplot2::ggplot(forGraph2, ggplot2::aes(x = ID, y = Value)) +
   ggplot2::geom_line(ggplot2::aes(color = Probability, linetype = Probability)) +
   ggplot2::scale_color_manual(values = c("darkred", "steelblue")) +
   ggplot2::ylab("Prior, Posterior") +
-  ggplot2::xlab("Model number in the raniking")
+  ggplot2::xlab("Model number in the ranking")
 
 if (dilution==0){
 Graph1_2 <- ggplot2::ggplot(forGraph1, ggplot2::aes(x = ID, y = Value)) +

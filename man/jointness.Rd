@@ -2,7 +2,7 @@
 % Please edit documentation in R/jointness.R
 \name{jointness}
 \alias{jointness}
-\title{Calculation of of the jointness measures}
+\title{Calculation of the jointness measures}
 \usage{
 jointness(bma_list, measure = "HCGHM", rho = 0.5, round = 3)
 }

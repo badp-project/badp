@@ -121,7 +121,7 @@ regressor_names_from_params_vector <- function(params) {
 #' \link[badp]{sem_likelihood} for details.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
-#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
@@ -178,7 +178,7 @@ nested_optimization_wrapper <- function(
 #' \link[badp]{sem_likelihood} for details.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
-#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
 #' @param n_all_regressors Integer. Total number of potential regressors in the
 #' full (maximal) model space. Used to compute the full parameter dimension
 #' (for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
@@ -276,7 +276,7 @@ non_nested_optimization_wrapper <- function(
 #' \code{pbapply::pblapply} will run sequentially.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
-#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
 #' @param nested Logical. If \code{TRUE} (default), compute approximate standard
 #' deviations using the nested-model approach via
 #' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
@@ -736,13 +736,8 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' \code{pbapply::pblapply} will run sequentially.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
-#' \code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
+#' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
 #' that \code{scale} is used only for adjusting the \code{parscale} element added later in the function code.
-#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
-#' deviations using the nested-model approach via
-#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
-#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
-#' approximation routine is used for each model in \code{params}.
 #' @param nested Logical. If \code{TRUE} (default), compute approximate standard
 #' deviations using the nested-model approach via
 #' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested

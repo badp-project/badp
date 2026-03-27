@@ -1,6 +1,6 @@
 #' Graphs of the prior and posterior model probabilities of the model sizes
 #'
-#' This function draws four graphs of prior and posterior model probabilities: \cr
+#' This function draws two graphs of prior and posterior model probabilities: \cr
 #' a) The results with binomial model prior (based on PMP - posterior model probability) \cr
 #' b) The results with binomial-beta model prior (based on PMP - posterior model probability)
 #'
