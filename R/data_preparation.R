@@ -94,6 +94,7 @@ join_lagged_col <- function(df, col, col_lagged, timestamp_col,
 #'
 #' @export
 feature_standardization <- function(df, excluded_cols, group_by_col, scale = TRUE) {
+  df <- tibble::as_tibble(df)
   if (missing(group_by_col)) {
     # No grouping requested
     if (missing(excluded_cols)) {
