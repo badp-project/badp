@@ -22,15 +22,15 @@ A data frame with 1012 rows and 8 columns
 }
 }
 \source{
-\url{https://doi.org/10.7910/DVN/M9DADS}
+\url{https://doi.org/10.7910/DVN/GTOFJB}
 }
 \usage{
 migration_data
 }
 \description{
-Data used in the manuscript Beck, K., Dubel, M., Wyszyński, M., & Yersh, V. (2025).
-Most seek higher earnings, some escape unemployment, but none look for a handout:
-Economic drivers of labor mobility in the European Union.
-https://doi.org/10.2139/ssrn.5472939
+Data used in the manuscript Afonso, A., Alves, J., & Beck, K. (2025).
+Drivers of migration flows in the European Union: Earnings or unemployment?
+International Labour Review, 164(2), 1-23.
+https://doi.org/10.16995/ilr.18845
 }
 \keyword{datasets}
