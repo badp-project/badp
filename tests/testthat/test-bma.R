@@ -1,16 +1,16 @@
 test_that(paste("bma computes correct bma_list and all its objects"), {
 
-  data_prepared <- bdsm::economic_growth[,1:6] %>%
-    bdsm::feature_standardization(
+  data_prepared <- badp::economic_growth[,1:6] %>%
+    badp::feature_standardization(
       excluded_cols = c(country, year, gdp)
     ) %>%
-    bdsm::feature_standardization(
+    badp::feature_standardization(
       group_by_col  = year,
       excluded_cols = country,
       scale         = FALSE
     )
 
-  bma_results <- bma(small_model_space, df = data_prepared, round= 3, dilution = 0)
+  bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
   expect_equal(length(bma_results), 16)
   expect_equal(is.numeric(bma_results[[4]]), TRUE)

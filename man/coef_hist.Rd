@@ -6,6 +6,13 @@
 \arguments{
 \item{bma_list}{bma object (the result of the bma function)}
 
+\item{weight}{Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
+\enumerate{
+\item NULL - no weighting (default option) \cr
+\item "binomial" - using posterior model probabilities based on binomial model prior \cr
+\item "beta" - using posterior model probabilities based on binomial-beta model prior
+}}
+
 \item{BW}{Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
 \enumerate{
 \item "FD" Freedman-Diaconis method \cr
@@ -35,19 +42,18 @@ This function draws graphs of the distribution (in the form of histogram or kern
 \donttest{
 library(magrittr)
 
-data_prepared <- bdsm::economic_growth[, 1:6] \%>\%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:6] \%>\%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) \%>\%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE
   )
 
 bma_results <- bma(
-  model_space = bdsm::small_model_space,
-  df          = data_prepared,
+  model_space = badp::small_model_space,
   round       = 3,
   dilution    = 0
 )

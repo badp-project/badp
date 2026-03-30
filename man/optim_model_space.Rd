@@ -10,6 +10,7 @@ optim_model_space(
   entity_col,
   dep_var_col,
   init_value,
+  nested = TRUE,
   exact_value = FALSE,
   cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
@@ -27,9 +28,15 @@ optim_model_space(
 \item{init_value}{The value with which the model space will be initialized.
 This will be the starting point for the numerical optimization.}
 
+\item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
+deviations using the nested-model approach via
+\code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+approximation routine is used for each model in \code{params}.}
+
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{cl}{An optional cluster object. If supplied, the function will use this
 cluster for parallel processing. If \code{NULL} (the default),
@@ -45,22 +52,26 @@ List with two objects: \cr
 \enumerate{
 \item params - table with parameters of all estimated models \cr
 \item stats - table with the value of maximized likelihood function, BIC, and
-standard errors for all estimated models
+standard errors for all estimated models \cr
+\item reg_names - vector with the names of the variables \cr
+\item observations_num - number of observations \cr
+\item df - data frame used in estimation
 }
 }
 \description{
 This function calculates model space, values of the maximized likelihood function, BICs, and
-standard deviations of the parameters that will be used in Bayesian model averaging.
+standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
+it provides a vector with the names of the variables for bma function and the number of observations.
 }
 \examples{
-\dontrun{
+\donttest{
 library(magrittr)
 
-data_prepared <- bdsm::economic_growth[, 1:5] \%>\%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:5] \%>\%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) \%>\%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE

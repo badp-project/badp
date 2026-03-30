@@ -1,4 +1,4 @@
-#' @useDynLib bdsm, .registration = TRUE
+#' @useDynLib badp, .registration = TRUE
 
 # Import C++ dependencies to satisfy CRAN checks.
 # Fixes the following NOTE:
@@ -88,16 +88,20 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
                              lin_related_regressors = NULL,
                              which_matrices = c("Y1", "Y2", "Z", "cur_Y2",
                                                 "cur_Z", "res_maker_matrix")) {
-
   Y1 <- if ("Y1" %in% which_matrices) {
     df %>% sem_dep_var_matrix(
       timestamp_col = {{ timestamp_col }}, entity_col = {{ entity_col }},
       dep_var_col = {{ dep_var_col }})
   } else NULL
   Y2 <- if ("Y2" %in% which_matrices) {
-    df %>% sem_regressors_matrix(
-      timestamp_col = {{ timestamp_col }}, entity_col = {{ entity_col }},
-      dep_var_col = {{ dep_var_col }})
+    Y2_tmp <- df %>%
+      sem_regressors_matrix(
+        timestamp_col = {{ timestamp_col }},
+        entity_col = {{ entity_col }},
+        dep_var_col = {{ dep_var_col }}
+        )
+    # Y2 should never be null -  but can be 0x0 matrix if no regressors in the model
+    if (is.null(Y2_tmp)) matrix(numeric(0), nrow = 0, ncol = 0) else Y2_tmp
   } else NULL
   cur_Y2 <- if ("cur_Y2" %in% which_matrices) {
     df %>%

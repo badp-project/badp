@@ -18,13 +18,15 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
                               Rcpp::Nullable<arma::vec> psis = R_NilValue,
                               bool per_entity = false,
                               bool exact_value = true) {
-  arma::mat res_maker_matrix = residual_maker_matrix(cur_Z);
 
+  arma::mat res_maker_matrix = residual_maker_matrix(cur_Z);
+  
   int n_entities = Y1.n_rows;
   int periods_n = dep_vars.n_elem;
   int tot_regressors_n = Y2.n_cols / (periods_n - 1);
   int lin_related_regressors_n =
       beta.isNotNull() ? as<arma::vec>(beta).n_elem : 0;
+
 
   Rcpp::List B = sem_B_matrix(alpha, periods_n, beta);
   arma::mat C = sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1);
@@ -32,8 +34,7 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
 
   arma::mat B1 = as<arma::mat>(B[0]);
   arma::mat S1 = as<arma::mat>(S[0]);
-  arma::mat S2 = as<arma::mat>(S[1]);
-
+  
   arma::mat U1;
   if (lin_related_regressors_n == 0) {
     U1 = Y1 * B1.t() - cur_Z * C.t();
@@ -46,26 +47,35 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
   if (!arma::inv_sympd(S11_inverse, S1)) {
     return wrap(NumericVector::create(NA_REAL));
   }
-  arma::mat M = Y2 - U1 * S11_inverse * S2;
-  arma::mat H = trans(M) * res_maker_matrix * M;
-
+  
+  
   double gaussian_normalization_const =
-      log(2 * M_PI) * n_entities *
-      (periods_n + (periods_n - 1) * tot_regressors_n) / 2.0;
+  log(2 * M_PI) * n_entities *
+  (periods_n + (periods_n - 1) * tot_regressors_n) / 2.0;
   double trace_simplification_term =
-      0.5 * n_entities * (periods_n - 1) * tot_regressors_n;
-
+  0.5 * n_entities * (periods_n - 1) * tot_regressors_n;
+  
   double S1_logdet{}, S1_sign{};
   arma::log_det(S1_logdet, S1_sign, S1);
   if (!std::isfinite(S1_logdet) || S1_sign <= 0) {
     return wrap(NumericVector::create(NA_REAL));
   }
-
-  arma::mat H_scaled = H / static_cast<double>(n_entities);
-  double H_logdet{}, H_sign{};
-  arma::log_det(H_logdet, H_sign, H_scaled);
-  if (!std::isfinite(H_logdet) || H_sign <= 0) {
-    return wrap(NumericVector::create(NA_REAL));
+  
+  // this term shoudl be 0 if lag. dep. var is the only regressor
+  // then likelihood is calc. based on the  
+  double H_logdet = 0.;
+  
+  if (tot_regressors_n >= 1) {
+    arma::mat S2 = as<arma::mat>(S[1]);
+    arma::mat M = Y2 - U1 * S11_inverse * S2;
+    arma::mat H = trans(M) * res_maker_matrix * M;
+    
+    arma::mat H_scaled = H / static_cast<double>(n_entities);
+    double H_sign{};
+    arma::log_det(H_logdet, H_sign, H_scaled);
+    if (!std::isfinite(H_logdet) || H_sign <= 0) {
+      return wrap(NumericVector::create(NA_REAL));
+    }
   }
 
   double likelihood =

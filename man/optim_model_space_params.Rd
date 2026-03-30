@@ -10,6 +10,7 @@ optim_model_space_params(
   entity_col,
   dep_var_col,
   init_value,
+  nested,
   exact_value = FALSE,
   cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
@@ -27,9 +28,15 @@ optim_model_space_params(
 \item{init_value}{The value with which the model space will be initialized.
 This will be the starting point for the numerical optimization.}
 
+\item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
+deviations using the nested-model approach via
+\code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
+approach via \code{non_nested_std_dev_from_params()}. The choice affects which
+approximation routine is used for each model in \code{params}.}
+
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
-\link[bdsm]{sem_likelihood} for details.}
+\link[badp]{sem_likelihood} for details.}
 
 \item{cl}{An optional cluster object. If supplied, the function will use this
 cluster for parallel processing. If \code{NULL} (the default),

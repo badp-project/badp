@@ -20,19 +20,18 @@
 #' \donttest{
 #' library(magrittr)
 #'
-#' data_prepared <- bdsm::economic_growth[, 1:6] %>%
-#'   bdsm::feature_standardization(
+#' data_prepared <- badp::economic_growth[, 1:6] %>%
+#'   badp::feature_standardization(
 #'     excluded_cols = c(country, year, gdp)
 #'   ) %>%
-#'   bdsm::feature_standardization(
+#'   badp::feature_standardization(
 #'     group_by_col  = year,
 #'     excluded_cols = country,
 #'     scale         = FALSE
 #'   )
 #'
 #' bma_results <- bma(
-#'   model_space = bdsm::small_model_space,
-#'   df          = data_prepared,
+#'   model_space = badp::small_model_space,
 #'   round       = 3,
 #'   dilution    = 0
 #' )
@@ -96,13 +95,13 @@ Graph1 <- ggplot2::ggplot(forGraph1, ggplot2::aes(x = ID, y = Value)) +
   ggplot2::geom_line(ggplot2::aes(color = Probability, linetype = Probability)) +
   ggplot2::scale_color_manual(values = c("darkred", "steelblue")) +
   ggplot2::ylab("Prior, Posterior") +
-  ggplot2::xlab("Model number in the raniking")
+  ggplot2::xlab("Model number in the ranking")
 
 Graph2 <- ggplot2::ggplot(forGraph2, ggplot2::aes(x = ID, y = Value)) +
   ggplot2::geom_line(ggplot2::aes(color = Probability, linetype = Probability)) +
   ggplot2::scale_color_manual(values = c("darkred", "steelblue")) +
   ggplot2::ylab("Prior, Posterior") +
-  ggplot2::xlab("Model number in the raniking")
+  ggplot2::xlab("Model number in the ranking")
 
 if (dilution==0){
 Graph1_2 <- ggplot2::ggplot(forGraph1, ggplot2::aes(x = ID, y = Value)) +
@@ -137,9 +136,7 @@ if (dilution==1){
 }
 
 # Putting together the last plot
-Finalplot <- ggpubr::ggarrange(Graph1_2,Graph2_2,
-                               labels = c("a)", "b)"),
-                               ncol = 1, nrow = 2, common.legend = TRUE, legend = "bottom")
+Finalplot <- arrange_plots_common_legend(Graph1_2, Graph2_2)
 
 print(Finalplot)
 

@@ -4,12 +4,10 @@
 \alias{bma}
 \title{Calculation of the bma object}
 \usage{
-bma(model_space, df, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
+bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 }
 \arguments{
 \item{model_space}{List with params and stats from the model space}
-
-\item{df}{Data frame with data for the SEM analysis.}
 
 \item{round}{Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)}
 
@@ -49,19 +47,18 @@ Other objects for furhter analysis are also returned.
 \donttest{
 library(magrittr)
 
-data_prepared <- bdsm::economic_growth[, 1:6] \%>\%
-  bdsm::feature_standardization(
+data_prepared <- badp::economic_growth[, 1:6] \%>\%
+  badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) \%>\%
-  bdsm::feature_standardization(
+  badp::feature_standardization(
     group_by_col  = year,
     excluded_cols = country,
     scale         = FALSE
   )
 
 bma_results <- bma(
-  model_space = bdsm::small_model_space,
-  df          = data_prepared,
+  model_space = badp::small_model_space,
   round       = 3,
   dilution    = 0
 )
