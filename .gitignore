@@ -58,6 +58,8 @@ rsconnect/
 
 # testthat error messages
 tests/testthat/testthat-problems.rds
+tests/testthat/Rplots.pdf
+inst/visual_comparison_output/
 inst/doc
 /output
 
