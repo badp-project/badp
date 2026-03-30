@@ -92,13 +92,7 @@ times number of time stamps divided by 2, i.e.
 \code{regressors_n * (periods_n - 1) * periods_n / 2}
 }
 \examples{
-set.seed(1)
-df <- data.frame(
-  entities = rep(1:4, 5),
-  times = rep(seq(1960, 2000, 10), each = 4),
-  dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
-)
-df <-
-  feature_standardization(df, excluded_cols = c(times, entities))
-sem_likelihood(0.5, df, times, entities, dep_var)
+data(economic_growth)
+eg <- feature_standardization(economic_growth, excluded_cols = c(year, country))
+sem_likelihood(0.5, eg, year, country, gdp)
 }

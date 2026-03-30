@@ -1,3 +1,8 @@
+# badp 0.4.1
+
+* Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
+* Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
+
 # badp 0.4.0
 
 * Renamed package from `bdsm` to `badp` (Bayesian Averaging for Dynamic Panels).
