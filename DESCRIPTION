@@ -1,6 +1,6 @@
 Package: badp
 Title: Bayesian Averaging for Dynamic Panels
-Version: 0.4.0.1
+Version: 0.4.1
 Authors@R:
     c(person(given = "Krzysztof",
            family = "Beck",
