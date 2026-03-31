@@ -84,6 +84,8 @@ sem_params_to_list <- function(params, periods_n, tot_regressors_n,
 #' @examples
 #' matrices_from_df(economic_growth, year, country, gdp, c("pop", "sed"),
 #'                  c("Y1", "Y2"))
+#'
+#' @keywords internal
 matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
                              lin_related_regressors = NULL,
                              which_matrices = c("Y1", "Y2", "Z", "cur_Y2",

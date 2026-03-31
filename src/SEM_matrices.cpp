@@ -20,6 +20,8 @@ using namespace arma;
 //'
 //' @examples
 //' residual_maker_matrix(matrix(c(1,2,3,4), nrow = 2))
+//'
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat residual_maker_matrix(const arma::mat &m) {
   arma::mat proj_matrix = m * arma::solve(m.t() * m, m.t());
@@ -40,6 +42,8 @@ arma::mat residual_maker_matrix(const arma::mat &m) {
 //'
 //' @examples
 //' sem_B_matrix(3, 4, 4:6)
+//'
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List sem_B_matrix(double alpha, int periods_n,
                         Rcpp::Nullable<arma::vec> beta = R_NilValue) {
@@ -107,6 +111,8 @@ Rcpp::List sem_B_matrix(double alpha, int periods_n,
 //' phi_1 <- 21:25
 //' periods_n <- 4
 //' sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+//'
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
                        Rcpp::Nullable<arma::vec> beta = R_NilValue,
@@ -152,6 +158,8 @@ arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
 //'
 //' @examples
 //' sem_psi_matrix(1:30, 4, 5)
+//'
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat sem_psi_matrix(const arma::vec &psis, int timestamps_n,
                          int features_n) {
@@ -211,6 +219,8 @@ arma::mat sem_psi_matrix(const arma::vec &psis, int timestamps_n,
 //' phis <- c(10, 10, 20, 20, 30, 30)
 //' psis <- c(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112)
 //' sem_sigma_matrix(err_var, dep_vars, phis, psis)
+//'
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List sem_sigma_matrix(double err_var, const arma::vec &dep_vars,
                             Rcpp::Nullable<arma::vec> phis = R_NilValue,

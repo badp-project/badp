@@ -35,4 +35,6 @@ df <- data.frame(
   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
 )
 sem_dep_var_matrix(df, times, entities, dep_var)
+
 }
+\keyword{internal}

@@ -24,4 +24,6 @@ Matrix with psi parameters for SEM representation
 }
 \examples{
 sem_psi_matrix(1:30, 4, 5)
+
 }
+\keyword{internal}

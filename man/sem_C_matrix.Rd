@@ -33,4 +33,6 @@ beta <- 11:15
 phi_1 <- 21:25
 periods_n <- 4
 sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+
 }
+\keyword{internal}
