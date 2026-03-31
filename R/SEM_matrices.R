@@ -40,6 +40,8 @@ determine_min_timestamps <- function(df, timestamp_col) {
 #'   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
 #' )
 #' sem_dep_var_matrix(df, times, entities, dep_var)
+#'
+#' @keywords internal
 sem_dep_var_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
   min_timestamps <-
     determine_min_timestamps(df = df, timestamp_col = {{ timestamp_col }})
@@ -81,6 +83,8 @@ sem_dep_var_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
 #'   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
 #' )
 #' sem_regressors_matrix(df, times, entities, dep_var)
+#'
+#' @keywords internal
 sem_regressors_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},
@@ -133,6 +137,7 @@ sem_regressors_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
 #'   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
 #' )
 #' exogenous_matrix(df, times, entities, dep_var)
+#' @keywords internal
 exogenous_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},

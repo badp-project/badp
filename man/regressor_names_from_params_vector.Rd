@@ -26,3 +26,4 @@ params <- c(alpha = 1, beta_gdp = 1, beta_gdp_lagged = 1, phi_0 = 1, err_var = 1
 regressor_names_from_params_vector(params)
 
 }
+\keyword{internal}

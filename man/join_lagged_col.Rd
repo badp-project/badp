@@ -47,3 +47,4 @@ df <- data.frame(
 join_lagged_col(df, gdp, gdp_lagged, year, country, 1)
 
 }
+\keyword{internal}

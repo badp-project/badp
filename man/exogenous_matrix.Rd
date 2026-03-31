@@ -35,3 +35,4 @@ df <- data.frame(
 )
 exogenous_matrix(df, times, entities, dep_var)
 }
+\keyword{internal}

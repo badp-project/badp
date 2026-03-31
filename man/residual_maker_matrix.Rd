@@ -19,4 +19,6 @@ the Wikipedia.
 }
 \examples{
 residual_maker_matrix(matrix(c(1,2,3,4), nrow = 2))
+
 }
+\keyword{internal}

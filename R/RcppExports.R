@@ -19,6 +19,8 @@ sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2, cu
 #'
 #' @examples
 #' residual_maker_matrix(matrix(c(1,2,3,4), nrow = 2))
+#'
+#' @keywords internal
 residual_maker_matrix <- function(m) {
     .Call(`_badp_residual_maker_matrix`, m)
 }
@@ -37,6 +39,8 @@ residual_maker_matrix <- function(m) {
 #'
 #' @examples
 #' sem_B_matrix(3, 4, 4:6)
+#'
+#' @keywords internal
 sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
     .Call(`_badp_sem_B_matrix`, alpha, periods_n, beta)
 }
@@ -64,6 +68,8 @@ sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
 #' phi_1 <- 21:25
 #' periods_n <- 4
 #' sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+#'
+#' @keywords internal
 sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
     .Call(`_badp_sem_C_matrix`, alpha, phi_0, periods_n, beta, phi_1)
 }
@@ -84,6 +90,8 @@ sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
 #'
 #' @examples
 #' sem_psi_matrix(1:30, 4, 5)
+#'
+#' @keywords internal
 sem_psi_matrix <- function(psis, timestamps_n, features_n) {
     .Call(`_badp_sem_psi_matrix`, psis, timestamps_n, features_n)
 }
@@ -108,6 +116,8 @@ sem_psi_matrix <- function(psis, timestamps_n, features_n) {
 #' phis <- c(10, 10, 20, 20, 30, 30)
 #' psis <- c(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112)
 #' sem_sigma_matrix(err_var, dep_vars, phis, psis)
+#'
+#' @keywords internal
 sem_sigma_matrix <- function(err_var, dep_vars, phis = NULL, psis = NULL) {
     .Call(`_badp_sem_sigma_matrix`, err_var, dep_vars, phis, psis)
 }

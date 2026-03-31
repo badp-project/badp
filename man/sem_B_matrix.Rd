@@ -22,4 +22,6 @@ representation.
 }
 \examples{
 sem_B_matrix(3, 4, 4:6)
+
 }
+\keyword{internal}

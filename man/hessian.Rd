@@ -28,3 +28,4 @@ lik <- function(theta) {
 hessian(lik, c(1, 1))
 
 }
+\keyword{internal}

@@ -13,4 +13,13 @@ full_bma_results
 \description{
 A list with multiple elements summarising the BMA analysis
 }
+\seealso{
+Other datasets: 
+\code{\link{economic_growth}},
+\code{\link{full_model_space}},
+\code{\link{model_space_nonnested}},
+\code{\link{original_economic_growth}},
+\code{\link{small_model_space}}
+}
+\concept{datasets}
 \keyword{datasets}
