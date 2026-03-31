@@ -29,4 +29,6 @@ dep_vars <- c(2, 2, 2, 2)
 phis <- c(10, 10, 20, 20, 30, 30)
 psis <- c(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112)
 sem_sigma_matrix(err_var, dep_vars, phis, psis)
+
 }
+\keyword{internal}

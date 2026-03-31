@@ -17,6 +17,7 @@
 #'  reg_names <- extract_names(df)
 #'
 #' }
+#' @keywords internal
 extract_names <- function(df){
   reg_names <- colnames(df)
   reg_names <- reg_names[-(1:2)]
