@@ -146,7 +146,7 @@ test_that(paste("model_space computes correct model_space list"), {
   )
 
   expect_equal(length(model_space), 6)
-  expect_equal(class(model_space), "list")
+  expect_s3_class(model_space, "badp_model_space")
   expect_equal(class(model_space[[1]]), c("matrix","array"))
   expect_equal(class(model_space[[2]]), c("matrix","array"))
 })
