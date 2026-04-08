@@ -150,8 +150,7 @@ print.summary.badp_bma <- function(x, ...) {
   # Identify important variables (high PIP)
   if ("PIP" %in% colnames(x$results)) {
     pips <- x$results[, "PIP"]
-    pips <- pips[!is.na(pips)]
-    high_pip <- which(pips > 0.5)
+    high_pip <- which(!is.na(pips) & pips > 0.5)
     if (length(high_pip) > 0) {
       cat("Variables with PIP > 0.5:\n")
       cat("  ", paste(x$reg_names[high_pip], collapse = ", "), "\n\n")
