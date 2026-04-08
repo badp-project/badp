@@ -33,8 +33,8 @@ An object of class \code{badp_bma}, which is a list with 16 elements:
 \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
 \item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
-\item{alphas}{A vector of coefficients for the lagged dependent variable in the coef_hist function.}
-\item{betas_nonzero}{A vector of nonzero coefficients for the regressors in the coef_hist function.}
+\item{alphas}{A matrix (M×1) of coefficients for the lagged dependent variable across all models, used in the coef_hist function.}
+\item{betas_nonzero}{A matrix ((M/2)×R) of nonzero coefficients for the regressors, used in the coef_hist function.}
 \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
 }
