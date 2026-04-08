@@ -757,13 +757,20 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @importFrom parallel parApply
 #'
 #' @return
-#' List with two objects: \cr
+#' An object of class \code{badp_model_space}, which is a list with the following elements: \cr
 #' 1) params - table with parameters of all estimated models \cr
 #' 2) stats - table with the value of maximized likelihood function, BIC, and
 #' standard errors for all estimated models \cr
 #' 3) reg_names - vector with the names of the variables \cr
 #' 4) observations_num - number of observations \cr
-#' 5) df - data frame used in estimation
+#' 5) df - data frame used in estimation \cr
+#' 6) is_nested - logical indicating whether nested approach was used
+#'
+#' @section Methods:
+#' Objects of class \code{badp_model_space} have the following methods available:
+#' \itemize{
+#'   \item \code{\link{print.badp_model_space}} - Display model space information
+#' }
 #'
 #' @examples
 #' \donttest{
@@ -826,5 +833,9 @@ optim_model_space <-
     reg_names <- extract_names(df)
     observations_num <- nrow((na.omit(df[,4])))
 
-    list(params = params, stats = stats, reg_names = reg_names, observations_num = observations_num, df = df, is_nested = nested)
+    structure(
+      list(params = params, stats = stats, reg_names = reg_names,
+           observations_num = observations_num, df = df, is_nested = nested),
+      class = "badp_model_space"
+    )
   }

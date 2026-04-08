@@ -39,13 +39,4 @@ A list created with \code{\link{optim_model_space}} using the
 \code{\link{economic_growth}} dataset and only three regressors:
 \code{ish}, \code{sed}, and \code{pgrw}.
 }
-\seealso{
-Other datasets: 
-\code{\link{economic_growth}},
-\code{\link{full_bma_results}},
-\code{\link{full_model_space}},
-\code{\link{model_space_nonnested}},
-\code{\link{original_economic_growth}}
-}
-\concept{datasets}
 \keyword{datasets}

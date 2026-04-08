@@ -5,7 +5,7 @@
 \alias{full_bma_results}
 \title{Example output of the bma function}
 \format{
-An object of class \code{list} of length 16.
+An object of class \code{badp_bma} of length 16.
 }
 \usage{
 full_bma_results
@@ -13,13 +13,4 @@ full_bma_results
 \description{
 A list with multiple elements summarising the BMA analysis
 }
-\seealso{
-Other datasets: 
-\code{\link{economic_growth}},
-\code{\link{full_model_space}},
-\code{\link{model_space_nonnested}},
-\code{\link{original_economic_growth}},
-\code{\link{small_model_space}}
-}
-\concept{datasets}
 \keyword{datasets}
