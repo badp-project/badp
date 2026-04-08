@@ -1,5 +1,6 @@
 # badp 0.4.1
 
+* Improved documentation: Added `@keywords internal` to hide helper and implementation functions from user-facing help documentation.
 * Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
 * Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
 
