@@ -36,13 +36,4 @@ economic_growth
 Data used in Growth Empirics in Panel Data under Model Uncertainty and Weak
 Exogeneity (Moral-Benito, 2016, Journal of Applied Econometrics).
 }
-\seealso{
-Other datasets: 
-\code{\link{full_bma_results}},
-\code{\link{full_model_space}},
-\code{\link{model_space_nonnested}},
-\code{\link{original_economic_growth}},
-\code{\link{small_model_space}}
-}
-\concept{datasets}
 \keyword{datasets}

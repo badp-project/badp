@@ -37,13 +37,4 @@ model_space_nonnested
 A list created with \code{\link{optim_model_space}} using the
 \code{\link{economic_growth}} dataset.
 }
-\seealso{
-Other datasets: 
-\code{\link{economic_growth}},
-\code{\link{full_bma_results}},
-\code{\link{full_model_space}},
-\code{\link{original_economic_growth}},
-\code{\link{small_model_space}}
-}
-\concept{datasets}
 \keyword{datasets}
