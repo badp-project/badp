@@ -18,31 +18,42 @@ bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 \item{dil.Par}{Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.}
 }
 \value{
-A list with 16 elements.
+An object of class \code{badp_bma}, which is a list with 16 elements:
 
 \describe{
-\item{uniform_table}{A table containing the results based on the binomialmodel prior.}
+\item{uniform_table}{A table containing the results based on the binomial model prior.}
 \item{random_table}{A table containing the results based on the binomial-beta model prior.}
 \item{reg_names}{A vector containing the names of the regressors, used by the functions.}
 \item{R}{The total number of regressors.}
 \item{num_of_models}{The number of models present in the model space.}
-\item{forJointnes}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-\item{forBestModels}{A table containing model IDs, PMPs, coefficients, standard deviations,and standardized regression coefficients (stdRs) for the best_models function.}
+\item{jointness_data}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
+\item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard deviations, and standardized regression coefficients (stdRs) for the best_models function.}
 \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
-\item{sizePriors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
+\item{size_priors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
 \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
-\item{modelPriors}{A table containing the model priors, used by the model_pmp function.}
+\item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
 \item{alphas}{A vector of coefficients for the lagged dependent variable in the coef_hist function.}
 \item{betas_nonzero}{A vector of nonzero coefficients for the regressors in the coef_hist function.}
-\item{d_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
-\item{PMStable}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+\item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
+\item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
 }
 }
 \description{
 This function calculates BMA statistics based on the provided model space.
 Other objects for furhter analysis are also returned.
 }
+\section{Methods}{
+
+Objects of class \code{badp_bma} have the following methods available:
+\itemize{
+\item \code{\link{print.badp_bma}} - Display results
+\item \code{\link{summary.badp_bma}} - Detailed statistical summary
+\item \code{\link{coef.badp_bma}} - Extract coefficients
+\item \code{\link{plot.badp_bma}} - Visualize results
+}
+}
+
 \examples{
 \donttest{
 library(magrittr)
