@@ -58,7 +58,7 @@ if (is.null(top)){
 }
 
 if (top>M){# CONDITION about what to do if the user sets top that is higher than M
-  # we tell the user that we are setting top = R
+  # we tell the user that we are setting top = M
   message("The number of the best models (top) cannot be higher than the total number of models. We set top = R (total number of regressors) and continue :)")
   top = M
 }
