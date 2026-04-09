@@ -1,6 +1,6 @@
 #' Graphs of the distribution of the coefficients over the model space
 #'
-#' This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes this regressors (half of the model space).
+#' This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes these regressors (half of the model space).
 #'
 #' @name coef_hist
 #'
@@ -17,7 +17,7 @@
 #' @param BN Parameter taking the values (default: BN = 0): \cr
 #' 1 - the histogram will be build based on the number of bins specified by the user through parameter num. If BN=1, the function ignores parameters BW. \cr
 #' 0 - the histogram will be build in line with parameter BW
-#' @param num A vector with the numbers of bins used to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.
+#' @param num A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.
 #' @param kernel A parameter taking the values (default: kernel = 0):\cr
 #' 1 - the function will build graphs using kernel density for the distribution of coefficients (with kernel=1, the function ignores parameters BW and BN) \cr
 #' 0 - the function will build regular histogram density for the distribution of coefficients
@@ -96,7 +96,7 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
     histPlots[[1]]<-invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
                                 ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
                                 ggplot2::labs(
-                                  title = paste("Distribiution of", x_names[1], "coefficients"),
+                                  title = paste("Distribution of", x_names[1], "coefficients"),
                                   x = paste0("Coefficients on ",x_names[1]),
                                   y = "Frequency") +
                                 ggplot2::theme_minimal(base_size = 12) +
@@ -108,7 +108,7 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
       histPlots[[i]]<-invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
                                   ggplot2::geom_density(fill = "skyblue", alpha = 0.7) +
                                   ggplot2::labs(
-                                    title = paste("Distribiution of", x_names[i], "coefficients"),
+                                    title = paste("Distribution of", x_names[i], "coefficients"),
                                     x = paste0("Coefficients on ",x_names[i]),
                                     y = "Frequency") +
                                   ggplot2::theme_minimal(base_size = 12) +
@@ -129,13 +129,13 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
       # 3) Binwidth sizes
       if(BW=="vec"){
         if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
-        if (length(binW)!=K){stop("binW is missspecified: binW should have K (number of regressors +1) elements")}
+        if (length(binW)!=K){stop("binW is misspecified: binW should have K (number of regressors +1) elements")}
         BW<-binW[1]
       }
       histPlots[[1]] <- invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
                                     ggplot2::geom_histogram(binwidth = BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
                                     ggplot2::labs(
-                                      title = paste("Distribiution of", x_names[1], "coefficients"),
+                                      title = paste("Distribution of", x_names[1], "coefficients"),
                                       x = paste0("Coefficients on ",x_names[1]),
                                       y = "Frequency") +
                                     ggplot2::theme_minimal(base_size = 12) +
@@ -151,13 +151,13 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
         # 3) Binwidth sizes
         if(BW=="vec"){
           if (is.null(binW)){stop("Please provide a vector with bin width sizes through parameter binW")}
-          if (length(binW)!=K){stop("binW is missspecified: binW should have K elements")}
+          if (length(binW)!=K){stop("binW is misspecified: binW should have K elements")}
           BW<-binW[i]
         }
         histPlots[[i]] <- invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
                                       ggplot2::geom_histogram(binwidth=BW, fill = "skyblue", color = "skyblue", alpha = 0.8) +
                                       ggplot2::labs(
-                                        title = paste("Distribiution of", x_names[i], "coefficients"),
+                                        title = paste("Distribution of", x_names[i], "coefficients"),
                                         x = paste0("Coefficients on ",x_names[i]),
                                         y = "Frequency") +
                                       ggplot2::theme_minimal(base_size = 12) +
@@ -171,11 +171,11 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
     # CONDITION for graphs plotted with bins - through setting the number of bins:
     if (BN==1){### Rules for bin width
       if (is.null(num)){stop("Please provide a vector with number of bins through parameter num")}
-      if (length(num)!=K){stop("num is missspecified: num should have K elements")}
+      if (length(num)!=K){stop("num is misspecified: num should have K elements")}
       histPlots[[1]]<-invisible(ggplot2::ggplot(alpha, ggplot2::aes(x = .data[[x_names[1]]])) +
                                   ggplot2::geom_histogram(bins=num[1], fill = "skyblue", color = "skyblue", alpha = 0.8) +
                                   ggplot2::labs(
-                                    title = paste("Distribiution of", x_names[1], "coefficients"),
+                                    title = paste("Distribution of", x_names[1], "coefficients"),
                                     x = paste0("Coefficients on ",x_names[1]),
                                     y = "Frequency") +
                                   ggplot2::theme_minimal(base_size = 12) +
@@ -187,7 +187,7 @@ coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, n
         histPlots[[i]]<-invisible(ggplot2::ggplot(betas, ggplot2::aes(x = .data[[x_names[i]]])) +
                                     ggplot2::geom_histogram(bins=num[i], fill = "skyblue", color = "skyblue", alpha = 0.8) +
                                     ggplot2::labs(
-                                      title = paste("Distribiution of", x_names[i], "coefficients"),
+                                      title = paste("Distribution of", x_names[i], "coefficients"),
                                       x = paste0("Coefficients on ",x_names[i]),
                                       y = "Frequency") +
                                     ggplot2::theme_minimal(base_size = 12) +

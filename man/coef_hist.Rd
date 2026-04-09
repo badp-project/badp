@@ -26,7 +26,7 @@
 1 - the histogram will be build based on the number of bins specified by the user through parameter num. If BN=1, the function ignores parameters BW. \cr
 0 - the histogram will be build in line with parameter BW}
 
-\item{num}{A vector with the numbers of bins used to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.}
+\item{num}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.}
 
 \item{kernel}{A parameter taking the values (default: kernel = 0):\cr
 1 - the function will build graphs using kernel density for the distribution of coefficients (with kernel=1, the function ignores parameters BW and BN) \cr
@@ -36,7 +36,7 @@
 A list with the graphs of the distribution of coefficients for all the considered regressors.
 }
 \description{
-This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes this regressors (half of the model space).
+This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes these regressors (half of the model space).
 }
 \examples{
 \donttest{

@@ -13,7 +13,7 @@ extract_names(df)
 A vector with names of the variables.
 }
 \description{
-The function extract the names of the variables from the data set used in the analysis and
+The function extracts the names of the variables from the data set used in the analysis and
 places them in a vector.
 }
 \examples{
