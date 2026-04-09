@@ -54,13 +54,13 @@ Priors <- bma_list[[11]] # Priors: uniform and random
 dilution <- bma_list[[12]] # 0 - no dilution prior, 1 - dilution prior
 
 if (is.null(top)){
-  top <- M
+  top <- R
 }
 
 if (top>M){# CONDITION about what to do if the user sets top that is higher than M
-  # we tell the user that we are setting top = M
+  # we tell the user that we are setting top = R
   message("The number of the best models (top) cannot be higher than the total number of models. We set top = R (total number of regressors) and continue :)")
-  top = M
+  top = R
 }
 
 # Objects to store posteriors and priors
