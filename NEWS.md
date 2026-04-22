@@ -1,5 +1,16 @@
 # badp 0.4.1
 
+* Added S3 classes and methods for JSS compliance:
+    * `bma()` now returns an object of class `badp_bma` (previously unclassed list).
+    * `optim_model_space()` now returns an object of class `badp_model_space`.
+    * Implemented S3 methods for `badp_bma` objects:
+        * `print.badp_bma()` - Clean, informative console output.
+        * `summary.badp_bma()` - Detailed statistical summary with highlighted important variables.
+        * `coef.badp_bma()` - Extract coefficients with optional standard errors and PIPs.
+        * `plot.badp_bma()` - Default visualization with dispatch to existing plot functions.
+    * Implemented `print.badp_model_space()` for model space objects.
+    * Fixed component names in `bma()` output: removed spaces, duplicates, and typos; all names are now valid R identifiers (e.g., `uniform_table`, `random_table`, `reg_names`, `dilution`, `alphas`).
+    * Added comprehensive tests for S3 methods.
 * Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
 * Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
 

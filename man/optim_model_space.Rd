@@ -48,14 +48,15 @@ passed to \link[stats]{optim}. Default is
 that \code{scale} is used only for adjusting the \code{parscale} element added later in the function code.}
 }
 \value{
-List with two objects: \cr
+An object of class \code{badp_model_space}, which is a list with the following elements: \cr
 \enumerate{
 \item params - table with parameters of all estimated models \cr
 \item stats - table with the value of maximized likelihood function, BIC, and
 standard errors for all estimated models \cr
 \item reg_names - vector with the names of the variables \cr
 \item observations_num - number of observations \cr
-\item df - data frame used in estimation
+\item df - data frame used in estimation \cr
+\item is_nested - logical indicating whether nested approach was used
 }
 }
 \description{
@@ -63,6 +64,14 @@ This function calculates model space, values of the maximized likelihood functio
 standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
 it provides a vector with the names of the variables for bma function and the number of observations.
 }
+\section{Methods}{
+
+Objects of class \code{badp_model_space} have the following methods available:
+\itemize{
+\item \code{\link{print.badp_model_space}} - Display model space information
+}
+}
+
 \examples{
 \donttest{
 library(magrittr)

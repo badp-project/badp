@@ -1,7 +1,7 @@
 #' Calculation of the bma object
 #'
 #' This function calculates BMA statistics based on the provided model space.
-#' Other objects for furhter analysis are also returned.
+#' Other objects for further analysis are also returned.
 #'
 #' @param model_space List with params and stats from the model space
 #' @param round Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)
@@ -9,25 +9,34 @@
 #' @param dilution Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).
 #' @param dil.Par Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.
 #'
-#' @return A list with 16 elements.
+#' @return An object of class \code{badp_bma}, which is a list with 16 elements:
 #'
 #' \describe{
-#'   \item{uniform_table}{A table containing the results based on the binomialmodel prior.}
+#'   \item{uniform_table}{A table containing the results based on the binomial model prior.}
 #'   \item{random_table}{A table containing the results based on the binomial-beta model prior.}
 #'   \item{reg_names}{A vector containing the names of the regressors, used by the functions.}
 #'   \item{R}{The total number of regressors.}
 #'   \item{num_of_models}{The number of models present in the model space.}
-#'   \item{forJointnes}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-#'   \item{forBestModels}{A table containing model IDs, PMPs, coefficients, standard deviations,and standardized regression coefficients (stdRs) for the best_models function.}
+#'   \item{jointness_data}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
+#'   \item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard deviations, and standardized regression coefficients (stdRs) for the best_models function.}
 #'   \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
-#'   \item{sizePriors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
+#'   \item{size_priors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
 #'   \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
-#'   \item{modelPriors}{A table containing the model priors, used by the model_pmp function.}
+#'   \item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 #'   \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
-#'   \item{alphas}{A vector of coefficients for the lagged dependent variable in the coef_hist function.}
-#'   \item{betas_nonzero}{A vector of nonzero coefficients for the regressors in the coef_hist function.}
-#'   \item{d_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
-#'   \item{PMStable}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+#'   \item{alphas}{A matrix of coefficients for the lagged dependent variable across all models, used in the coef_hist function.}
+#'   \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
+#'   \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
+#'   \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+#' }
+#'
+#' @section Methods:
+#' Objects of class \code{badp_bma} have the following methods available:
+#' \itemize{
+#'   \item \code{\link{print.badp_bma}} - Display results
+#'   \item \code{\link{summary.badp_bma}} - Detailed statistical summary
+#'   \item \code{\link{coef.badp_bma}} - Extract coefficients
+#'   \item \code{\link{plot.badp_bma}} - Visualize results
 #' }
 #'
 #' @export
@@ -299,12 +308,11 @@ bma <- function(
   bma_list <- list(uniform_table,random_table,reg_names,R,num_of_models,forJointness,
                    forBestModels,EMS,sizePriors,PMPs,modelPriors,dilution,
                    alphas,betas_nonzero,d_free,PMStable)
-  names(bma_list) <- c("Table with the binomial model prior results", "Table with the binomial model prior results",
-                       "Names of variables", "Number of regressors", "Size of the model space (number of models)",
-                       "Table for jointness function","Table for best_models function", "Expected model size",
-                       "Table with model size priors","Table with posterior model probabilities","Table with model priors",
-                       "Paremeter indication use of dilution","Ceofficients on the lagged dependent variable",
-                       "Coefficients on regressors", "degrees of freedom of the models","Table with prior and posterior model sizes")
+  names(bma_list) <- c("uniform_table", "random_table", "reg_names", "R",
+                       "num_of_models", "jointness_data", "best_models_data",
+                       "EMS", "size_priors", "PMPs", "model_priors", "dilution",
+                       "alphas", "betas_nonzero", "df_free", "PMS_table")
+  class(bma_list) <- "badp_bma"
 
   return(bma_list)
 }

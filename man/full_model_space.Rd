@@ -5,7 +5,7 @@
 \alias{full_model_space}
 \title{Example output of \code{\link{optim_model_space}}}
 \format{
-A list with 5 elements:
+An object of class \code{badp_model_space}, which is a list with 6 elements:
 \describe{
 \item{params}{
 A numeric matrix with 40 rows and 512 columns, containing parameter
@@ -28,22 +28,16 @@ The total number of observations in the panel (292).
 \item{df}{
 The data frame used in the analysis.
 }
+\item{is_nested}{
+A logical indicating whether the model space uses nested specifications.
+}
 }
 }
 \usage{
 full_model_space
 }
 \description{
-A list created with \code{\link{optim_model_space}} using the
+A badp_model_space object created with \code{\link{optim_model_space}} using the
 \code{\link{economic_growth}} dataset.
 }
-\seealso{
-Other datasets: 
-\code{\link{economic_growth}},
-\code{\link{full_bma_results}},
-\code{\link{model_space_nonnested}},
-\code{\link{original_economic_growth}},
-\code{\link{small_model_space}}
-}
-\concept{datasets}
 \keyword{datasets}

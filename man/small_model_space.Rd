@@ -5,7 +5,7 @@
 \alias{small_model_space}
 \title{Example output of \code{\link{optim_model_space}} (small version)}
 \format{
-A list with 5 elements:
+An object of class \code{badp_model_space}, which is a list with 6 elements:
 \describe{
 \item{params}{
 A numeric matrix with 40 rows and 8 columns (corresponding to
@@ -29,6 +29,9 @@ The total number of observations in the panel (292).
 \item{df}{
 The data frame used in the analysis.
 }
+\item{is_nested}{
+A logical indicating whether the model space uses nested specifications.
+}
 }
 }
 \usage{
@@ -39,13 +42,4 @@ A list created with \code{\link{optim_model_space}} using the
 \code{\link{economic_growth}} dataset and only three regressors:
 \code{ish}, \code{sed}, and \code{pgrw}.
 }
-\seealso{
-Other datasets: 
-\code{\link{economic_growth}},
-\code{\link{full_bma_results}},
-\code{\link{full_model_space}},
-\code{\link{model_space_nonnested}},
-\code{\link{original_economic_growth}}
-}
-\concept{datasets}
 \keyword{datasets}
