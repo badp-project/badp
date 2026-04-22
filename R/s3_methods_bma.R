@@ -264,7 +264,9 @@ coef.badp_bma <- function(object, prior = "binomial", type = "posterior_mean",
 #'   }
 #' @param ... Additional arguments passed to the underlying plot function.
 #'
-#' @return A plot object (typically a ggplot2 or grid object).
+#' @return The object returned by the selected visualization helper. Depending on
+#'   \code{which}, this may be a single plot object or a list containing plots
+#'   and/or tables; some helpers may also print output as a side effect.
 #'
 #' @details
 #' This function dispatches to the appropriate visualization function based on the
