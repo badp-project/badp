@@ -22,7 +22,9 @@
 \item{...}{Additional arguments passed to the underlying plot function.}
 }
 \value{
-A plot object (typically a ggplot2 or grid object).
+Depending on \code{which}, either a single plot object (typically a ggplot2
+or grid object) or a list of plot objects/components returned by the
+underlying helper function.
 }
 \description{
 Plot method for objects of class \code{badp_bma}.
