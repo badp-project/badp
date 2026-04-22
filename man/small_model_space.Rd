@@ -5,7 +5,7 @@
 \alias{small_model_space}
 \title{Example output of \code{\link{optim_model_space}} (small version)}
 \format{
-A list with 5 elements:
+An object of class \code{badp_model_space}, which is a list with 6 elements:
 \describe{
 \item{params}{
 A numeric matrix with 40 rows and 8 columns (corresponding to
@@ -28,6 +28,9 @@ The total number of observations in the panel (292).
 }
 \item{df}{
 The data frame used in the analysis.
+}
+\item{is_nested}{
+A logical indicating whether the model space uses nested specifications.
 }
 }
 }

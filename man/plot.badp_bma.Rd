@@ -22,9 +22,9 @@
 \item{...}{Additional arguments passed to the underlying plot function.}
 }
 \value{
-Depending on \code{which}, either a single plot object (typically a ggplot2
-or grid object) or a list of plot objects/components returned by the
-underlying helper function.
+The object returned by the selected visualization helper. Depending on
+\code{which}, this may be a single plot object or a list containing plots
+and/or tables; some helpers may also print output as a side effect.
 }
 \description{
 Plot method for objects of class \code{badp_bma}.
