@@ -25,7 +25,7 @@ test_that("model_space object has correct structure", {
 test_that("print.badp_model_space produces expected output", {
   expect_output(print(small_model_space), "Model Space Object")
   expect_output(print(small_model_space), "Number of models:")
-  expect_output(print(small_model_space), "Number of parameters per model:")
+  expect_output(print(small_model_space), "Number of parameters in full parameter vector:")
   expect_output(print(small_model_space), "Variables:")
   expect_output(print(small_model_space), "Observations:")
   expect_output(print(small_model_space), "Nested:")
