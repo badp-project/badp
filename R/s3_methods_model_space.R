@@ -27,7 +27,7 @@ print.badp_model_space <- function(x, ...) {
   cat("Model Space Object\n")
   cat("==================\n\n")
   cat("Number of models:", ncol(x$params), "\n")
-  cat("Number of parameters per model:", nrow(x$params), "\n")
+  cat("Number of parameters in full parameter vector:", nrow(x$params), "\n")
   cat("Variables:", paste(x$reg_names, collapse = ", "), "\n")
   cat("Observations:", x$observations_num, "\n")
   cat("Nested:", x$is_nested, "\n\n")
