@@ -1,7 +1,7 @@
 #' Calculation of the bma object
 #'
 #' This function calculates BMA statistics based on the provided model space.
-#' Other objects for furhter analysis are also returned.
+#' Other objects for further analysis are also returned.
 #'
 #' @param model_space List with params and stats from the model space
 #' @param round Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)
