@@ -1,3 +1,84 @@
+#' Double-bracket accessor for badp_bma objects with legacy name support
+#'
+#' Provides backward compatibility for legacy component name access in
+#' \code{badp_bma} objects. Translates the original long-form names used
+#' before the S3 class was introduced to the current short, valid-R-identifier
+#' names, so that code such as
+#' \code{results[["Coefficients on regressors"]]} continues to work without
+#' modification.
+#'
+#' @param x An object of class \code{badp_bma}.
+#' @param i A character string (component name) or integer index.
+#' @param ... Additional arguments (currently unused).
+#'
+#' @return The requested component of \code{x}.
+#'
+#' @details
+#' The following legacy names are automatically translated to their new
+#' equivalents:
+#' \describe{
+#'   \item{"Table with the binomial model prior results"}{\code{uniform_table}}
+#'   \item{"Names of variables"}{\code{reg_names}}
+#'   \item{"Number of regressors"}{\code{R}}
+#'   \item{"Size of the model space (number of models)"}{\code{num_of_models}}
+#'   \item{"Table for jointness function"}{\code{jointness_data}}
+#'   \item{"Table for best_models function"}{\code{best_models_data}}
+#'   \item{"Expected model size"}{\code{EMS}}
+#'   \item{"Table with model size priors"}{\code{size_priors}}
+#'   \item{"Table with posterior model probabilities"}{\code{PMPs}}
+#'   \item{"Table with model priors"}{\code{model_priors}}
+#'   \item{"Paremeter indication use of dilution"}{\code{dilution}}
+#'   \item{"Ceofficients on the lagged dependent variable"}{\code{alphas}}
+#'   \item{"Coefficients on regressors"}{\code{betas_nonzero}}
+#'   \item{"degrees of freedom of the models"}{\code{df_free}}
+#'   \item{"Table with prior and posterior model sizes"}{\code{PMS_table}}
+#' }
+#' Numeric indexing is passed through unchanged.
+#'
+#' @seealso \code{\link{bma}}
+#'
+#' @examples
+#' \donttest{
+#' data(full_model_space)
+#' results <- bma(full_model_space)
+#'
+#' # Legacy name access (backward compatible)
+#' results[["Coefficients on regressors"]]
+#' results[["Names of variables"]]
+#'
+#' # Equivalent new name access
+#' results[["betas_nonzero"]]
+#' results[["reg_names"]]
+#' }
+#'
+#' @export
+`[[.badp_bma` <- function(x, i, ...) {
+  if (is.character(i)) {
+    legacy_map <- c(
+      "Table with the binomial model prior results" = "uniform_table",
+      "Names of variables" = "reg_names",
+      "Number of regressors" = "R",
+      "Size of the model space (number of models)" = "num_of_models",
+      "Table for jointness function" = "jointness_data",
+      "Table for best_models function" = "best_models_data",
+      "Expected model size" = "EMS",
+      "Table with model size priors" = "size_priors",
+      "Table with posterior model probabilities" = "PMPs",
+      "Table with model priors" = "model_priors",
+      "Paremeter indication use of dilution" = "dilution",
+      "Ceofficients on the lagged dependent variable" = "alphas",
+      "Coefficients on regressors" = "betas_nonzero",
+      "degrees of freedom of the models" = "df_free",
+      "Table with prior and posterior model sizes" = "PMS_table"
+    )
+    if (i %in% names(legacy_map)) {
+      i <- unname(legacy_map[i])
+    }
+  }
+  unclass(x)[[i]]
+}
+
+
 #' Print Bayesian Model Averaging Results
 #'
 #' Print method for objects of class \code{badp_bma}.
