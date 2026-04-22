@@ -10,7 +10,7 @@
         * `plot.badp_bma()` - Default visualization with dispatch to existing plot functions.
     * Implemented `print.badp_model_space()` for model space objects.
     * Fixed component names in `bma()` output: removed spaces, duplicates, and typos; all names are now valid R identifiers (e.g., `uniform_table`, `random_table`, `reg_names`, `dilution`, `alphas`).
-    * **Backward compatibility**: All existing code continues to work - numeric indexing (`results[[3]]`) and helper functions (`best_models()`, `jointness()`, etc.) are fully preserved. Named access is now also available (`results$reg_names`).
+    * **Compatibility note**: Numeric indexing (`results[[3]]`) and helper functions (`best_models()`, `jointness()`, etc.) are fully preserved. Named access is available via the new identifiers (e.g., `results$reg_names`), but code using the previous long component names must be updated.
     * Added comprehensive tests for S3 methods and backward compatibility (125 new tests).
 * Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
 * Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
