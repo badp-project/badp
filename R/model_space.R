@@ -748,11 +748,6 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
 #' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
 #' approximation routine is used for each model in \code{params}.
-#' @param nested Logical. If \code{TRUE} (default), compute approximate standard
-#' deviations using the nested-model approach via
-#' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
-#' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
-#' approximation routine is used for each model in \code{params}.
 #'
 #' @importFrom parallel parApply
 #'
