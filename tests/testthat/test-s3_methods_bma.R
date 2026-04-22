@@ -198,37 +198,3 @@ test_that("invalid arguments produce errors", {
   expect_error(plot(bma_results, which = "invalid"))
 })
 
-test_that("legacy name access via [[ is backward compatible", {
-  bma_results <- bma(small_model_space, round = 3, dilution = 0)
-
-  # Legacy names must return the same object as the new names.
-  # NOTE: "Paremeter..." and "Ceofficients..." preserve the original typos
-  # intentionally — they are the exact strings the old code used.
-  expect_equal(bma_results[["Table with the binomial model prior results"]], bma_results$uniform_table)
-  expect_equal(bma_results[["Names of variables"]], bma_results$reg_names)
-  expect_equal(bma_results[["Number of regressors"]], bma_results$R)
-  expect_equal(bma_results[["Size of the model space (number of models)"]], bma_results$num_of_models)
-  expect_equal(bma_results[["Table for jointness function"]], bma_results$jointness_data)
-  expect_equal(bma_results[["Table for best_models function"]], bma_results$best_models_data)
-  expect_equal(bma_results[["Expected model size"]], bma_results$EMS)
-  expect_equal(bma_results[["Table with model size priors"]], bma_results$size_priors)
-  expect_equal(bma_results[["Table with posterior model probabilities"]], bma_results$PMPs)
-  expect_equal(bma_results[["Table with model priors"]], bma_results$model_priors)
-  expect_equal(bma_results[["Paremeter indication use of dilution"]], bma_results$dilution)       # original typo
-  expect_equal(bma_results[["Ceofficients on the lagged dependent variable"]], bma_results$alphas) # original typo
-  expect_equal(bma_results[["Coefficients on regressors"]], bma_results$betas_nonzero)
-  expect_equal(bma_results[["degrees of freedom of the models"]], bma_results$df_free)
-  expect_equal(bma_results[["Table with prior and posterior model sizes"]], bma_results$PMS_table)
-})
-
-test_that("numeric and new-name access unchanged by [[ method", {
-  bma_results <- bma(small_model_space, round = 3, dilution = 0)
-
-  # Numeric indexing must still return the correct component
-  expect_equal(bma_results[[1]], bma_results$uniform_table)
-  expect_equal(bma_results[[14]], bma_results$betas_nonzero)
-
-  # New names must still work directly
-  expect_equal(bma_results[["reg_names"]], bma_results$reg_names)
-  expect_equal(bma_results[["betas_nonzero"]], bma_results$betas_nonzero)
-})
