@@ -11,6 +11,6 @@ An object of class \code{badp_bma} of length 16.
 full_bma_results
 }
 \description{
-A list with multiple elements summarising the BMA analysis
+A badp_bma object summarising the BMA analysis
 }
 \keyword{datasets}
