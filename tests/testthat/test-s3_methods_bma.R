@@ -201,7 +201,9 @@ test_that("invalid arguments produce errors", {
 test_that("legacy name access via [[ is backward compatible", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Legacy names must return the same object as the new names
+  # Legacy names must return the same object as the new names.
+  # NOTE: "Paremeter..." and "Ceofficients..." preserve the original typos
+  # intentionally — they are the exact strings the old code used.
   expect_equal(bma_results[["Table with the binomial model prior results"]], bma_results$uniform_table)
   expect_equal(bma_results[["Names of variables"]], bma_results$reg_names)
   expect_equal(bma_results[["Number of regressors"]], bma_results$R)
@@ -212,8 +214,8 @@ test_that("legacy name access via [[ is backward compatible", {
   expect_equal(bma_results[["Table with model size priors"]], bma_results$size_priors)
   expect_equal(bma_results[["Table with posterior model probabilities"]], bma_results$PMPs)
   expect_equal(bma_results[["Table with model priors"]], bma_results$model_priors)
-  expect_equal(bma_results[["Paremeter indication use of dilution"]], bma_results$dilution)
-  expect_equal(bma_results[["Ceofficients on the lagged dependent variable"]], bma_results$alphas)
+  expect_equal(bma_results[["Paremeter indication use of dilution"]], bma_results$dilution)       # original typo
+  expect_equal(bma_results[["Ceofficients on the lagged dependent variable"]], bma_results$alphas) # original typo
   expect_equal(bma_results[["Coefficients on regressors"]], bma_results$betas_nonzero)
   expect_equal(bma_results[["degrees of freedom of the models"]], bma_results$df_free)
   expect_equal(bma_results[["Table with prior and posterior model sizes"]], bma_results$PMS_table)

@@ -27,8 +27,8 @@
 #'   \item{"Table with model size priors"}{\code{size_priors}}
 #'   \item{"Table with posterior model probabilities"}{\code{PMPs}}
 #'   \item{"Table with model priors"}{\code{model_priors}}
-#'   \item{"Paremeter indication use of dilution"}{\code{dilution}}
-#'   \item{"Ceofficients on the lagged dependent variable"}{\code{alphas}}
+#'   \item{"Paremeter indication use of dilution"}{\code{dilution} (note: original name had a typo)}
+#'   \item{"Ceofficients on the lagged dependent variable"}{\code{alphas} (note: original name had a typo)}
 #'   \item{"Coefficients on regressors"}{\code{betas_nonzero}}
 #'   \item{"degrees of freedom of the models"}{\code{df_free}}
 #'   \item{"Table with prior and posterior model sizes"}{\code{PMS_table}}
@@ -65,6 +65,8 @@
       "Table with model size priors" = "size_priors",
       "Table with posterior model probabilities" = "PMPs",
       "Table with model priors" = "model_priors",
+      # Note: the following two keys preserve original typos intentionally,
+      # so that user code written against the old names continues to work.
       "Paremeter indication use of dilution" = "dilution",
       "Ceofficients on the lagged dependent variable" = "alphas",
       "Coefficients on regressors" = "betas_nonzero",
