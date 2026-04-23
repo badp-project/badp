@@ -38,6 +38,7 @@
 #'
 #' init_model_space_params(data_prepared, year, country, gdp)
 #' @export
+#' @keywords internal
 init_model_space_params <- function(df, timestamp_col, entity_col,
                                     dep_var_col, init_value = 1) {
   regressors <- df %>%
@@ -97,6 +98,8 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
 #' regressor_names_from_params_vector(params)
 #'
 #' @export
+#'
+#' @keywords internal
 regressor_names_from_params_vector <- function(params) {
   regressors_subset <-
     t(params %>% stats::na.omit()) %>% as.data.frame() %>%
@@ -125,7 +128,7 @@ regressor_names_from_params_vector <- function(params) {
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
-#'
+#' @keywords internal
 nested_optimization_wrapper <- function(
     params,
     df,
@@ -191,6 +194,7 @@ nested_optimization_wrapper <- function(
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
 #'
+#' @keywords internal
 non_nested_optimization_wrapper <- function(
     params,
     df,
@@ -386,7 +390,7 @@ optim_model_space_params <- function(
 #' are rows with standard deviations for each parameter. After that we have rows
 #' with robust standard deviation (not sure yet what exactly "robust" means).
 #' @export
-#'
+#' @keywords internal
 nested_std_dev_from_params <- function(
     params,
     data,
@@ -500,6 +504,7 @@ nested_std_dev_from_params <- function(
 #' with robust standard deviation (not sure yet what exactly "robust" means).
 #' @export
 #'
+#' @keywords internal
 non_nested_std_dev_from_params <- function(
     params,
     df,

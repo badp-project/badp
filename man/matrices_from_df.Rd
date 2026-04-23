@@ -43,4 +43,6 @@ List of matrices for SEM model
 \examples{
 matrices_from_df(economic_growth, year, country, gdp, c("pop", "sed"),
                  c("Y1", "Y2"))
+
 }
+\keyword{internal}

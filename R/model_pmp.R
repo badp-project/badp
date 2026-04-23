@@ -136,9 +136,7 @@ if (dilution==1){
 }
 
 # Putting together the last plot
-Finalplot <- ggpubr::ggarrange(Graph1_2,Graph2_2,
-                               labels = c("a)", "b)"),
-                               ncol = 1, nrow = 2, common.legend = TRUE, legend = "bottom")
+Finalplot <- arrange_plots_common_legend(Graph1_2, Graph2_2)
 
 print(Finalplot)
 

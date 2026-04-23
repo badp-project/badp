@@ -84,6 +84,8 @@ sem_params_to_list <- function(params, periods_n, tot_regressors_n,
 #' @examples
 #' matrices_from_df(economic_growth, year, country, gdp, c("pop", "sed"),
 #'                  c("Y1", "Y2"))
+#'
+#' @keywords internal
 matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
                              lin_related_regressors = NULL,
                              which_matrices = c("Y1", "Y2", "Z", "cur_Y2",
@@ -211,16 +213,9 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
 #' @export
 #'
 #' @examples
-# TODO: sometimes generates NaN and positive values - why?
-#' set.seed(1)
-#' df <- data.frame(
-#'   entities = rep(1:4, 5),
-#'   times = rep(seq(1960, 2000, 10), each = 4),
-#'   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
-#' )
-#' df <-
-#'   feature_standardization(df, excluded_cols = c(times, entities))
-#' sem_likelihood(0.5, df, times, entities, dep_var)
+#' data(economic_growth)
+#' eg <- feature_standardization(economic_growth, excluded_cols = c(year, country))
+#' sem_likelihood(0.5, eg, year, country, gdp)
 sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
                            lin_related_regressors = NULL,
                            per_entity = FALSE,

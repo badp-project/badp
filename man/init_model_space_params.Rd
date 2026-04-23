@@ -58,3 +58,4 @@ data_prepared <- badp::economic_growth[, 1:5] \%>\%
 
 init_model_space_params(data_prepared, year, country, gdp)
 }
+\keyword{internal}

@@ -5,6 +5,8 @@
 * Fixed `feature_standardization` function to handle tibble input correctly.
 * Exported `join_lagged_col` function.
 * Fixed spelling mistakes and grammar in documentation.
+* Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
+* Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
 
 # badp 0.4.0
 

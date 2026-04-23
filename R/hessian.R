@@ -17,6 +17,7 @@
 #' hessian(lik, c(1, 1))
 #'
 #' @export
+#' @keywords internal
 hessian <- function(lik, theta, ...) {
   k <- length(theta)
   hessi <- optimbase::zeros(k, k)

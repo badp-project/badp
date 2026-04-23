@@ -29,6 +29,7 @@
 #' @importFrom rlang :=
 #'
 #' @export
+#' @keywords internal
 join_lagged_col <- function(df, col, col_lagged, timestamp_col,
                             entity_col, timestep = NULL) {
   non_lagged_df <- df %>%

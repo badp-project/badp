@@ -45,3 +45,4 @@ with robust standard deviation (not sure yet what exactly "robust" means).
 Helper function - wraps single execution of the log-likelihood & deviation
 parameters calculations. Used for non nested version of SEM likelihood.
 }
+\keyword{internal}

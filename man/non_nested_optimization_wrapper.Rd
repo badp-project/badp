@@ -54,3 +54,4 @@ List (or matrix) of parameters describing analyzed models.
 Helper-function - finds parameters minimizing log-likelihood function
 for the non-nested version of the SEM setup, using BFGS method
 }
+\keyword{internal}
