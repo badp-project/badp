@@ -1,3 +1,11 @@
+# badp 0.5.0
+
+* Added `migration_data` dataset with migration flows data from Afonso, Alves, & Beck (2025).
+* Added `migration_model_space` and `migration_model_space_nonnested` example model space objects.
+* Fixed `feature_standardization` function to handle tibble input correctly.
+* Exported `join_lagged_col` function.
+* Fixed spelling mistakes and grammar in documentation.
+
 # badp 0.4.0
 
 * Renamed package from `bdsm` to `badp` (Bayesian Averaging for Dynamic Panels).
