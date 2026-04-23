@@ -58,6 +58,7 @@ Imports:
     rlang,
     rootSolve,
     stats,
+    tibble,
     tidyr,
     tidyselect
 LinkingTo:

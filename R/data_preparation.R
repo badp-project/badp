@@ -1,6 +1,6 @@
 #' Dataframe with no lagged column
 #'
-#' This function allows to turn data in the format with lagged values for a
+#' This function allows the user to turn data in the format with lagged values for a
 #' chosen column (i.e. there are two columns with the same quantity, but one
 #' column is lagged in time) into the format with just one column
 #'
@@ -95,6 +95,7 @@ join_lagged_col <- function(df, col, col_lagged, timestamp_col,
 #'
 #' @export
 feature_standardization <- function(df, excluded_cols, group_by_col, scale = TRUE) {
+  df <- tibble::as_tibble(df)
   if (missing(group_by_col)) {
     # No grouping requested
     if (missing(excluded_cols)) {

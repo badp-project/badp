@@ -1,14 +1,15 @@
 #' Graphs of the prior and posterior model probabilities of the model sizes
 #'
-#' This function draws four graphs of prior and posterior model probabilities: \cr
-#' a) The results with binomial model prior (based on PMP - posterior model probability) \cr
-#' b) The results with binomial-beta model prior (based on PMP - posterior model probability)
+#' This function draws two graphs of prior and posterior model probabilities: \cr
+#' a) The results with binomial model prior \cr
+#' b) The results with binomial-beta model prior \cr
+#' c) One graph combining all the aforementioned graphs
 #'
 #' @param bma_list bma_list object (the result of the bma function)
 #'
 #' @return A list with three graphs with prior and posterior model probabilities for model sizes:\cr
-#' 1) The results with binomial model prior (based on PMP - posterior model probability) \cr
-#' 2) The results with binomial-beta model prior (based on PMP - posterior model probability) \cr
+#' 1) The results with binomial model prior \cr
+#' 2) The results with binomial-beta model prior  \cr
 #' 3) One graph combining all the aforementioned graphs
 #'
 #' @export

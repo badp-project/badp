@@ -1,5 +1,10 @@
-# badp 0.4.1
+# badp 0.5.0
 
+* Added `migration_data` dataset with migration flows data from Afonso, Alves, & Beck (2025).
+* Added `migration_model_space` and `migration_model_space_nonnested` example model space objects.
+* Fixed `feature_standardization` function to handle tibble input correctly.
+* Exported `join_lagged_col` function.
+* Fixed spelling mistakes and grammar in documentation.
 * Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
 * Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
 
@@ -23,7 +28,7 @@
 
 # bdsm 0.2.1
 
-* Added vignette explaining Bayesian model averaging for dynamic panels with weakly exogenous regressors
+* Added a vignette explaining Bayesian model averaging for dynamic panels with weakly exogenous regressors
 
 # bdsm 0.2.0
 
@@ -45,7 +50,7 @@
     * The file R/SEM_bma.R was deleted, indicating major re-factoring or deprecation of related functionality.
 * Added progress bar for computationally intensive functions
 * Changed naming convention and broadened the meaning of a model space.
-Now it's a list containing two named elements:
+Now it is a list containing two named elements:
 parameters (params) of all considered models
 and statistics (stats) computed using these parameters. 
 This is a much more comprehensible naming convention than the previous one, where only the parameters were considered as the model space. 
