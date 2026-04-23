@@ -1,8 +1,13 @@
-# badp 0.4.1
+# badp 0.5.0
 
 * Improved documentation: Added `@keywords internal` to hide helper and implementation functions from user-facing help documentation.
 * Replaced `sem_likelihood` example: use the bundled `economic_growth` dataset instead of small random data that could produce `NA` or invalid positive values on some platforms.
 * Removed `ggpubr` dependency; plotting functions now use custom arrangement with `gridExtra`.
+* Added `migration_data` dataset with migration flows data from Afonso, Alves, & Beck (2025).
+* Added `migration_model_space` and `migration_model_space_nonnested` example model space objects.
+* Fixed `feature_standardization` function to handle tibble input correctly.
+* Exported `join_lagged_col` function.
+* Fixed spelling mistakes and grammar in documentation.
 
 # badp 0.4.0
 
