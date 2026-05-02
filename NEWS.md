@@ -5,7 +5,7 @@
     * `optim_model_space()` now returns an object of class `badp_model_space`.
     * Implemented S3 methods for `badp_bma` objects:
         * `print.badp_bma()` - Clean, informative console output.
-        * `summary.badp_bma()` - Detailed statistical summary with highlighted important variables.
+        * `summary.badp_bma()` - Detailed statistical summary with highlighted important variables. Enhanced to display BMA statistics for both binomial and binomial-beta priors simultaneously.
         * `coef.badp_bma()` - Extract coefficients with optional standard errors and PIPs.
         * `plot.badp_bma()` - Default visualization with dispatch to existing plot functions.
     * Implemented `print.badp_model_space()` for model space objects.
