@@ -70,6 +70,8 @@ print.badp_bma <- function(x, ...) {
 #'   \item \code{dilution_applied} - Logical indicating if dilution prior was used
 #'   \item \code{prior_type} - Character string indicating prior type
 #'   \item \code{results} - Coefficient table for selected prior
+#'   \item \code{results_binomial} - Coefficient table for binomial prior
+#'   \item \code{results_beta} - Coefficient table for binomial-beta prior
 #'   \item \code{model_sizes} - Prior and posterior model sizes table
 #'   \item \code{reg_names} - Variable names
 #' }
@@ -105,6 +107,8 @@ summary.badp_bma <- function(object, prior = "binomial", ...) {
       dilution_applied = object$dilution == 1,
       prior_type = prior,
       results = results_table,
+      results_binomial = object$uniform_table,
+      results_beta = object$random_table,
       model_sizes = object$PMS_table,
       reg_names = object$reg_names
     ),
@@ -135,11 +139,16 @@ print.summary.badp_bma <- function(x, ...) {
   cat("  Number of regressors:", x$num_regressors, "\n")
   cat("  Expected model size:", round(x$expected_model_size, 3), "\n")
   cat("  Dilution prior:", ifelse(x$dilution_applied, "Applied", "Not applied"), "\n")
-  cat("  Model prior:", x$prior_type, "\n\n")
+  cat("  Model prior: binomial, binomial-beta\n\n")
 
-  cat("Coefficient Estimates (", x$prior_type, " prior):\n", sep = "")
+  cat("BMA statistics (binomial prior):\n")
   cat(strrep("-", 40), "\n", sep = "")
-  print(x$results)
+  print(x$results_binomial)
+  cat("\n")
+
+  cat("BMA statistics (binomial-beta prior):\n")
+  cat(strrep("-", 40), "\n", sep = "")
+  print(x$results_beta)
   cat("\n")
 
   cat("Prior and Posterior Model Sizes:\n")
@@ -148,8 +157,8 @@ print.summary.badp_bma <- function(x, ...) {
   cat("\n")
 
   # Identify important variables (high PIP)
-  if ("PIP" %in% colnames(x$results)) {
-    pips <- x$results[, "PIP"]
+  if ("PIP" %in% colnames(x$results_binomial)) {
+    pips <- x$results_binomial[, "PIP"]
     high_pip <- which(!is.na(pips) & pips > 0.5)
     if (length(high_pip) > 0) {
       cat("Variables with PIP > 0.5:\n")

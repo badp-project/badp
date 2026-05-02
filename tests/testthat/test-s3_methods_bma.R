@@ -85,17 +85,23 @@ test_that("summary.badp_bma returns correct structure", {
   expect_true("dilution_applied" %in% names(summ))
   expect_true("prior_type" %in% names(summ))
   expect_true("results" %in% names(summ))
+  expect_true("results_binomial" %in% names(summ))
+  expect_true("results_beta" %in% names(summ))
   expect_true("model_sizes" %in% names(summ))
   expect_true("reg_names" %in% names(summ))
 
   expect_equal(summ$prior_type, "binomial")
   expect_equal(summ$model_space_size, bma_results$num_of_models)
   expect_equal(summ$num_regressors, bma_results$R)
+  expect_equal(summ$results_binomial, bma_results$uniform_table)
+  expect_equal(summ$results_beta, bma_results$random_table)
 
   # Test beta prior summary
   summ_beta <- summary(bma_results, prior = "beta")
   expect_equal(summ_beta$prior_type, "beta")
   expect_equal(summ_beta$results, bma_results$random_table)
+  expect_equal(summ_beta$results_binomial, bma_results$uniform_table)
+  expect_equal(summ_beta$results_beta, bma_results$random_table)
 })
 
 test_that("print.summary.badp_bma produces expected output", {
@@ -105,7 +111,10 @@ test_that("print.summary.badp_bma produces expected output", {
   expect_output(print(summ), "Bayesian Model Averaging Summary")
   expect_output(print(summ), "Model Space Information:")
   expect_output(print(summ), "Total models:")
-  expect_output(print(summ), "Coefficient Estimates")
+  expect_output(print(summ), "BMA statistics")
+  expect_output(print(summ), "binomial prior")
+  expect_output(print(summ), "binomial-beta prior")
+  expect_output(print(summ), "Model prior: binomial, binomial-beta")
 })
 
 test_that("coef.badp_bma extracts coefficients without standard errors", {
