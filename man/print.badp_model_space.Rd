@@ -10,7 +10,7 @@
 \item{x}{An object of class \code{badp_model_space}, typically the result of
 \code{\link{compute_model_space_stats}} or \code{\link{optim_model_space}}.}
 
-\item{...}{Additional arguments (currently unused).}
+\item{...}{Additional arguments forwarded to \code{\link{summary.badp_model_space}}.}
 }
 \value{
 Invisibly returns the input object \code{x}.
@@ -19,9 +19,10 @@ Invisibly returns the input object \code{x}.
 Print method for objects of class \code{badp_model_space}.
 }
 \details{
-This function provides a formatted summary of the model space object,
-including the number of models, parameters, variables, and observations.
-Model space objects are typically used as input to the \code{\link{bma}} function.
+This method is a thin wrapper that delegates to
+\code{\link{summary.badp_model_space}} and then prints the resulting
+summary, so \code{print(x)} and \code{print(summary(x))} produce
+identical output.
 }
 \examples{
 \donttest{
@@ -31,6 +32,7 @@ print(full_model_space)
 
 }
 \seealso{
+\code{\link{summary.badp_model_space}},
 \code{\link{compute_model_space_stats}}, \code{\link{optim_model_space}},
 \code{\link{bma}}
 }

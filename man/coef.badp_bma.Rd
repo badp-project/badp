@@ -4,60 +4,99 @@
 \alias{coef.badp_bma}
 \title{Extract Coefficients from Bayesian Model Averaging Results}
 \usage{
-\method{coef}{badp_bma}(object, prior = "binomial", type = "posterior_mean", se = FALSE, ...)
+\method{coef}{badp_bma}(
+  object,
+  prior = "both",
+  conditional = FALSE,
+  se = FALSE,
+  robustSE = FALSE,
+  PIP = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.}
 
-\item{prior}{Character string specifying which prior to use.
-Options are \code{"binomial"} (default) or \code{"beta"}.}
+\item{prior}{Character string specifying which prior to use. Options are
+\code{"both"} (default), \code{"binomial"}, or \code{"beta"}. With
+\code{"both"} the result reports estimates under the binomial and the
+binomial-beta priors and is printed via
+\code{\link{print.badp_bma_coef}}.}
 
-\item{type}{Character string specifying the type of coefficient to extract.
-Options are:
-\itemize{
-\item \code{"posterior_mean"} - Posterior mean (default)
-\item \code{"conditional_mean"} - Conditional posterior mean
-}}
+\item{conditional}{Logical. If \code{TRUE}, returns coefficients (and
+standard errors when \code{se = TRUE}) \emph{conditional on inclusion}
+of the variable in a model - i.e. the columns whose names end in
+\code{"con"} (\code{PMcon}, \code{PSDcon}, \code{PSDRcon}). If
+\code{FALSE} (default), returns the unconditional posterior mean and
+standard error.}
 
-\item{se}{Logical. If \code{TRUE}, returns a data frame including standard errors
-and posterior inclusion probabilities. If \code{FALSE} (default), returns a
-named numeric vector of coefficients.}
+\item{se}{Logical. If \code{TRUE}, includes a standard-error column
+alongside each estimate. Defaults to \code{FALSE}.}
+
+\item{robustSE}{Logical. Only meaningful when \code{se = TRUE}. If
+\code{TRUE}, uses the robust posterior standard deviation
+(\code{PSDR} / \code{PSDRcon}); if \code{FALSE} (default), uses the
+non-robust version (\code{PSD} / \code{PSDcon}). Ignored with a
+warning when \code{se = FALSE}.}
+
+\item{PIP}{Logical. If \code{TRUE} (default), includes a posterior
+inclusion probability column for each prior. Set to \code{FALSE} to
+suppress.}
 
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-If \code{se = FALSE}, a named numeric vector of coefficient estimates.
-If \code{se = TRUE}, a data frame with columns:
+The shape of the return value depends on \code{prior},
+\code{se} and \code{PIP}:
 \itemize{
-\item \code{estimate} - Coefficient estimate
-\item \code{std.error} - Standard error
-\item \code{PIP} - Posterior inclusion probability
+\item \code{prior = "both"}: always a \code{badp_bma_coef} data frame.
+Columns are grouped by prior; for each prior the columns
+\code{<p>_estimate}, \code{<p>_std_error} (when \code{se = TRUE})
+and \code{<p>_PIP} (when \code{PIP = TRUE}) appear, with
+\code{<p>} being either \code{binom} or \code{beta}.
+\item \code{prior = "binomial"} or \code{"beta"}: a named numeric
+vector of estimates when \code{se = FALSE} and \code{PIP = FALSE};
+otherwise a data frame with columns \code{estimate},
+\code{std.error} (when \code{se = TRUE}) and \code{PIP} (when
+\code{PIP = TRUE}).
 }
 }
 \description{
 Coefficient extraction method for objects of class \code{badp_bma}.
 }
 \details{
-This function extracts coefficient estimates from Bayesian Model Averaging results.
-The posterior mean is the weighted average across all models, while the conditional
-mean is the average conditional on inclusion in the model.
+This function extracts coefficient estimates from Bayesian Model Averaging
+results. By default both priors are reported so the user can compare them
+at a glance; set \code{prior = "binomial"} or \code{prior = "beta"} to
+obtain the legacy single-prior return values (useful when feeding
+coefficients into downstream code).
 }
 \examples{
 \donttest{
 data(full_model_space)
 results <- bma(full_model_space)
 
-# Extract posterior means
+# Posterior means under both priors with PIP
 coef(results)
 
-# Extract with standard errors
+# With standard errors
 coef(results, se = TRUE)
 
-# Extract conditional means
-coef(results, type = "conditional_mean", se = TRUE)
+# With robust standard errors
+coef(results, se = TRUE, robustSE = TRUE)
+
+# Conditional posterior means and SEs
+coef(results, conditional = TRUE, se = TRUE)
+
+# Suppress PIP column
+coef(results, PIP = FALSE)
+
+# Single-prior numeric vector (legacy behaviour)
+coef(results, prior = "binomial", PIP = FALSE)
 }
 
 }
 \seealso{
-\code{\link{bma}}, \code{\link{summary.badp_bma}}
+\code{\link{bma}}, \code{\link{summary.badp_bma}},
+\code{\link{print.badp_bma_coef}}
 }

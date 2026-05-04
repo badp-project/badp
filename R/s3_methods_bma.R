@@ -3,14 +3,17 @@
 #' Print method for objects of class \code{badp_bma}.
 #'
 #' @param x An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.
-#' @param ... Additional arguments (currently unused).
+#' @param ... Additional arguments forwarded to \code{\link{summary.badp_bma}}
+#'   (e.g. \code{prior = "beta"}).
 #'
 #' @return Invisibly returns the input object \code{x}.
 #'
 #' @details
-#' This function provides a formatted summary of the Bayesian Model Averaging results,
-#' including model space information, coefficient estimates under both binomial and
-#' binomial-beta priors, and prior/posterior model sizes.
+#' This method is a thin wrapper that delegates to
+#' \code{\link{summary.badp_bma}} and then prints the resulting summary, so
+#' \code{print(x)} and \code{print(summary(x))} produce identical output.
+#' Pass \code{...} to control the prior used for the highlighted results
+#' (see \code{\link{summary.badp_bma}}).
 #'
 #' @seealso \code{\link{bma}}, \code{\link{summary.badp_bma}}, \code{\link{coef.badp_bma}}
 #'
@@ -23,32 +26,7 @@
 #'
 #' @export
 print.badp_bma <- function(x, ...) {
-  cat("Bayesian Model Averaging Results\n")
-  cat("=================================\n\n")
-  cat("Model Space:", x$num_of_models, "models\n")
-  cat("Regressors:", x$R, "\n")
-  cat("Expected Model Size:", round(x$EMS, 3), "\n")
-  cat("Dilution Prior:", ifelse(x$dilution == 1, "Yes", "No"), "\n\n")
-
-  cat("Binomial Model Prior Results:\n")
-  cat("------------------------------\n")
-  print(x$uniform_table)
-  cat("\n")
-
-  cat("Binomial-Beta Model Prior Results:\n")
-  cat("-----------------------------------\n")
-  print(x$random_table)
-  cat("\n")
-
-  cat("Prior and Posterior Model Sizes:\n")
-  cat("---------------------------------\n")
-  print(x$PMS_table)
-  cat("\n")
-
-  cat("Use summary() for detailed statistics\n")
-  cat("Use coef() to extract coefficients\n")
-  cat("Use plot() to visualize results\n")
-
+  print(summary(x, ...))
   invisible(x)
 }
 
@@ -68,6 +46,7 @@ print.badp_bma <- function(x, ...) {
 #'   \item \code{num_regressors} - Number of regressors (excluding lagged dependent variable)
 #'   \item \code{expected_model_size} - Expected model size
 #'   \item \code{dilution_applied} - Logical indicating if dilution prior was used
+#'   \item \code{dilution_param} - Numeric value of the dilution parameter (\code{dil.Par}); only relevant when \code{dilution_applied} is \code{TRUE}
 #'   \item \code{prior_type} - Character string indicating prior type
 #'   \item \code{results} - Coefficient table for selected prior
 #'   \item \code{results_binomial} - Coefficient table for binomial prior
@@ -105,6 +84,7 @@ summary.badp_bma <- function(object, prior = "binomial", ...) {
       num_regressors = object$R,
       expected_model_size = object$EMS,
       dilution_applied = object$dilution == 1,
+      dilution_param = object$dil.Par,
       prior_type = prior,
       results = results_table,
       results_binomial = object$uniform_table,
@@ -139,6 +119,9 @@ print.summary.badp_bma <- function(x, ...) {
   cat("  Number of regressors:", x$num_regressors, "\n")
   cat("  Expected model size:", round(x$expected_model_size, 3), "\n")
   cat("  Dilution prior:", ifelse(x$dilution_applied, "Applied", "Not applied"), "\n")
+  if (isTRUE(x$dilution_applied) && !is.null(x$dilution_param)) {
+    cat("  Dilution parameter (dil.Par):", x$dilution_param, "\n")
+  }
   cat("  Model prior: binomial, binomial-beta\n\n")
 
   cat("BMA statistics (binomial prior):\n")
@@ -175,85 +158,250 @@ print.summary.badp_bma <- function(x, ...) {
 #' Coefficient extraction method for objects of class \code{badp_bma}.
 #'
 #' @param object An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.
-#' @param prior Character string specifying which prior to use.
-#'   Options are \code{"binomial"} (default) or \code{"beta"}.
-#' @param type Character string specifying the type of coefficient to extract.
-#'   Options are:
-#'   \itemize{
-#'     \item \code{"posterior_mean"} - Posterior mean (default)
-#'     \item \code{"conditional_mean"} - Conditional posterior mean
-#'   }
-#' @param se Logical. If \code{TRUE}, returns a data frame including standard errors
-#'   and posterior inclusion probabilities. If \code{FALSE} (default), returns a
-#'   named numeric vector of coefficients.
+#' @param prior Character string specifying which prior to use. Options are
+#'   \code{"both"} (default), \code{"binomial"}, or \code{"beta"}. With
+#'   \code{"both"} the result reports estimates under the binomial and the
+#'   binomial-beta priors and is printed via
+#'   \code{\link{print.badp_bma_coef}}.
+#' @param conditional Logical. If \code{TRUE}, returns coefficients (and
+#'   standard errors when \code{se = TRUE}) \emph{conditional on inclusion}
+#'   of the variable in a model - i.e. the columns whose names end in
+#'   \code{"con"} (\code{PMcon}, \code{PSDcon}, \code{PSDRcon}). If
+#'   \code{FALSE} (default), returns the unconditional posterior mean and
+#'   standard error.
+#' @param se Logical. If \code{TRUE}, includes a standard-error column
+#'   alongside each estimate. Defaults to \code{FALSE}.
+#' @param robustSE Logical. Only meaningful when \code{se = TRUE}. If
+#'   \code{TRUE}, uses the robust posterior standard deviation
+#'   (\code{PSDR} / \code{PSDRcon}); if \code{FALSE} (default), uses the
+#'   non-robust version (\code{PSD} / \code{PSDcon}). Ignored with a
+#'   warning when \code{se = FALSE}.
+#' @param PIP Logical. If \code{TRUE} (default), includes a posterior
+#'   inclusion probability column for each prior. Set to \code{FALSE} to
+#'   suppress.
 #' @param ... Additional arguments (currently unused).
 #'
-#' @return If \code{se = FALSE}, a named numeric vector of coefficient estimates.
-#'   If \code{se = TRUE}, a data frame with columns:
+#' @return The shape of the return value depends on \code{prior},
+#'   \code{se} and \code{PIP}:
 #'   \itemize{
-#'     \item \code{estimate} - Coefficient estimate
-#'     \item \code{std.error} - Standard error
-#'     \item \code{PIP} - Posterior inclusion probability
+#'     \item \code{prior = "both"}: always a \code{badp_bma_coef} data frame.
+#'       Columns are grouped by prior; for each prior the columns
+#'       \code{<p>_estimate}, \code{<p>_std_error} (when \code{se = TRUE})
+#'       and \code{<p>_PIP} (when \code{PIP = TRUE}) appear, with
+#'       \code{<p>} being either \code{binom} or \code{beta}.
+#'     \item \code{prior = "binomial"} or \code{"beta"}: a named numeric
+#'       vector of estimates when \code{se = FALSE} and \code{PIP = FALSE};
+#'       otherwise a data frame with columns \code{estimate},
+#'       \code{std.error} (when \code{se = TRUE}) and \code{PIP} (when
+#'       \code{PIP = TRUE}).
 #'   }
 #'
 #' @details
-#' This function extracts coefficient estimates from Bayesian Model Averaging results.
-#' The posterior mean is the weighted average across all models, while the conditional
-#' mean is the average conditional on inclusion in the model.
+#' This function extracts coefficient estimates from Bayesian Model Averaging
+#' results. By default both priors are reported so the user can compare them
+#' at a glance; set \code{prior = "binomial"} or \code{prior = "beta"} to
+#' obtain the legacy single-prior return values (useful when feeding
+#' coefficients into downstream code).
 #'
-#' @seealso \code{\link{bma}}, \code{\link{summary.badp_bma}}
+#' @seealso \code{\link{bma}}, \code{\link{summary.badp_bma}},
+#'   \code{\link{print.badp_bma_coef}}
 #'
 #' @examples
 #' \donttest{
 #' data(full_model_space)
 #' results <- bma(full_model_space)
 #'
-#' # Extract posterior means
+#' # Posterior means under both priors with PIP
 #' coef(results)
 #'
-#' # Extract with standard errors
+#' # With standard errors
 #' coef(results, se = TRUE)
 #'
-#' # Extract conditional means
-#' coef(results, type = "conditional_mean", se = TRUE)
+#' # With robust standard errors
+#' coef(results, se = TRUE, robustSE = TRUE)
+#'
+#' # Conditional posterior means and SEs
+#' coef(results, conditional = TRUE, se = TRUE)
+#'
+#' # Suppress PIP column
+#' coef(results, PIP = FALSE)
+#'
+#' # Single-prior numeric vector (legacy behaviour)
+#' coef(results, prior = "binomial", PIP = FALSE)
 #' }
 #'
 #' @export
-coef.badp_bma <- function(object, prior = "binomial", type = "posterior_mean",
-                          se = FALSE, ...) {
+coef.badp_bma <- function(object,
+                          prior       = "both",
+                          conditional = FALSE,
+                          se          = FALSE,
+                          robustSE    = FALSE,
+                          PIP         = TRUE,
+                          ...) {
   # Validate arguments
-  prior <- match.arg(prior, c("binomial", "beta"))
-  type <- match.arg(type, c("posterior_mean", "conditional_mean"))
+  prior <- match.arg(prior, c("both", "binomial", "beta"))
 
-  # Select table based on prior
-  table <- if (prior == "binomial") object$uniform_table else object$random_table
-
-  # Extract based on type
-  coef_col <- switch(type,
-    "posterior_mean" = "PM",
-    "conditional_mean" = "PMcon"
-  )
-
-  coefs <- table[, coef_col]
-  names(coefs) <- object$reg_names
-
-  if (se) {
-    se_col <- switch(type,
-      "posterior_mean" = "PSD",
-      "conditional_mean" = "PSDcon"
-    )
-    ses <- table[, se_col]
-
-    result <- data.frame(
-      estimate = coefs,
-      std.error = ses,
-      PIP = table[, "PIP"],
-      row.names = object$reg_names
-    )
-    return(result)
+  if (!is.logical(conditional) || length(conditional) != 1L) {
+    stop("`conditional` must be a single logical value.")
+  }
+  if (!is.logical(se) || length(se) != 1L) {
+    stop("`se` must be a single logical value.")
+  }
+  if (!is.logical(robustSE) || length(robustSE) != 1L) {
+    stop("`robustSE` must be a single logical value.")
+  }
+  if (!is.logical(PIP) || length(PIP) != 1L) {
+    stop("`PIP` must be a single logical value.")
+  }
+  if (robustSE && !se) {
+    warning("`robustSE = TRUE` has no effect when `se = FALSE`; ignoring.")
   }
 
-  return(coefs)
+  # Resolve column names from the bma tables
+  coef_col <- if (conditional) "PMcon" else "PM"
+  se_col <- if (conditional) {
+    if (robustSE) "PSDRcon" else "PSDcon"
+  } else {
+    if (robustSE) "PSDR" else "PSD"
+  }
+
+  reg <- object$reg_names
+
+  # ---- Single-prior path: preserve legacy return shape when possible ----
+  if (prior %in% c("binomial", "beta")) {
+    tab <- if (prior == "binomial") object$uniform_table else object$random_table
+
+    coefs <- tab[, coef_col]
+    names(coefs) <- reg
+
+    if (!se && !PIP) {
+      return(coefs)
+    }
+
+    cols <- list()
+    cols[[coef_col]] <- unname(coefs)
+    if (se)  cols[[se_col]] <- unname(tab[, se_col])
+    if (PIP) cols[["PIP"]]  <- unname(tab[, "PIP"])
+
+    return(do.call(data.frame,
+                   c(cols, list(row.names = reg, check.names = FALSE))))
+  }
+
+  # ---- Both-priors path ----
+  bin <- object$uniform_table
+  bet <- object$random_table
+
+  cols <- list()
+  cols[[paste0("binom_", coef_col)]] <- unname(bin[, coef_col])
+  if (se)  cols[[paste0("binom_", se_col)]] <- unname(bin[, se_col])
+  if (PIP) cols[["binom_PIP"]]              <- unname(bin[, "PIP"])
+  cols[[paste0("beta_", coef_col)]] <- unname(bet[, coef_col])
+  if (se)  cols[[paste0("beta_", se_col)]] <- unname(bet[, se_col])
+  if (PIP) cols[["beta_PIP"]]              <- unname(bet[, "PIP"])
+
+  out <- do.call(data.frame,
+                 c(cols, list(row.names = reg, check.names = FALSE)))
+
+  attr(out, "conditional") <- conditional
+  attr(out, "se")          <- se
+  attr(out, "robustSE")    <- robustSE
+  attr(out, "PIP")         <- PIP
+  attr(out, "coef_col")    <- coef_col
+  attr(out, "se_col")      <- se_col
+  class(out) <- c("badp_bma_coef", "data.frame")
+  out
+}
+
+
+#' Print Coefficient Tables from Bayesian Model Averaging
+#'
+#' Print method for objects of class \code{badp_bma_coef} produced by
+#' \code{\link{coef.badp_bma}} when \code{prior = "both"}.
+#'
+#' @param x An object of class \code{badp_bma_coef}.
+#' @param digits Integer. Number of significant digits used when printing
+#'   numeric columns. Defaults to \code{4}.
+#' @param ... Additional arguments passed to \code{\link[base]{print.data.frame}}.
+#'
+#' @return Invisibly returns the input object \code{x}.
+#'
+#' @details
+#' When the result contains only point estimates (\code{se = FALSE},
+#' \code{PIP = FALSE}), the two priors are printed side by side. Otherwise
+#' the output is split into two stacked panels - one per prior - each with
+#' the requested combination of \code{estimate}, \code{std.error} and
+#' \code{PIP} columns. The header reflects whether the estimates are
+#' unconditional or conditional on inclusion, and whether standard errors
+#' are robust.
+#'
+#' @seealso \code{\link{coef.badp_bma}}
+#'
+#' @export
+print.badp_bma_coef <- function(x, digits = 4, ...) {
+  conditional <- isTRUE(attr(x, "conditional"))
+  has_se      <- isTRUE(attr(x, "se"))
+  has_PIP     <- isTRUE(attr(x, "PIP"))
+  robustSE    <- isTRUE(attr(x, "robustSE"))
+
+  # Resolve the bma-table column names for this view (matches what
+  # appears in the summary tables).
+  coef_col <- attr(x, "coef_col")
+  if (is.null(coef_col)) coef_col <- if (conditional) "PMcon" else "PM"
+  se_col <- attr(x, "se_col")
+  if (is.null(se_col)) {
+    se_col <- if (conditional) {
+      if (robustSE) "PSDRcon" else "PSDcon"
+    } else {
+      if (robustSE) "PSDR" else "PSD"
+    }
+  }
+
+  mean_label <- if (conditional) "Conditional posterior mean" else "Posterior mean"
+
+  # ---- Side-by-side form: estimates only ----
+  if (!has_se && !has_PIP) {
+    title <- paste0(mean_label, " (both priors)")
+    cat(title, "\n", sep = "")
+    cat(strrep("-", nchar(title)), "\n", sep = "")
+    y <- data.frame(
+      binomial        = x[[paste0("binom_", coef_col)]],
+      `binomial-beta` = x[[paste0("beta_",  coef_col)]],
+      row.names       = rownames(x),
+      check.names     = FALSE
+    )
+    print(y, digits = digits, ...)
+    return(invisible(x))
+  }
+
+  # ---- Two-panel form ----
+  title <- mean_label
+  if (has_se) {
+    title <- paste0(title,
+                    if (robustSE) " with robust std. errors" else " with std. errors")
+  }
+  if (has_PIP) {
+    title <- paste0(title, if (has_se) " and PIP" else " with PIP")
+  }
+  title <- paste0(title, " (both priors)")
+  cat(title, "\n", sep = "")
+  cat(strrep("-", nchar(title)), "\n", sep = "")
+
+  build_panel <- function(prefix) {
+    cols <- list()
+    cols[[coef_col]] <- x[[paste0(prefix, "_", coef_col)]]
+    if (has_se)  cols[[se_col]] <- x[[paste0(prefix, "_", se_col)]]
+    if (has_PIP) cols[["PIP"]]  <- x[[paste0(prefix, "_PIP")]]
+    do.call(data.frame,
+            c(cols, list(row.names = rownames(x), check.names = FALSE)))
+  }
+
+  cat("Binomial prior:\n")
+  print(build_panel("binom"), digits = digits, ...)
+  cat("\n")
+  cat("Binomial-beta prior:\n")
+  print(build_panel("beta"), digits = digits, ...)
+
+  invisible(x)
 }
 
 

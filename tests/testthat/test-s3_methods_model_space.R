@@ -1,6 +1,9 @@
 test_that("badp_model_space class is properly assigned", {
   expect_s3_class(small_model_space, "badp_model_space")
   expect_s3_class(full_model_space, "badp_model_space")
+  expect_s3_class(model_space_nonnested, "badp_model_space")
+  expect_s3_class(migration_model_space, "badp_model_space")
+  expect_s3_class(migration_model_space_nonnested, "badp_model_space")
 })
 
 test_that("model_space object has correct structure", {
@@ -23,13 +26,22 @@ test_that("model_space object has correct structure", {
 })
 
 test_that("print.badp_model_space produces expected output", {
-  expect_output(print(small_model_space), "Model Space Object")
+  # print.badp_model_space delegates to print(summary(x)), so the output
+  # should match the summary printer.
+  expect_output(print(small_model_space), "Model Space Summary")
   expect_output(print(small_model_space), "Number of models:")
-  expect_output(print(small_model_space), "Number of parameters in full parameter vector:")
+  expect_output(print(small_model_space), "Number of regressors:")
+  expect_output(print(small_model_space), "Parameters per model:")
+  expect_output(print(small_model_space), "Observations used:")
   expect_output(print(small_model_space), "Variables:")
-  expect_output(print(small_model_space), "Observations:")
-  expect_output(print(small_model_space), "Nested:")
+  expect_output(print(small_model_space), "Nested model space:")
   expect_output(print(small_model_space), "Use with bma")
+})
+
+test_that("print.badp_model_space matches print.summary.badp_model_space output", {
+  out_print   <- utils::capture.output(print(small_model_space))
+  out_summary <- utils::capture.output(print(summary(small_model_space)))
+  expect_identical(out_print, out_summary)
 })
 
 test_that("model_space works with bma function", {

@@ -37,6 +37,7 @@ An object of class \code{badp_bma}, which is a list with 16 elements:
 \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
 \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+\item{dil.Par}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
 }
 }
 \description{

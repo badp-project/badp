@@ -51,6 +51,7 @@ Imports:
     magrittr,
     optimbase,
     parallel,
+    patchwork,
     pbapply,
     Rcpp,
     RcppArmadillo,
