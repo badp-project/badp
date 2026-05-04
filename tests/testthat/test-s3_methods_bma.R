@@ -6,8 +6,8 @@ test_that("badp_bma class is properly assigned", {
 test_that("numeric indexing still works after adding S3 class (backward compatibility)", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test all 16 components are accessible by numeric index
-  expect_equal(length(bma_results), 16)
+  # Test all 17 components are accessible by numeric index
+  expect_equal(length(bma_results), 17)
   expect_true(is.matrix(bma_results[[1]]))  # uniform_table
   expect_true(is.matrix(bma_results[[2]]))  # random_table
   expect_equal(length(bma_results[[3]]), bma_results[[4]] + 1)  # reg_names length = R + 1
@@ -24,6 +24,7 @@ test_that("numeric indexing still works after adding S3 class (backward compatib
   expect_true(is.matrix(bma_results[[14]])) # betas_nonzero
   expect_true(is.matrix(bma_results[[15]])) # df_free
   expect_true(is.matrix(bma_results[[16]])) # PMS_table
+  expect_true(is.numeric(bma_results[[17]])) # dil.Par
 })
 
 test_that("named access works for bma components", {
@@ -63,14 +64,26 @@ test_that("existing helper functions work with classed objects", {
 test_that("print.badp_bma produces expected output", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  expect_output(print(bma_results), "Bayesian Model Averaging Results")
-  expect_output(print(bma_results), "Model Space:")
-  expect_output(print(bma_results), "Regressors:")
-  expect_output(print(bma_results), "Expected Model Size:")
-  expect_output(print(bma_results), "Dilution Prior:")
-  expect_output(print(bma_results), "Binomial Model Prior Results:")
-  expect_output(print(bma_results), "Binomial-Beta Model Prior Results:")
+  # print.badp_bma delegates to print(summary(x)), so the output should
+  # match the summary printer.
+  expect_output(print(bma_results), "Bayesian Model Averaging Summary")
+  expect_output(print(bma_results), "Model Space Information:")
+  expect_output(print(bma_results), "Total models:")
+  expect_output(print(bma_results), "Number of regressors:")
+  expect_output(print(bma_results), "Expected model size:")
+  expect_output(print(bma_results), "Dilution prior:")
+  expect_output(print(bma_results), "BMA statistics")
+  expect_output(print(bma_results), "binomial prior")
+  expect_output(print(bma_results), "binomial-beta prior")
   expect_output(print(bma_results), "Prior and Posterior Model Sizes:")
+})
+
+test_that("print.badp_bma matches print.summary.badp_bma output", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  out_print   <- utils::capture.output(print(bma_results))
+  out_summary <- utils::capture.output(print(summary(bma_results)))
+  expect_identical(out_print, out_summary)
 })
 
 test_that("summary.badp_bma returns correct structure", {
@@ -117,53 +130,160 @@ test_that("print.summary.badp_bma produces expected output", {
   expect_output(print(summ), "Model prior: binomial, binomial-beta")
 })
 
-test_that("coef.badp_bma extracts coefficients without standard errors", {
+test_that("coef.badp_bma default returns both priors with PIP", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test binomial prior
   coefs <- coef(bma_results)
-  expect_true(is.numeric(coefs))
-  expect_equal(length(coefs), length(bma_results$reg_names))
-  expect_true(!is.null(names(coefs)))
-  expect_equal(names(coefs), bma_results$reg_names)
+  expect_s3_class(coefs, "badp_bma_coef")
+  expect_s3_class(coefs, "data.frame")
+  expect_equal(nrow(coefs), length(bma_results$reg_names))
+  expect_equal(rownames(coefs), bma_results$reg_names)
 
-  # Test beta prior
-  coefs_beta <- coef(bma_results, prior = "beta")
+  # Column names mirror the bma summary table (PM, PIP); SE off by default.
+  expect_true("binom_PM"  %in% colnames(coefs))
+  expect_true("binom_PIP" %in% colnames(coefs))
+  expect_true("beta_PM"   %in% colnames(coefs))
+  expect_true("beta_PIP"  %in% colnames(coefs))
+  expect_false(any(grepl("PSD", colnames(coefs))))
+
+  expect_equal(coefs[["binom_PM"]],
+               unname(bma_results$uniform_table[, "PM"]))
+  expect_equal(coefs[["beta_PM"]],
+               unname(bma_results$random_table[, "PM"]))
+})
+
+test_that("coef.badp_bma PIP toggle controls inclusion of PIP columns", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  no_pip <- coef(bma_results, PIP = FALSE)
+  expect_s3_class(no_pip, "badp_bma_coef")
+  expect_false("binom_PIP" %in% colnames(no_pip))
+  expect_false("beta_PIP"  %in% colnames(no_pip))
+  expect_true("binom_PM"   %in% colnames(no_pip))
+  expect_true("beta_PM"    %in% colnames(no_pip))
+})
+
+test_that("coef.badp_bma single-prior options preserve legacy return shape", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  # Numeric vector requires PIP = FALSE (and se = FALSE)
+  coefs_bin <- coef(bma_results, prior = "binomial", PIP = FALSE)
+  expect_true(is.numeric(coefs_bin))
+  expect_equal(length(coefs_bin), length(bma_results$reg_names))
+  expect_equal(names(coefs_bin), bma_results$reg_names)
+
+  coefs_beta <- coef(bma_results, prior = "beta", PIP = FALSE)
   expect_true(is.numeric(coefs_beta))
   expect_equal(length(coefs_beta), length(bma_results$reg_names))
+
+  # Default single-prior call returns a data frame with PM and PIP columns
+  coefs_bin_pip <- coef(bma_results, prior = "binomial")
+  expect_s3_class(coefs_bin_pip, "data.frame")
+  expect_true("PM"  %in% colnames(coefs_bin_pip))
+  expect_true("PIP" %in% colnames(coefs_bin_pip))
 })
 
-test_that("coef.badp_bma extracts coefficients with standard errors", {
+test_that("coef.badp_bma se = TRUE adds standard error columns", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # With standard errors
+  # Both priors: PSD column is added
   coefs_se <- coef(bma_results, se = TRUE)
-  expect_s3_class(coefs_se, "data.frame")
-  expect_true("estimate" %in% names(coefs_se))
-  expect_true("std.error" %in% names(coefs_se))
-  expect_true("PIP" %in% names(coefs_se))
-  expect_equal(nrow(coefs_se), length(bma_results$reg_names))
-  expect_equal(rownames(coefs_se), bma_results$reg_names)
+  expect_s3_class(coefs_se, "badp_bma_coef")
+  for (col in c("binom_PM", "binom_PSD", "binom_PIP",
+                "beta_PM",  "beta_PSD",  "beta_PIP")) {
+    expect_true(col %in% colnames(coefs_se))
+  }
 
-  # Test conditional mean with SE
-  coefs_cond <- coef(bma_results, type = "conditional_mean", se = TRUE)
-  expect_s3_class(coefs_cond, "data.frame")
-  expect_true("estimate" %in% names(coefs_cond))
-  expect_true("std.error" %in% names(coefs_cond))
+  # Single prior
+  coefs_se_bin <- coef(bma_results, prior = "binomial", se = TRUE)
+  expect_s3_class(coefs_se_bin, "data.frame")
+  expect_true(all(c("PM", "PSD", "PIP") %in% colnames(coefs_se_bin)))
 })
 
-test_that("coef.badp_bma type argument works correctly", {
+test_that("coef.badp_bma robustSE switches between PSD and PSDR columns", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  coefs_pm <- coef(bma_results, type = "posterior_mean")
-  coefs_cm <- coef(bma_results, type = "conditional_mean")
+  normal <- coef(bma_results, se = TRUE, robustSE = FALSE)
+  robust <- coef(bma_results, se = TRUE, robustSE = TRUE)
 
-  expect_true(is.numeric(coefs_pm))
-  expect_true(is.numeric(coefs_cm))
-  expect_equal(length(coefs_pm), length(coefs_cm))
+  # Column names switch depending on robustSE
+  expect_true("binom_PSD"   %in% colnames(normal))
+  expect_true("binom_PSDR"  %in% colnames(robust))
+  expect_false("binom_PSDR" %in% colnames(normal))
+  expect_false("binom_PSD"  %in% colnames(robust))
 
-  # Values should be different for posterior_mean vs conditional_mean
-  expect_false(all(coefs_pm == coefs_cm))
+  # Values match the corresponding bma table columns
+  expect_equal(normal[["binom_PSD"]],
+               unname(bma_results$uniform_table[, "PSD"]))
+  expect_equal(normal[["beta_PSD"]],
+               unname(bma_results$random_table[, "PSD"]))
+  expect_equal(robust[["binom_PSDR"]],
+               unname(bma_results$uniform_table[, "PSDR"]))
+  expect_equal(robust[["beta_PSDR"]],
+               unname(bma_results$random_table[, "PSDR"]))
+
+  # robustSE without se warns and is otherwise ignored
+  expect_warning(coef(bma_results, se = FALSE, robustSE = TRUE),
+                 "robustSE")
+})
+
+test_that("coef.badp_bma conditional switches to PMcon / PSDcon columns", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  uncond <- coef(bma_results, conditional = FALSE)
+  cond   <- coef(bma_results, conditional = TRUE)
+
+  expect_true("binom_PM"    %in% colnames(uncond))
+  expect_true("binom_PMcon" %in% colnames(cond))
+  expect_equal(uncond[["binom_PM"]],
+               unname(bma_results$uniform_table[, "PM"]))
+  expect_equal(cond[["binom_PMcon"]],
+               unname(bma_results$uniform_table[, "PMcon"]))
+
+  # conditional + se uses PSDcon
+  cond_se <- coef(bma_results, conditional = TRUE, se = TRUE)
+  expect_true("binom_PSDcon" %in% colnames(cond_se))
+  expect_equal(cond_se[["binom_PSDcon"]],
+               unname(bma_results$uniform_table[, "PSDcon"]))
+
+  # conditional + robustSE uses PSDRcon
+  cond_robust <- coef(bma_results, conditional = TRUE, se = TRUE,
+                      robustSE = TRUE)
+  expect_true("binom_PSDRcon" %in% colnames(cond_robust))
+  expect_equal(cond_robust[["binom_PSDRcon"]],
+               unname(bma_results$uniform_table[, "PSDRcon"]))
+})
+
+test_that("print.badp_bma_coef adapts to the requested view", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  # Default (PIP, no SE): two-panel form mentioning PIP
+  expect_output(print(coef(bma_results)), "Posterior mean with PIP")
+  expect_output(print(coef(bma_results)), "Binomial prior:")
+  expect_output(print(coef(bma_results)), "Binomial-beta prior:")
+  expect_output(print(coef(bma_results)), "PM")
+  expect_output(print(coef(bma_results)), "PIP")
+
+  # Estimates only: side-by-side form
+  expect_output(print(coef(bma_results, PIP = FALSE)),
+                "Posterior mean \\(both priors\\)")
+  expect_output(print(coef(bma_results, PIP = FALSE)), "binomial-beta")
+
+  # SE: panels include PSD
+  out_se <- coef(bma_results, se = TRUE)
+  expect_output(print(out_se), "Posterior mean with std\\. errors and PIP")
+  expect_output(print(out_se), "PSD")
+
+  # Robust SE: panels include PSDR and the header mentions robust
+  out_rob <- coef(bma_results, se = TRUE, robustSE = TRUE)
+  expect_output(print(out_rob), "robust std\\. errors")
+  expect_output(print(out_rob), "PSDR")
+
+  # Conditional: header and column name reflect this
+  expect_output(print(coef(bma_results, conditional = TRUE)),
+                "Conditional posterior mean")
+  expect_output(print(coef(bma_results, conditional = TRUE)),
+                "PMcon")
 })
 
 test_that("plot.badp_bma dispatches correctly", {
@@ -200,8 +320,11 @@ test_that("invalid arguments produce errors", {
   expect_error(summary(bma_results, prior = "invalid"))
   expect_error(coef(bma_results, prior = "invalid"))
 
-  # Invalid type
-  expect_error(coef(bma_results, type = "invalid"))
+  # Non-logical flags
+  expect_error(coef(bma_results, conditional = "yes"))
+  expect_error(coef(bma_results, se = "yes"))
+  expect_error(coef(bma_results, robustSE = "yes"))
+  expect_error(coef(bma_results, PIP = "yes"))
 
   # Invalid which
   expect_error(plot(bma_results, which = "invalid"))

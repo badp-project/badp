@@ -12,10 +12,13 @@ test_that(paste("bma computes correct bma_list and all its objects"), {
 
   bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
-  expect_equal(length(bma_results), 16)
+  expect_equal(length(bma_results), 17)
   expect_equal(is.numeric(bma_results[[4]]), TRUE)
   expect_equal(is.numeric(bma_results[[5]]), TRUE)
   expect_equal(length(bma_results[[3]]), bma_results[[4]]+1)
+  # Slot 17 holds dil.Par (the dilution prior parameter)
+  expect_equal(is.numeric(bma_results[[17]]), TRUE)
+  expect_equal(bma_results$dil.Par, bma_results[[17]])
   expect_equal(nrow(bma_results[[1]]), bma_results[[4]]+1)
   expect_equal(ncol(bma_results[[1]]), 8)
   expect_equal(nrow(bma_results[[2]]), bma_results[[4]]+1)

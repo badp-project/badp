@@ -9,15 +9,16 @@
 \value{
 A list with three graphs with prior and posterior model probabilities for model sizes:\cr
 \enumerate{
-\item The results with binomial model prior (based on PMP - posterior model probability) \cr
-\item The results with binomial-beta model prior (based on PMP - posterior model probability) \cr
+\item The results with binomial model prior \cr
+\item The results with binomial-beta model prior  \cr
 \item One graph combining all the aforementioned graphs
 }
 }
 \description{
 This function draws two graphs of prior and posterior model probabilities: \cr
-a) The results with binomial model prior (based on PMP - posterior model probability) \cr
-b) The results with binomial-beta model prior (based on PMP - posterior model probability)
+a) The results with binomial model prior \cr
+b) The results with binomial-beta model prior \cr
+c) One graph combining all the aforementioned graphs
 }
 \examples{
 \donttest{

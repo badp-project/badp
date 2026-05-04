@@ -28,6 +28,7 @@
 #'   \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
 #'   \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 #'   \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+#'   \item{dil.Par}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
 #' }
 #'
 #' @section Methods:
@@ -315,13 +316,13 @@ bma <- function(
   bma_list <- list(
     uniform_table, random_table, reg_names, R, num_of_models, forJointness,
     forBestModels, EMS, sizePriors, PMPs, modelPriors, dilution,
-    alphas, betas_nonzero, d_free, PMStable
+    alphas, betas_nonzero, d_free, PMStable, dil.Par
   )
   names(bma_list) <- c(
     "uniform_table", "random_table", "reg_names", "R",
     "num_of_models", "jointness_data", "best_models_data",
     "EMS", "size_priors", "PMPs", "model_priors", "dilution",
-    "alphas", "betas_nonzero", "df_free", "PMS_table"
+    "alphas", "betas_nonzero", "df_free", "PMS_table", "dil.Par"
   )
   class(bma_list) <- "badp_bma"
 
