@@ -2,8 +2,10 @@
 
 S3method(coef,badp_bma)
 S3method(plot,badp_bma)
+S3method(print,badp_best_models)
 S3method(print,badp_bma)
 S3method(print,badp_bma_coef)
+S3method(print,badp_drawable_grob)
 S3method(print,badp_model_space)
 S3method(print,summary.badp_bma)
 S3method(print,summary.badp_model_space)
