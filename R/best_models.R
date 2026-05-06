@@ -169,23 +169,95 @@ best_models <- function(bma_list, criterion = 1, best = 5, round = 3, estimate =
   inclusion_2 <- knitr::kable(inclusion_table, row.names = TRUE, align = "c")
   models_std_2 <- knitr::kable(models_std, row.names = TRUE, align = "c")
   models_stdR_2 <- knitr::kable(models_stdR, row.names = TRUE, align = "c")
-  inclusion_3 <- grid::grid.grabExpr(gridExtra::grid.table(inclusion_table))
-  models_std_3 <- grid::grid.grabExpr(gridExtra::grid.table(models_std))
-  models_stdR_3 <- grid::grid.grabExpr(gridExtra::grid.table(models_stdR))
+  inclusion_3 <- as_drawable_grob(
+    grid::grid.grabExpr(gridExtra::grid.table(inclusion_table)))
+  models_std_3 <- as_drawable_grob(
+    grid::grid.grabExpr(gridExtra::grid.table(models_std)))
+  models_stdR_3 <- as_drawable_grob(
+    grid::grid.grabExpr(gridExtra::grid.table(models_stdR)))
 
 
   out <- list(inclusion_table, models_std, models_stdR, inclusion_2, models_std_2,
               models_stdR_2, inclusion_3, models_std_3, models_stdR_3)
 
-  if (estimate==FALSE){
-    gridExtra::grid.table(inclusion_table)
+  # Remember which table the caller asked to display, so the print method
+  # can reproduce the original side effect when the result is auto-printed
+  # at the top level (i.e. `best_models(...)` without assignment).
+  attr(out, "estimate") <- isTRUE(estimate)
+  attr(out, "robust")   <- isTRUE(robust)
+  class(out) <- c("badp_best_models", "list")
+
+  out
+}
+
+#' Print Best Models Tables
+#'
+#' Print method for objects of class \code{badp_best_models} returned by
+#' \code{\link{best_models}}. Draws the table chosen by the \code{estimate}
+#' and \code{robust} arguments of the original \code{\link{best_models}}
+#' call to the active graphics device.
+#'
+#' Because R only auto-prints expressions evaluated at the top level, calling
+#' \code{best_models(bma_list)} without assignment triggers this method (and
+#' hence the table is drawn), while \code{best <- best_models(bma_list)}
+#' stays silent.
+#'
+#' @param x An object of class \code{badp_best_models}.
+#' @param ... Additional arguments (currently unused).
+#'
+#' @return Invisibly returns the input object \code{x}.
+#'
+#' @seealso \code{\link{best_models}}
+#'
+#' @export
+print.badp_best_models <- function(x, ...) {
+  estimate <- isTRUE(attr(x, "estimate"))
+  robust   <- isTRUE(attr(x, "robust"))
+
+  if (!estimate) {
+    gridExtra::grid.table(x[[1]])         # inclusion_table
+  } else if (robust) {
+    gridExtra::grid.table(x[[3]])         # models_stdR (robust SE)
+  } else {
+    gridExtra::grid.table(x[[2]])         # models_std (regular SE)
   }
-  if (estimate==TRUE){
-    if (robust==TRUE){
-      gridExtra::grid.table(models_stdR)
-    }else{
-      gridExtra::grid.table(models_std)
-    }
-  }
-  return(out)
+
+  invisible(x)
+}
+
+
+# Internal helper: tag a captured gTree so that auto-printing it (e.g.
+# typing `best[[9]]` at the console) renders the picture via
+# `grid::grid.draw()` instead of just printing a description string.
+# The original gTree / grob / gDesc classes are preserved, so any code
+# that does `grid::grid.draw(best[[9]])` continues to work unchanged.
+as_drawable_grob <- function(g) {
+  class(g) <- c("badp_drawable_grob", class(g))
+  g
+}
+
+
+#' Print a Drawable Best-Models Grob
+#'
+#' Print method for the captured \code{gTree} objects stored in positions
+#' 7-9 of the list returned by \code{\link{best_models}}. Renders the grob
+#' to the active graphics device via \code{\link[grid]{grid.draw}} so that
+#' typing e.g. \code{best[[9]]} at the console displays the picture
+#' instead of a description string.
+#'
+#' @param x A \code{badp_drawable_grob} object (a \code{gTree} captured by
+#'   \code{\link[grid]{grid.grabExpr}}).
+#' @param newpage Logical; if \code{TRUE} (default) a new graphics page is
+#'   started before drawing.
+#' @param ... Additional arguments (currently unused).
+#'
+#' @return Invisibly returns the input object \code{x}.
+#'
+#' @seealso \code{\link{best_models}}, \code{\link[grid]{grid.draw}}
+#'
+#' @export
+print.badp_drawable_grob <- function(x, newpage = TRUE, ...) {
+  if (isTRUE(newpage)) grid::grid.newpage()
+  grid::grid.draw(x)
+  invisible(x)
 }
