@@ -47,18 +47,22 @@ suppress.}
 }
 \value{
 The shape of the return value depends on \code{prior},
-\code{se} and \code{PIP}:
+\code{conditional}, \code{se}, \code{robustSE} and \code{PIP}:
 \itemize{
 \item \code{prior = "both"}: always a \code{badp_bma_coef} data frame.
 Columns are grouped by prior; for each prior the columns
-\code{<p>_estimate}, \code{<p>_std_error} (when \code{se = TRUE})
-and \code{<p>_PIP} (when \code{PIP = TRUE}) appear, with
-\code{<p>} being either \code{binom} or \code{beta}.
+\code{binom_PM} / \code{beta_PM} (or \code{binom_PMcon} / \code{beta_PMcon}
+when \code{conditional = TRUE}), standard error columns
+\code{binom_PSD} / \code{beta_PSD} (or \code{binom_PSDR} / \code{beta_PSDR}
+when \code{robustSE = TRUE}, or their \code{con} variants when
+\code{conditional = TRUE}) when \code{se = TRUE}, and
+\code{binom_PIP} / \code{beta_PIP} when \code{PIP = TRUE}.
 \item \code{prior = "binomial"} or \code{"beta"}: a named numeric
 vector of estimates when \code{se = FALSE} and \code{PIP = FALSE};
-otherwise a data frame with columns \code{estimate},
-\code{std.error} (when \code{se = TRUE}) and \code{PIP} (when
-\code{PIP = TRUE}).
+otherwise a data frame with columns \code{PM} (or \code{PMcon}
+when \code{conditional = TRUE}), standard error column
+\code{PSD} / \code{PSDR} (or \code{PSDcon} / \code{PSDRcon})
+when \code{se = TRUE}, and \code{PIP} when \code{PIP = TRUE}.
 }
 }
 \description{
