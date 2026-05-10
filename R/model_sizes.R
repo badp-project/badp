@@ -1,3 +1,5 @@
+utils::globalVariables(c("ID", "Value", "Probability"))
+
 #' Graphs of the prior and posterior model probabilities of the model sizes
 #'
 #' This function draws two graphs of prior and posterior model probabilities: \cr
@@ -36,11 +38,6 @@
 #'
 #' size_graphs <- model_sizes(bma_results)
 #' }
-#'
-#'@name model_sizes
-
-utils::globalVariables(c("ID", "Value", "Probability"))
-
 model_sizes <- function(bma_list){
 
   R <- bma_list[[4]] # total number of regressors

@@ -1,8 +1,8 @@
+utils::globalVariables(".data")
+
 #' Graphs of the distribution of the coefficients over the model space
 #'
 #' This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes these regressors (half of the model space).
-#'
-#' @name coef_hist
 #'
 #' @param bma_list bma object (the result of the bma function)
 #' @param weight Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
@@ -48,9 +48,6 @@
 #'
 #' coef_plots <- coef_hist(bma_results, kernel = 1)
 #' }
-
-utils::globalVariables(".data")
-
 coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, num = NULL, kernel = 0){
   if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
       stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")

@@ -3,6 +3,17 @@
 \name{coef_hist}
 \alias{coef_hist}
 \title{Graphs of the distribution of the coefficients over the model space}
+\usage{
+coef_hist(
+  bma_list,
+  weight = NULL,
+  BW = "FD",
+  binW = NULL,
+  BN = 0,
+  num = NULL,
+  kernel = 0
+)
+}
 \arguments{
 \item{bma_list}{bma object (the result of the bma function)}
 

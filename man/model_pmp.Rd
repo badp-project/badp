@@ -3,6 +3,9 @@
 \name{model_pmp}
 \alias{model_pmp}
 \title{Graphs of the prior and posterior model probabilities for the best individual models}
+\usage{
+model_pmp(bma_list, top = NULL)
+}
 \arguments{
 \item{bma_list}{bma_list object (the result of the bma function)}
 
@@ -44,5 +47,4 @@ bma_results <- bma(
 
 model_graphs <- model_pmp(bma_results, top = 16)
 }
-
 }

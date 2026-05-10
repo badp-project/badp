@@ -3,6 +3,9 @@
 \name{posterior_dens}
 \alias{posterior_dens}
 \title{Graphs of the posterior densities of the coefficients}
+\usage{
+posterior_dens(bma_list, prior = "binomial", SE = "standard")
+}
 \arguments{
 \item{bma_list}{bma object (the result of the bma function)}
 
