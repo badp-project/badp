@@ -4,7 +4,7 @@ utils::globalVariables(".data")
 #'
 #' This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes these regressors (half of the model space).
 #'
-#' @param bma_list bma object (the result of the bma function)
+#' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param weight Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
 #' 1) NULL - no weighting (default option) \cr
 #' 2) "binomial" - using posterior model probabilities based on binomial model prior \cr

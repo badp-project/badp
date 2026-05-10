@@ -14,15 +14,15 @@ best_models(
 )
 }
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
-\item{criterion}{The criterion that will be used for a basis of the model ranking: \cr
-1 - binomial model prior \cr
-2 - binomial-beta model prior}
+\item{criterion}{Integer specifying the ranking criterion: \cr
+\code{1} - binomial model prior (default); \cr
+\code{2} - binomial-beta model prior.}
 
-\item{best}{The number of the best models to be considered}
+\item{best}{Integer. The number of best models to display (default: 5).}
 
-\item{round}{Parameter indicating the decimal place to which number in the tables should be rounded (default round = 3)}
+\item{round}{Integer indicating the decimal place to which numbers in the tables should be rounded (default: 3).}
 
 \item{estimate}{A parameter with values TRUE or FALSE indicating which table should be displayed when
 TRUE - table with the estimation results \cr

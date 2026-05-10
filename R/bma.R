@@ -3,11 +3,11 @@
 #' This function calculates BMA statistics based on the provided model space.
 #' Other objects for further analysis are also returned.
 #'
-#' @param model_space List with params and stats from the model space
-#' @param round Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)
-#' @param EMS Expected model size for model binomial and binomial-beta model prior
-#' @param dilution Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).
-#' @param dil.Par Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.
+#' @param model_space An object of class \code{badp_model_space}, typically returned by \code{\link{optim_model_space}}.
+#' @param round Integer indicating the decimal place to which numbers in the BMA tables and prior and posterior model sizes should be rounded (default: 4).
+#' @param EMS Numeric. Expected model size for binomial and binomial-beta model prior (default: R/2, where R is the number of regressors).
+#' @param dilution Integer. Use 0 for no dilution prior (default), or 1 to apply a dilution prior (George 2010).
+#' @param dil.Par Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.
 #'
 #' @return An object of class \code{badp_bma}, which is a list containing:
 #'

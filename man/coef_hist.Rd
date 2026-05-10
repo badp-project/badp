@@ -15,7 +15,7 @@ coef_hist(
 )
 }
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{weight}{Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
 \enumerate{

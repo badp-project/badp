@@ -12,7 +12,7 @@
 #' Hofmarcher P, Crespo Cuaresma J, Grün B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
 #' Ley E, Steel M (2007) Jointness in Bayesian variable selection with applications to growth regression. Journal of Macroeconomics, 29(3), 476-493. doi: 10.1016/j.jmacro.2006.12.002
 #'
-#' @param bma_list bma object (the result of the bma function)
+#' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param measure Character string specifying the measure of jointness. One of: \cr
 #' \code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr
 #' \code{"LS"} - Ley & Steel (2007) measure; \cr
