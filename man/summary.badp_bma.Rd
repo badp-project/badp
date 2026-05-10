@@ -30,7 +30,7 @@ Summary method for objects of class \code{badp_bma}.
 }
 \details{
 This function creates a comprehensive summary object that includes model space information,
-coefficient estimates for both priors, and highlights variables with high posterior inclusion
+BMA statistics for both priors, and highlights variables with high posterior inclusion
 probabilities. The summary always displays results for both the binomial and binomial-beta
 priors to allow direct comparison.
 }
