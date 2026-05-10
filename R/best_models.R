@@ -51,7 +51,7 @@
 #'   dilution    = 0
 #' )
 #'
-#' best_5_models <- best_models(bma_results, prior = "binomial", best = 5, estimate = TRUE, robust = TRUE)
+#' best_5_models <- best_models(bma_results, prior = "binomial", best = 5, estimate = TRUE)
 #' }
 
 best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estimate = TRUE, robust = TRUE){
