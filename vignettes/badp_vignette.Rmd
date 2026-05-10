@@ -1027,7 +1027,7 @@ Although @Moral+2013 and @Moral+2016 addressed this issue to some extent, resear
 
 To apply the dilution prior, the user must set `dilution = 1` in the `bma` function.
 The user can also manipulate the dilution parameter $\omega$.
-The default option is `dil.Par = 0.5`, as recommended by @George+2010.
+The default option is `dilution_par = 0.5`, as recommended by @George+2010.
 
 ```{r}
 bma_results_dil <- bma(
@@ -1047,27 +1047,27 @@ The change in the prior distribution is more visible for the binomial-beta model
 In panel b, the prior probability mass has decreased for larger models and increased for smaller models.
 However, this change is not uniform, as models characterized by the highest degree of multicollinearity are subject to the greatest penalty in terms of prior probability mass.
 
-Before moving to the BMA statistics, it is instructive to examine the change in the `dil.Par` parameter.
+Before moving to the BMA statistics, it is instructive to examine the change in the `dilution_par` parameter.
 
 ```{r fig=TRUE}
 bma_results_dil01 <- bma(
   model_space = full_model_space,
   round       = 3,
   dilution    = 1,
-  dil.Par     = 0.1
+  dilution_par     = 0.1
 )
 size_graphs_dil01 <- model_sizes(bma_results_dil01)
 ```
 
 As we can see, decreasing the value of $\omega$ diminishes the impact of dilution on the model prior.
-Conversely, raising the `dil.Par` parameter increases the degree of dilution.
+Conversely, raising the `dilution_par` parameter increases the degree of dilution.
 
 ```{r fig=TRUE}
 bma_results_dil2 <- bma(
   model_space = full_model_space,
   round       = 3,
   dilution    = 1,
-  dil.Par     = 2
+  dilution_par     = 2
 )
 size_graphs_dil2 <- model_sizes(bma_results_dil2)
 ```
