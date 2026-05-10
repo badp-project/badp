@@ -5,7 +5,7 @@
 \alias{model_space_nonnested}
 \title{Example output of \code{\link{optim_model_space}} for non-nested models}
 \format{
-An object of class \code{badp_model_space}, which is a list with 6 elements:
+An object of class \code{badp_model_space}:
 \describe{
 \item{params}{
 A numeric matrix with 40 rows and 512 columns, containing parameter
