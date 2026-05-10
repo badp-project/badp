@@ -59,7 +59,7 @@
 #' \code{\link{economic_growth}} dataset and only three regressors:
 #' \code{ish}, \code{sed}, and \code{pgrw}.
 #'
-#' @format An object of class \code{badp_model_space}, which is a list with 6 elements:
+#' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
 #'     A numeric matrix with 40 rows and 8 columns (corresponding to
@@ -95,7 +95,7 @@
 #' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{economic_growth}} dataset.
 #'
-#' @format An object of class \code{badp_model_space}, which is a list with 6 elements:
+#' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
 #'     A numeric matrix with 40 rows and 512 columns, containing parameter
@@ -130,7 +130,7 @@
 #' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{economic_growth}} dataset.
 #'
-#' @format An object of class \code{badp_model_space}, which is a list with 6 elements:
+#' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
 #'     A numeric matrix with 40 rows and 512 columns, containing parameter
@@ -193,10 +193,10 @@
 
 #' Example output of \code{\link{optim_model_space}} in the case of migration data
 #'
-#' A list created with \code{\link{optim_model_space}} using the
+#' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{migration_data}} dataset.
 #'
-#' @format A list with 5 elements:
+#' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
 #'     A numeric matrix with 51 rows and 16 columns, containing parameter
@@ -218,16 +218,19 @@
 #'   }
 #'   \item{df}{
 #'     The data frame used in the analysis.
+#'   }
+#'   \item{is_nested}{
+#'     A logical indicating whether the model space uses nested specifications.
 #'   }
 #' }
 "migration_model_space"
 
 #' Example output of \code{\link{optim_model_space}} in the case of migration data obtained with nonnested approach.
 #'
-#' A list created with \code{\link{optim_model_space}} using the
+#' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{migration_data}} dataset with nonnested approach.
 #'
-#' @format A list with 5 elements:
+#' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
 #'     A numeric matrix with 51 rows and 16 columns, containing parameter
@@ -249,6 +252,9 @@
 #'   }
 #'   \item{df}{
 #'     The data frame used in the analysis.
+#'   }
+#'   \item{is_nested}{
+#'     A logical indicating whether the model space uses nested specifications.
 #'   }
 #' }
 "migration_model_space_nonnested"
