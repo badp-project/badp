@@ -3,7 +3,7 @@
 #' Print method for objects of class \code{badp_model_space}.
 #'
 #' @param x An object of class \code{badp_model_space}, typically the result of
-#'   \code{\link{compute_model_space_stats}} or \code{\link{optim_model_space}}.
+#'   \code{\link{optim_model_space}}.
 #' @param ... Additional arguments forwarded to \code{\link{summary.badp_model_space}}.
 #'
 #' @return Invisibly returns the input object \code{x}.
@@ -15,8 +15,7 @@
 #' identical output.
 #'
 #' @seealso \code{\link{summary.badp_model_space}},
-#'   \code{\link{compute_model_space_stats}}, \code{\link{optim_model_space}},
-#'   \code{\link{bma}}
+#'   \code{\link{optim_model_space}}, \code{\link{bma}}
 #'
 #' @examples
 #' \donttest{
