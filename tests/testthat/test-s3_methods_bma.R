@@ -89,32 +89,21 @@ test_that("print.badp_bma matches print.summary.badp_bma output", {
 test_that("summary.badp_bma returns correct structure", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test binomial prior summary
   summ <- summary(bma_results)
   expect_s3_class(summ, "summary.badp_bma")
   expect_true("model_space_size" %in% names(summ))
   expect_true("num_regressors" %in% names(summ))
   expect_true("expected_model_size" %in% names(summ))
   expect_true("dilution_applied" %in% names(summ))
-  expect_true("prior_type" %in% names(summ))
-  expect_true("results" %in% names(summ))
   expect_true("results_binomial" %in% names(summ))
   expect_true("results_beta" %in% names(summ))
   expect_true("model_sizes" %in% names(summ))
   expect_true("reg_names" %in% names(summ))
 
-  expect_equal(summ$prior_type, "binomial")
   expect_equal(summ$model_space_size, bma_results$num_of_models)
   expect_equal(summ$num_regressors, bma_results$R)
   expect_equal(summ$results_binomial, bma_results$uniform_table)
   expect_equal(summ$results_beta, bma_results$random_table)
-
-  # Test beta prior summary
-  summ_beta <- summary(bma_results, prior = "beta")
-  expect_equal(summ_beta$prior_type, "beta")
-  expect_equal(summ_beta$results, bma_results$random_table)
-  expect_equal(summ_beta$results_binomial, bma_results$uniform_table)
-  expect_equal(summ_beta$results_beta, bma_results$random_table)
 })
 
 test_that("print.summary.badp_bma produces expected output", {
@@ -316,8 +305,7 @@ test_that("plot.badp_bma returns appropriate objects", {
 test_that("invalid arguments produce errors", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Invalid prior
-  expect_error(summary(bma_results, prior = "invalid"))
+  # Invalid prior (only coef has prior argument; summary always shows both)
   expect_error(coef(bma_results, prior = "invalid"))
 
   # Non-logical flags
