@@ -2,7 +2,7 @@
 % Please edit documentation in R/s3_methods_bma.R
 \name{coef.badp_bma}
 \alias{coef.badp_bma}
-\title{Extract Coefficients from Bayesian Model Averaging Results}
+\title{Extract posterior statistics from Bayesian Model Averaging Results}
 \usage{
 \method{coef}{badp_bma}(
   object,
@@ -23,15 +23,15 @@
 binomial-beta priors and is printed via
 \code{\link{print.badp_bma_coef}}.}
 
-\item{conditional}{Logical. If \code{TRUE}, returns coefficients (and
-standard errors when \code{se = TRUE}) \emph{conditional on inclusion}
+\item{conditional}{Logical. If \code{TRUE}, returns posterior means (and
+posterior standard deviations when \code{se = TRUE}) \emph{conditional on inclusion}
 of the variable in a model - i.e. the columns whose names end in
 \code{"con"} (\code{PMcon}, \code{PSDcon}, \code{PSDRcon}). If
 \code{FALSE} (default), returns the unconditional posterior mean and
 standard error.}
 
-\item{se}{Logical. If \code{TRUE}, includes a standard-error column
-alongside each estimate. Defaults to \code{FALSE}.}
+\item{se}{Logical. If \code{TRUE}, includes a posterior standard deviation column
+alongside each posterior mean. Defaults to \code{FALSE}.}
 
 \item{robustSE}{Logical. Only meaningful when \code{se = TRUE}. If
 \code{TRUE}, uses the robust posterior standard deviation
@@ -60,7 +60,7 @@ when \code{robustSE = TRUE}, or their \code{con} variants when
 \item \code{prior = "binomial"} or \code{"beta"}: a named numeric
 vector of estimates when \code{se = FALSE} and \code{PIP = FALSE};
 otherwise a data frame with columns \code{PM} (or \code{PMcon}
-when \code{conditional = TRUE}), standard error column
+when \code{conditional = TRUE}), posterior standard deviation column
 \code{PSD} / \code{PSDR} (or \code{PSDcon} / \code{PSDRcon})
 when \code{se = TRUE}, and \code{PIP} when \code{PIP = TRUE}.
 }
