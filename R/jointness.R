@@ -13,11 +13,11 @@
 #' Ley E, Steel M (2007) Jointness in Bayesian variable selection with applications to growth regression. Journal of Macroeconomics, 29(3), 476-493. doi: 10.1016/j.jmacro.2006.12.002
 #'
 #' @param bma_list bma object (the result of the bma function)
-#' @param measure Parameter for choosing the measure of jointness: \cr
-#' HCGHM - for Hofmarcher et al. (2018) measure; \cr
-#' LS - for Ley & Steel (2007) measure; \cr
-#' DW - for Doppelhofer & Weeks (2009) measure; \cr
-#' PPI - for posterior probability of including both variables.
+#' @param measure Character string specifying the measure of jointness. One of: \cr
+#' \code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr
+#' \code{"LS"} - Ley & Steel (2007) measure; \cr
+#' \code{"DW"} - Doppelhofer & Weeks (2009) measure; \cr
+#' \code{"PPI"} - posterior probability of including both variables.
 #' @param rho The parameter "rho" (\eqn{\rho}) to be used in HCGHM jointness measure (default rho = 0.5). Works only if HCGHM measure is chosen (Hofmarcher et al. 2018).
 #' @param round Parameter indicating the decimal place to which the jointness measures should be rounded (default round = 3).
 #'
@@ -49,7 +49,8 @@
 #' }
 
 
-jointness <- function(bma_list, measure = "HCGHM", rho = 0.5, round = 3){
+jointness <- function(bma_list, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3){
+  measure <- match.arg(measure)
 
   # Extraction of the elements of the bma object
   reg_names <- bma_list[[3]] # vector with names of the regressors from bma object
