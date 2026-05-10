@@ -9,10 +9,10 @@ utils::globalVariables(".data")
 #' 1) NULL - no weighting (default option) \cr
 #' 2) "binomial" - using posterior model probabilities based on binomial model prior \cr
 #' 3) "beta" - using posterior model probabilities based on binomial-beta model prior
-#' @param BW Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
-#' 1) "FD" Freedman-Diaconis method \cr
-#' 2) "SC" Scott method \cr
-#' 3) "vec" user specified bin widths provided through a vector (parameter: binW)
+#' @param BW Character string specifying the method for bin widths (default: \code{"FD"}). One of: \cr
+#' \code{"FD"} - Freedman-Diaconis method; \cr
+#' \code{"SC"} - Scott method; \cr
+#' \code{"vec"} - user specified bin widths provided through a vector (parameter: binW).
 #' @param binW A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BW="vec".
 #' @param BN Parameter taking the values (default: BN = 0): \cr
 #' 1 - the histogram will be build based on the number of bins specified by the user through parameter num. If BN=1, the function ignores parameters BW. \cr
@@ -48,9 +48,16 @@ utils::globalVariables(".data")
 #'
 #' coef_plots <- coef_hist(bma_results, kernel = 1)
 #' }
-coef_hist <- function(bma_list, weight = NULL, BW = "FD", binW = NULL, BN = 0, num = NULL, kernel = 0){
+coef_hist <- function(bma_list, weight = NULL, BW = c("FD", "SC", "vec"), binW = NULL, BN = 0, num = NULL, kernel = 0){
   if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
       stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
+  }
+  BW <- match.arg(BW)
+  if (!kernel %in% c(0, 1)) {
+    stop("kernel must be 0 or 1")
+  }
+  if (!BN %in% c(0, 1)) {
+    stop("BN must be 0 or 1")
   }
 
   x_names <- bma_list[[3]] # names of variables

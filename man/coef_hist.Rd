@@ -7,7 +7,7 @@
 coef_hist(
   bma_list,
   weight = NULL,
-  BW = "FD",
+  BW = c("FD", "SC", "vec"),
   binW = NULL,
   BN = 0,
   num = NULL,
@@ -24,12 +24,10 @@ coef_hist(
 \item "beta" - using posterior model probabilities based on binomial-beta model prior
 }}
 
-\item{BW}{Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
-\enumerate{
-\item "FD" Freedman-Diaconis method \cr
-\item "SC" Scott method \cr
-\item "vec" user specified bin widths provided through a vector (parameter: binW)
-}}
+\item{BW}{Character string specifying the method for bin widths (default: \code{"FD"}). One of: \cr
+\code{"FD"} - Freedman-Diaconis method; \cr
+\code{"SC"} - Scott method; \cr
+\code{"vec"} - user specified bin widths provided through a vector (parameter: binW).}
 
 \item{binW}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BW="vec".}
 

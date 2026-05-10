@@ -4,16 +4,21 @@
 \alias{jointness}
 \title{Calculation of the jointness measures}
 \usage{
-jointness(bma_list, measure = "HCGHM", rho = 0.5, round = 3)
+jointness(
+  bma_list,
+  measure = c("HCGHM", "LS", "DW", "PPI"),
+  rho = 0.5,
+  round = 3
+)
 }
 \arguments{
 \item{bma_list}{bma object (the result of the bma function)}
 
-\item{measure}{Parameter for choosing the measure of jointness: \cr
-HCGHM - for Hofmarcher et al. (2018) measure; \cr
-LS - for Ley & Steel (2007) measure; \cr
-DW - for Doppelhofer & Weeks (2009) measure; \cr
-PPI - for posterior probability of including both variables.}
+\item{measure}{Character string specifying the measure of jointness. One of: \cr
+\code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr
+\code{"LS"} - Ley & Steel (2007) measure; \cr
+\code{"DW"} - Doppelhofer & Weeks (2009) measure; \cr
+\code{"PPI"} - posterior probability of including both variables.}
 
 \item{rho}{The parameter "rho" (\eqn{\rho}) to be used in HCGHM jointness measure (default rho = 0.5). Works only if HCGHM measure is chosen (Hofmarcher et al. 2018).}
 
