@@ -5,7 +5,7 @@
 \alias{full_bma_results}
 \title{Example output of the bma function}
 \format{
-An object of class \code{badp_bma} of length 16.
+An object of class \code{badp_bma}
 }
 \usage{
 full_bma_results
