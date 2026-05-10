@@ -12,7 +12,7 @@ jointness(
 )
 }
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{measure}{Character string specifying the measure of jointness. One of: \cr
 \code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr

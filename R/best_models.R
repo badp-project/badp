@@ -3,12 +3,12 @@
 #' This function creates a ranking of best models according to one of the possible criterion (PMP under binomial model prior, PMP under binomial-beta model prior, R^2 under binomial model prior, R^2 under binomial-beta model prior).
 #' The function gives two types of tables in three different formats: inclusion table (where 1 indicates presence of the regressor in the model and 0 indicates that the variable is excluded from the model) and estimation results table (it displays the best models and estimation output for those models: point estimates, standard errors, significance level, and R^2).
 #'
-#' @param bma_list bma object (the result of the bma function)
-#' @param criterion The criterion that will be used for a basis of the model ranking: \cr
-#' 1 - binomial model prior \cr
-#' 2 - binomial-beta model prior
-#' @param best The number of the best models to be considered
-#' @param round Parameter indicating the decimal place to which number in the tables should be rounded (default round = 3)
+#' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
+#' @param criterion Integer specifying the ranking criterion: \cr
+#' \code{1} - binomial model prior (default); \cr
+#' \code{2} - binomial-beta model prior.
+#' @param best Integer. The number of best models to display (default: 5).
+#' @param round Integer indicating the decimal place to which numbers in the tables should be rounded (default: 3).
 #' @param estimate A parameter with values TRUE or FALSE indicating which table should be displayed when
 #' TRUE - table with the estimation results \cr
 #' FALSE - table with the inclusion of regressors in the best models

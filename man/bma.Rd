@@ -7,15 +7,15 @@
 bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 }
 \arguments{
-\item{model_space}{List with params and stats from the model space}
+\item{model_space}{An object of class \code{badp_model_space}, typically returned by \code{\link{optim_model_space}}.}
 
-\item{round}{Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)}
+\item{round}{Integer indicating the decimal place to which numbers in the BMA tables and prior and posterior model sizes should be rounded (default: 4).}
 
-\item{EMS}{Expected model size for model binomial and binomial-beta model prior}
+\item{EMS}{Numeric. Expected model size for binomial and binomial-beta model prior (default: R/2, where R is the number of regressors).}
 
-\item{dilution}{Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).}
+\item{dilution}{Integer. Use 0 for no dilution prior (default), or 1 to apply a dilution prior (George 2010).}
 
-\item{dil.Par}{Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.}
+\item{dil.Par}{Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.}
 }
 \value{
 An object of class \code{badp_bma}, which is a list containing:
