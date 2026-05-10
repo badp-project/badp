@@ -4,13 +4,10 @@
 \alias{summary.badp_bma}
 \title{Summarize Bayesian Model Averaging Results}
 \usage{
-\method{summary}{badp_bma}(object, prior = "binomial", ...)
+\method{summary}{badp_bma}(object, ...)
 }
 \arguments{
 \item{object}{An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.}
-
-\item{prior}{Character string specifying which prior to use for the summary.
-Options are \code{"binomial"} (default) or \code{"beta"}.}
 
 \item{...}{Additional arguments (currently unused).}
 }
@@ -22,8 +19,6 @@ An object of class \code{summary.badp_bma} containing:
 \item \code{expected_model_size} - Expected model size
 \item \code{dilution_applied} - Logical indicating if dilution prior was used
 \item \code{dilution_param} - Numeric value of the dilution parameter (\code{dil.Par}); only relevant when \code{dilution_applied} is \code{TRUE}
-\item \code{prior_type} - Character string indicating prior type
-\item \code{results} - Coefficient table for selected prior
 \item \code{results_binomial} - Coefficient table for binomial prior
 \item \code{results_beta} - Coefficient table for binomial-beta prior
 \item \code{model_sizes} - Prior and posterior model sizes table
@@ -35,14 +30,15 @@ Summary method for objects of class \code{badp_bma}.
 }
 \details{
 This function creates a comprehensive summary object that includes model space information,
-coefficient estimates, and highlights variables with high posterior inclusion probabilities.
+coefficient estimates for both priors, and highlights variables with high posterior inclusion
+probabilities. The summary always displays results for both the binomial and binomial-beta
+priors to allow direct comparison.
 }
 \examples{
 \donttest{
 data(full_model_space)
 results <- bma(full_model_space)
 summary(results)
-summary(results, prior = "beta")
 }
 
 }
