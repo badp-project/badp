@@ -203,7 +203,7 @@ models:
 
 ``` r
 # Retrieve the 5 best models according to binomial prior
-top3_binom <- badp::best_models(bma_results, criterion = 1, best = 3)
+top3_binom <- badp::best_models(bma_results, prior = "binomial", best = 3)
 ```
 
 <img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
@@ -283,7 +283,7 @@ bma_obj <- badp::bma(
 # 4) Inspect the top 3 models under binomial prior
 best_3 <- badp::best_models(
   bma_list = bma_obj,
-  criterion = 1,
+  prior = "binomial",
   best = 3
 )
 ```

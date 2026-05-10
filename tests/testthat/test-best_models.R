@@ -14,7 +14,7 @@ test_that(paste("best_models creates correct lists with graphs"), {
 
   best <- 5
 
-  best_5_models <- best_models(bma_results, criterion = 2, best = best, estimate = TRUE, robust = TRUE)
+  best_5_models <- best_models(bma_results, prior = "beta", best = best, estimate = TRUE, robust = TRUE)
 
   expect_equal(class(best_5_models), c("badp_best_models", "list"))
   expect_s3_class(best_5_models, "badp_best_models")

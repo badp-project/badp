@@ -53,7 +53,7 @@ test_that("existing helper functions work with classed objects", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
   # All existing functions should work without error
-  expect_no_error(best_models(bma_results, criterion = 1, best = 5))
+  expect_no_error(best_models(bma_results, prior = "binomial", best = 5))
   expect_no_error(jointness(bma_results))
   expect_no_error(model_pmp(bma_results))
   expect_no_error(model_sizes(bma_results))
@@ -283,7 +283,7 @@ test_that("plot.badp_bma dispatches correctly", {
 
   # Test all plot types
   expect_no_error(plot(bma_results, which = "model_sizes"))
-  expect_no_error(plot(bma_results, which = "best_models", criterion = 1, best = 5))
+  expect_no_error(plot(bma_results, which = "best_models", prior = "binomial", best = 5))
   expect_no_error(plot(bma_results, which = "jointness"))
   expect_no_error(plot(bma_results, which = "coef_hist"))
   expect_no_error(plot(bma_results, which = "posterior_dens"))

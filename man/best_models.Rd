@@ -6,7 +6,7 @@
 \usage{
 best_models(
   bma_list,
-  criterion = 1,
+  prior = "binomial",
   best = 5,
   round = 3,
   estimate = TRUE,
@@ -16,9 +16,10 @@ best_models(
 \arguments{
 \item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
-\item{criterion}{Integer specifying the ranking criterion: \cr
-\code{1} - binomial model prior (default); \cr
-\code{2} - binomial-beta model prior.}
+\item{prior}{Character string specifying the model prior used for the
+ranking. Options are \code{"binomial"} (default) or \code{"beta"}
+(binomial-beta). Models are ranked by the posterior model probability
+computed under the chosen prior.}
 
 \item{best}{Integer. The number of best models to display (default: 5).}
 
@@ -71,6 +72,6 @@ bma_results <- bma(
   dilution    = 0
 )
 
-best_5_models <- best_models(bma_results, criterion = 1, best = 5, estimate = TRUE, robust = TRUE)
+best_5_models <- best_models(bma_results, prior = "binomial", best = 5, estimate = TRUE, robust = TRUE)
 }
 }
