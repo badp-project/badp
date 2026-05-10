@@ -3,8 +3,7 @@
 #' Print method for objects of class \code{badp_bma}.
 #'
 #' @param x An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.
-#' @param ... Additional arguments forwarded to \code{\link{summary.badp_bma}}
-#'   (e.g. \code{prior = "beta"}).
+#' @param ... Additional arguments (currently unused).
 #'
 #' @return Invisibly returns the input object \code{x}.
 #'
@@ -12,8 +11,8 @@
 #' This method is a thin wrapper that delegates to
 #' \code{\link{summary.badp_bma}} and then prints the resulting summary, so
 #' \code{print(x)} and \code{print(summary(x))} produce identical output.
-#' Pass \code{...} to control the prior used for the highlighted results
-#' (see \code{\link{summary.badp_bma}}).
+#' The output displays BMA statistics for both the binomial and binomial-beta
+#' priors to allow direct comparison.
 #'
 #' @seealso \code{\link{bma}}, \code{\link{summary.badp_bma}}, \code{\link{coef.badp_bma}}
 #'
@@ -26,7 +25,7 @@
 #'
 #' @export
 print.badp_bma <- function(x, ...) {
-  print(summary(x, ...))
+  print(summary(x))
   invisible(x)
 }
 
@@ -36,8 +35,6 @@ print.badp_bma <- function(x, ...) {
 #' Summary method for objects of class \code{badp_bma}.
 #'
 #' @param object An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.
-#' @param prior Character string specifying which prior to use for the summary.
-#'   Options are \code{"binomial"} (default) or \code{"beta"}.
 #' @param ... Additional arguments (currently unused).
 #'
 #' @return An object of class \code{summary.badp_bma} containing:
@@ -47,8 +44,6 @@ print.badp_bma <- function(x, ...) {
 #'   \item \code{expected_model_size} - Expected model size
 #'   \item \code{dilution_applied} - Logical indicating if dilution prior was used
 #'   \item \code{dilution_param} - Numeric value of the dilution parameter (\code{dil.Par}); only relevant when \code{dilution_applied} is \code{TRUE}
-#'   \item \code{prior_type} - Character string indicating prior type
-#'   \item \code{results} - Coefficient table for selected prior
 #'   \item \code{results_binomial} - Coefficient table for binomial prior
 #'   \item \code{results_beta} - Coefficient table for binomial-beta prior
 #'   \item \code{model_sizes} - Prior and posterior model sizes table
@@ -57,7 +52,9 @@ print.badp_bma <- function(x, ...) {
 #'
 #' @details
 #' This function creates a comprehensive summary object that includes model space information,
-#' coefficient estimates, and highlights variables with high posterior inclusion probabilities.
+#' coefficient estimates for both priors, and highlights variables with high posterior inclusion
+#' probabilities. The summary always displays results for both the binomial and binomial-beta
+#' priors to allow direct comparison.
 #'
 #' @seealso \code{\link{bma}}, \code{\link{print.badp_bma}}, \code{\link{coef.badp_bma}}
 #'
@@ -66,17 +63,10 @@ print.badp_bma <- function(x, ...) {
 #' data(full_model_space)
 #' results <- bma(full_model_space)
 #' summary(results)
-#' summary(results, prior = "beta")
 #' }
 #'
 #' @export
-summary.badp_bma <- function(object, prior = "binomial", ...) {
-  # Validate prior argument
-  prior <- match.arg(prior, c("binomial", "beta"))
-
-  # Select appropriate table based on prior
-  results_table <- if (prior == "binomial") object$uniform_table else object$random_table
-
+summary.badp_bma <- function(object, ...) {
   # Create summary object
   summary_obj <- structure(
     list(
@@ -85,8 +75,6 @@ summary.badp_bma <- function(object, prior = "binomial", ...) {
       expected_model_size = object$EMS,
       dilution_applied = object$dilution == 1,
       dilution_param = object$dil.Par,
-      prior_type = prior,
-      results = results_table,
       results_binomial = object$uniform_table,
       results_beta = object$random_table,
       model_sizes = object$PMS_table,

@@ -9,8 +9,7 @@
 \arguments{
 \item{x}{An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.}
 
-\item{...}{Additional arguments forwarded to \code{\link{summary.badp_bma}}
-(e.g. \code{prior = "beta"}).}
+\item{...}{Additional arguments (currently unused).}
 }
 \value{
 Invisibly returns the input object \code{x}.
@@ -22,8 +21,8 @@ Print method for objects of class \code{badp_bma}.
 This method is a thin wrapper that delegates to
 \code{\link{summary.badp_bma}} and then prints the resulting summary, so
 \code{print(x)} and \code{print(summary(x))} produce identical output.
-Pass \code{...} to control the prior used for the highlighted results
-(see \code{\link{summary.badp_bma}}).
+The output displays BMA statistics for both the binomial and binomial-beta
+priors to allow direct comparison.
 }
 \examples{
 \donttest{
