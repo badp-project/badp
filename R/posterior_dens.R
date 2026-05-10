@@ -1,8 +1,8 @@
+utils::globalVariables(".data")
+
 #' Graphs of the posterior densities of the coefficients
 #'
 #' This function draws graphs of the posterior densities of all the coefficients of interest.
-#'
-#' @name posterior_dens
 #'
 #' @param bma_list bma object (the result of the bma function)
 #' @param prior Parameter indicating which model prior should be used for calculations:
@@ -38,9 +38,6 @@
 #'
 #' posterior_graphs <- posterior_dens(bma_results, prior = "binomial", SE = "robust")
 #' }
-
-utils::globalVariables(".data")
-
 posterior_dens <- function(bma_list, prior = "binomial", SE = "standard"){
 
   if (!(prior %in% c("binomial", "beta"))) {

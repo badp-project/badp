@@ -1,3 +1,5 @@
+utils::globalVariables(c("ID", "Value", "Probability"))
+
 #' Graphs of the prior and posterior model probabilities for the best individual models
 #'
 #' This function draws four graphs of prior and posterior model probabilities for the best individual models: \cr
@@ -38,11 +40,6 @@
 #'
 #' model_graphs <- model_pmp(bma_results, top = 16)
 #' }
-#'
-#'@name model_pmp
-
-utils::globalVariables(c("ID", "Value", "Probability"))
-
 model_pmp <- function(bma_list, top = NULL){
 
 # Collecting information from the bma_list

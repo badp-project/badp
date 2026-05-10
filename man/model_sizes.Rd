@@ -3,6 +3,9 @@
 \name{model_sizes}
 \alias{model_sizes}
 \title{Graphs of the prior and posterior model probabilities of the model sizes}
+\usage{
+model_sizes(bma_list)
+}
 \arguments{
 \item{bma_list}{bma_list object (the result of the bma function)}
 }
@@ -42,5 +45,4 @@ bma_results <- bma(
 
 size_graphs <- model_sizes(bma_results)
 }
-
 }
