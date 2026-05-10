@@ -163,6 +163,8 @@
 #' Example output of the bma function
 #'
 #' A badp_bma object summarising the BMA analysis
+#'
+#' @format An object of class \code{badp_bma}
 "full_bma_results"
 
 
