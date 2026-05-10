@@ -25,7 +25,7 @@
 #'
 #' @export
 print.badp_bma <- function(x, ...) {
-  print(summary(x))
+  print(summary(x, ...))
   invisible(x)
 }
 
