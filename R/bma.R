@@ -9,7 +9,7 @@
 #' @param dilution Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).
 #' @param dil.Par Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.
 #'
-#' @return An object of class \code{badp_bma}, which is a list with 17 elements:
+#' @return An object of class \code{badp_bma}, which is a list containing:
 #'
 #' \describe{
 #'   \item{uniform_table}{A table containing the results based on the binomial model prior.}

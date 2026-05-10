@@ -18,7 +18,7 @@ bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
 \item{dil.Par}{Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.}
 }
 \value{
-An object of class \code{badp_bma}, which is a list with 17 elements:
+An object of class \code{badp_bma}, which is a list containing:
 
 \describe{
 \item{uniform_table}{A table containing the results based on the binomial model prior.}
