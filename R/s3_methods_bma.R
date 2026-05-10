@@ -141,7 +141,7 @@ print.summary.badp_bma <- function(x, ...) {
 }
 
 
-#' Extract Coefficients from Bayesian Model Averaging Results
+#' Extract posterior  statistics from Bayesian Model Averaging Results
 #'
 #' Coefficient extraction method for objects of class \code{badp_bma}.
 #'
@@ -151,14 +151,14 @@ print.summary.badp_bma <- function(x, ...) {
 #'   \code{"both"} the result reports estimates under the binomial and the
 #'   binomial-beta priors and is printed via
 #'   \code{\link{print.badp_bma_coef}}.
-#' @param conditional Logical. If \code{TRUE}, returns coefficients (and
-#'   standard errors when \code{se = TRUE}) \emph{conditional on inclusion}
+#' @param conditional Logical. If \code{TRUE}, returns posterior means (and
+#'   posterior standard deviations when \code{se = TRUE}) \emph{conditional on inclusion}
 #'   of the variable in a model - i.e. the columns whose names end in
 #'   \code{"con"} (\code{PMcon}, \code{PSDcon}, \code{PSDRcon}). If
 #'   \code{FALSE} (default), returns the unconditional posterior mean and
 #'   standard error.
-#' @param se Logical. If \code{TRUE}, includes a standard-error column
-#'   alongside each estimate. Defaults to \code{FALSE}.
+#' @param se Logical. If \code{TRUE}, includes a posterior standard deviation column
+#'   alongside each posterior mean. Defaults to \code{FALSE}.
 #' @param robustSE Logical. Only meaningful when \code{se = TRUE}. If
 #'   \code{TRUE}, uses the robust posterior standard deviation
 #'   (\code{PSDR} / \code{PSDRcon}); if \code{FALSE} (default), uses the
@@ -183,7 +183,7 @@ print.summary.badp_bma <- function(x, ...) {
 #'     \item \code{prior = "binomial"} or \code{"beta"}: a named numeric
 #'       vector of estimates when \code{se = FALSE} and \code{PIP = FALSE};
 #'       otherwise a data frame with columns \code{PM} (or \code{PMcon}
-#'       when \code{conditional = TRUE}), standard error column
+#'       when \code{conditional = TRUE}), posterior standard deviation column
 #'       \code{PSD} / \code{PSDR} (or \code{PSDcon} / \code{PSDRcon})
 #'       when \code{se = TRUE}, and \code{PIP} when \code{PIP = TRUE}.
 #'   }
