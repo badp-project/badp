@@ -1,5 +1,10 @@
 # badp 0.5.0
 
+* **Breaking change**: `best_models()` now takes a character `prior` argument
+  in place of the integer `criterion` argument. Use `prior = "binomial"`
+  (default) instead of `criterion = 1`, and `prior = "beta"` instead of
+  `criterion = 2`. This brings the API in line with `summary.badp_bma()`,
+  which already used `prior = "binomial" | "beta"`.
 * Added S3 classes and methods for JSS compliance:
     * `bma()` now returns an object of class `badp_bma` (previously unclassed list).
     * `optim_model_space()` now returns an object of class `badp_model_space`.

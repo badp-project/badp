@@ -4,9 +4,10 @@
 #' The function gives two types of tables in three different formats: inclusion table (where 1 indicates presence of the regressor in the model and 0 indicates that the variable is excluded from the model) and estimation results table (it displays the best models and estimation output for those models: point estimates, standard errors, significance level, and R^2).
 #'
 #' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
-#' @param criterion Integer specifying the ranking criterion: \cr
-#' \code{1} - binomial model prior (default); \cr
-#' \code{2} - binomial-beta model prior.
+#' @param prior Character string specifying the model prior used for the
+#'   ranking. Options are \code{"binomial"} (default) or \code{"beta"}
+#'   (binomial-beta). Models are ranked by the posterior model probability
+#'   computed under the chosen prior.
 #' @param best Integer. The number of best models to display (default: 5).
 #' @param round Integer indicating the decimal place to which numbers in the tables should be rounded (default: 3).
 #' @param estimate A parameter with values TRUE or FALSE indicating which table should be displayed when
@@ -50,10 +51,12 @@
 #'   dilution    = 0
 #' )
 #'
-#' best_5_models <- best_models(bma_results, criterion = 1, best = 5, estimate = TRUE, robust = TRUE)
+#' best_5_models <- best_models(bma_results, prior = "binomial", best = 5, estimate = TRUE, robust = TRUE)
 #' }
 
-best_models <- function(bma_list, criterion = 1, best = 5, round = 3, estimate = TRUE, robust = TRUE){
+best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estimate = TRUE, robust = TRUE){
+
+  prior <- match.arg(prior, c("binomial", "beta"))
 
   R <- bma_list[[4]] # number of regressors from bma object
   K <- R+1 # number of variables
@@ -69,11 +72,10 @@ best_models <- function(bma_list, criterion = 1, best = 5, round = 3, estimate =
     best = M
   }
 
-  # check for the criterion chosen by the user
-  if (criterion==1){ranking <- PMP_uniform}
-  if (criterion==2){ranking <- PMP_random}
+  # pick PMPs corresponding to the model prior chosen by the user
+  ranking <- if (prior == "binomial") PMP_uniform else PMP_random
 
-  Ranking<-cbind(ranking,info,d_free) # we add ranking criterion based on the users choice
+  Ranking<-cbind(ranking,info,d_free) # PMP column followed by per-model info
 
   # ordering the models according to PMP criterion
   Ranking <- Ranking[order(Ranking[,1],decreasing=T),] # ordering of the models

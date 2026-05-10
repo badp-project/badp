@@ -197,7 +197,7 @@ Use `best_models()` to extract specific information about the top-ranked models:
 
 ```{r}
 # Retrieve the 5 best models according to binomial prior
-top3_binom <- badp::best_models(bma_results, criterion = 1, best = 3)
+top3_binom <- badp::best_models(bma_results, prior = "binomial", best = 3)
 
 # Print the inclusion matrix for each of the top 3 models
 top3_binom[[1]]
@@ -257,7 +257,7 @@ bma_obj <- badp::bma(
 # 4) Inspect the top 3 models under binomial prior
 best_3 <- badp::best_models(
   bma_list = bma_obj,
-  criterion = 1,
+  prior = "binomial",
   best = 3
 )
 best_3[[1]]  # Inclusion table

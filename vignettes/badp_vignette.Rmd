@@ -782,11 +782,11 @@ The function returns a list containing nine objects:
 9. A table with estimation results using robust standard errors, stored as a gTree object;
 
 The parameters `estimate` and `robust` pertain only to the results that will be automatically displayed after running the function.
-The parameter `criterion` determines whether the models should be ranked according to posterior model probabilities calculated using the binomial (1) or binomial-beta (2) model prior.
+The parameter `prior` determines whether the models should be ranked according to posterior model probabilities calculated using the binomial (`prior = "binomial"`) or binomial-beta (`prior = "beta"`) model prior.
 To obtain the inclusion array for the 10 best models ranked with the binomial model prior, the user needs to run:
 
 ```{r}
-best_8_models <- best_models(bma_results, criterion = 1, best = 8)
+best_8_models <- best_models(bma_results, prior = "binomial", best = 8)
 best_8_models[[1]]
 ```
 
@@ -794,7 +794,7 @@ best_8_models[[1]]
 To obtain a knitr table with estimation output with regular standard errors for best 3 models ranked with binomial-beta model prior, the user needs to run:
 
 ```{r}
-best_3_models <- best_models(bma_results, criterion = 2, best = 3)
+best_3_models <- best_models(bma_results, prior = "beta", best = 3)
 best_3_models[[5]]
 ```
 
@@ -805,7 +805,7 @@ Finally, to obtain a gTree table with estimation output using robust standard er
 the user needs to run:
 
 ```{r fig=TRUE}
-best_3_models <- best_models(bma_results, criterion = 2, best = 3)
+best_3_models <- best_models(bma_results, prior = "beta", best = 3)
 best_3_models[[9]]
 ```
 
