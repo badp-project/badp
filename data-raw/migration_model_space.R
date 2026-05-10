@@ -1,4 +1,4 @@
-"migration_model_space"
+# migration_model_space
 
 # CHANGING THE DATA INTO APPROPRIATE FORMAT
 migration_formated <- join_lagged_col(migration_data, col = Mig, col_lagged = Mig_lag, entity_col = Pair, timestamp_col = Time, timestep = 5)
