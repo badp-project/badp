@@ -43,7 +43,7 @@ print.badp_bma <- function(x, ...) {
 #'   \item \code{num_regressors} - Number of regressors (excluding lagged dependent variable)
 #'   \item \code{expected_model_size} - Expected model size
 #'   \item \code{dilution_applied} - Logical indicating if dilution prior was used
-#'   \item \code{dilution_param} - Numeric value of the dilution parameter (\code{dil.Par}); only relevant when \code{dilution_applied} is \code{TRUE}
+#'   \item \code{dilution_param} - Numeric value of the dilution parameter (\code{dilution_par}); only relevant when \code{dilution_applied} is \code{TRUE}
 #'   \item \code{results_binomial} - Coefficient table for binomial prior
 #'   \item \code{results_beta} - Coefficient table for binomial-beta prior
 #'   \item \code{model_sizes} - Prior and posterior model sizes table
@@ -74,7 +74,7 @@ summary.badp_bma <- function(object, ...) {
       num_regressors = object$R,
       expected_model_size = object$EMS,
       dilution_applied = object$dilution == 1,
-      dilution_param = object$dil.Par,
+      dilution_param = object$dilution_par,
       results_binomial = object$uniform_table,
       results_beta = object$random_table,
       model_sizes = object$PMS_table,
@@ -108,7 +108,7 @@ print.summary.badp_bma <- function(x, ...) {
   cat("  Expected model size:", round(x$expected_model_size, 3), "\n")
   cat("  Dilution prior:", ifelse(x$dilution_applied, "Applied", "Not applied"), "\n")
   if (isTRUE(x$dilution_applied) && !is.null(x$dilution_param)) {
-    cat("  Dilution parameter (dil.Par):", x$dilution_param, "\n")
+    cat("  Dilution parameter (dilution_par):", x$dilution_param, "\n")
   }
   cat("  Model prior: binomial, binomial-beta\n\n")
 
