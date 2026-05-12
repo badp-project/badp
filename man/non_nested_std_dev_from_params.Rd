@@ -12,7 +12,7 @@ non_nested_std_dev_from_params(
   entity_col,
   dep_var_col,
   n_entities,
-  periods_n
+  n_periods
 )
 }
 \arguments{
@@ -30,7 +30,7 @@ to a model. Each row specifies model parameters. Compare with
 
 \item{n_entities}{Number of entities - passed to save calc. time}
 
-\item{periods_n}{Number of periods - passed to save calc. time}
+\item{n_periods}{Number of periods - passed to save calc. time}
 }
 \value{
 #' Matrix with columns describing likelihood and standard deviations for each

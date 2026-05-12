@@ -4,19 +4,19 @@
 \alias{sem_psi_matrix}
 \title{Matrix with psi parameters for SEM representation}
 \usage{
-sem_psi_matrix(psis, timestamps_n, features_n)
+sem_psi_matrix(psis, n_timestamps, n_features)
 }
 \arguments{
 \item{psis}{double vector with psi parameter values}
 
-\item{timestamps_n}{number of time stamps (e.g. years)}
+\item{n_timestamps}{number of time stamps (e.g. years)}
 
-\item{features_n}{number of features (e.g. population size, investment rate)}
+\item{n_features}{number of features (e.g. population size, investment rate)}
 }
 \value{
-A matrix with \code{timestamps_n} rows and
-\code{(timestamps_n - 1) * feature_n} columns. Psis are filled in row by row
-in a block manner, i.e. blocks of size \code{feature_n} are placed next to
+A matrix with \code{n_timestamps} rows and
+\code{(n_timestamps - 1) * n_features} columns. Psis are filled in row by row
+in a block manner, i.e. blocks of size \code{n_features} are placed next to
 each other
 }
 \description{

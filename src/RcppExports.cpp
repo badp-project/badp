@@ -47,43 +47,43 @@ BEGIN_RCPP
 END_RCPP
 }
 // sem_B_matrix
-Rcpp::List sem_B_matrix(double alpha, int periods_n, Rcpp::Nullable<arma::vec> beta);
-RcppExport SEXP _badp_sem_B_matrix(SEXP alphaSEXP, SEXP periods_nSEXP, SEXP betaSEXP) {
+Rcpp::List sem_B_matrix(double alpha, int n_periods, Rcpp::Nullable<arma::vec> beta);
+RcppExport SEXP _badp_sem_B_matrix(SEXP alphaSEXP, SEXP n_periodsSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< int >::type periods_n(periods_nSEXP);
+    Rcpp::traits::input_parameter< int >::type n_periods(n_periodsSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<arma::vec> >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(sem_B_matrix(alpha, periods_n, beta));
+    rcpp_result_gen = Rcpp::wrap(sem_B_matrix(alpha, n_periods, beta));
     return rcpp_result_gen;
 END_RCPP
 }
 // sem_C_matrix
-arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n, Rcpp::Nullable<arma::vec> beta, Rcpp::Nullable<arma::vec> phi_1);
-RcppExport SEXP _badp_sem_C_matrix(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP periods_nSEXP, SEXP betaSEXP, SEXP phi_1SEXP) {
+arma::mat sem_C_matrix(double alpha, double phi_0, int n_periods, Rcpp::Nullable<arma::vec> beta, Rcpp::Nullable<arma::vec> phi_1);
+RcppExport SEXP _badp_sem_C_matrix(SEXP alphaSEXP, SEXP phi_0SEXP, SEXP n_periodsSEXP, SEXP betaSEXP, SEXP phi_1SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< double >::type phi_0(phi_0SEXP);
-    Rcpp::traits::input_parameter< int >::type periods_n(periods_nSEXP);
+    Rcpp::traits::input_parameter< int >::type n_periods(n_periodsSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<arma::vec> >::type beta(betaSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<arma::vec> >::type phi_1(phi_1SEXP);
-    rcpp_result_gen = Rcpp::wrap(sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1));
+    rcpp_result_gen = Rcpp::wrap(sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1));
     return rcpp_result_gen;
 END_RCPP
 }
 // sem_psi_matrix
-arma::mat sem_psi_matrix(const arma::vec& psis, int timestamps_n, int features_n);
-RcppExport SEXP _badp_sem_psi_matrix(SEXP psisSEXP, SEXP timestamps_nSEXP, SEXP features_nSEXP) {
+arma::mat sem_psi_matrix(const arma::vec& psis, int n_timestamps, int n_features);
+RcppExport SEXP _badp_sem_psi_matrix(SEXP psisSEXP, SEXP n_timestampsSEXP, SEXP n_featuresSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const arma::vec& >::type psis(psisSEXP);
-    Rcpp::traits::input_parameter< int >::type timestamps_n(timestamps_nSEXP);
-    Rcpp::traits::input_parameter< int >::type features_n(features_nSEXP);
-    rcpp_result_gen = Rcpp::wrap(sem_psi_matrix(psis, timestamps_n, features_n));
+    Rcpp::traits::input_parameter< int >::type n_timestamps(n_timestampsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_features(n_featuresSEXP);
+    rcpp_result_gen = Rcpp::wrap(sem_psi_matrix(psis, n_timestamps, n_features));
     return rcpp_result_gen;
 END_RCPP
 }

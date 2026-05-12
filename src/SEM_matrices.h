@@ -5,10 +5,10 @@
 
 arma::mat residual_maker_matrix(const arma::mat &m);
 
-Rcpp::List sem_B_matrix(double alpha, int periods_n,
+Rcpp::List sem_B_matrix(double alpha, int n_periods,
                         Rcpp::Nullable<arma::vec> beta);
 
-arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
+arma::mat sem_C_matrix(double alpha, double phi_0, int n_periods,
                        Rcpp::Nullable<arma::vec> beta,
                        Rcpp::Nullable<arma::vec> phi_1);
 

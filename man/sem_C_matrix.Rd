@@ -4,14 +4,14 @@
 \alias{sem_C_matrix}
 \title{Coefficients matrix for initial conditions}
 \usage{
-sem_C_matrix(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL)
+sem_C_matrix(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL)
 }
 \arguments{
 \item{alpha}{numeric}
 
 \item{phi_0}{numeric}
 
-\item{periods_n}{numeric}
+\item{n_periods}{numeric}
 
 \item{beta}{numeric vector. Default is c() for no regressors case.}
 
@@ -31,8 +31,8 @@ alpha <- 9
 phi_0 <- 19
 beta <- 11:15
 phi_1 <- 21:25
-periods_n <- 4
-sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+n_periods <- 4
+sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1)
 
 }
 \keyword{internal}
