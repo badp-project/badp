@@ -53,10 +53,10 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
       stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
   }
   bin_method <- match.arg(bin_method)
-  if (!use_kernel %in% c(0, 1)) {
+  if (!(use_kernel %in% c(0, 1))) {
     stop("use_kernel must be 0 or 1")
   }
-  if (!use_bin_count %in% c(0, 1)) {
+  if (!(use_bin_count %in% c(0, 1))) {
     stop("use_bin_count must be 0 or 1")
   }
 
