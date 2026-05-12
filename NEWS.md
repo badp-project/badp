@@ -5,6 +5,7 @@
   (default) instead of `criterion = 1`, and `prior = "beta"` instead of
   `criterion = 2`. This brings the API in line with `summary.badp_bma()`,
   which already used `prior = "binomial" | "beta"`.
+* **Breaking change**: Renamed `dilution_par` parameter to `omega` for clarity and consistency with statistical literature.
 * Added S3 classes and methods for JSS compliance:
     * `bma()` now returns an object of class `badp_bma` (previously unclassed list).
     * `optim_model_space()` now returns an object of class `badp_model_space`.
@@ -24,6 +25,7 @@
 * Added `migration_model_space` and `migration_model_space_nonnested` example model space objects.
 * Fixed `feature_standardization` function to handle tibble input correctly.
 * Exported `join_lagged_col` function.
+* Standardized internal variable naming to R-idiomatic conventions (e.g., `n_` prefix for counts, `df_free` for degrees of freedom).
 * Fixed spelling mistakes and grammar in documentation.
 
 # badp 0.4.0
