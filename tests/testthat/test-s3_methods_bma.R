@@ -24,7 +24,7 @@ test_that("numeric indexing still works after adding S3 class (backward compatib
   expect_true(is.matrix(bma_results[[14]])) # betas_nonzero
   expect_true(is.matrix(bma_results[[15]])) # df_free
   expect_true(is.matrix(bma_results[[16]])) # PMS_table
-  expect_true(is.numeric(bma_results[[17]])) # dilution_par
+  expect_true(is.numeric(bma_results[[17]])) # omega
 })
 
 test_that("named access works for bma components", {

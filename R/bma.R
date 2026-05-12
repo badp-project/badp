@@ -7,7 +7,7 @@
 #' @param round Integer indicating the decimal place to which numbers in the BMA tables and prior and posterior model sizes should be rounded (default: 4).
 #' @param EMS Numeric. Expected model size for binomial and binomial-beta model prior (default: R/2, where R is the number of regressors).
 #' @param dilution Integer. Use 0 for no dilution prior (default), or 1 to apply a dilution prior (George 2010).
-#' @param dilution_par Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.
+#' @param omega Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.
 #'
 #' @return An object of class \code{badp_bma}, which is a list containing:
 #'
@@ -28,7 +28,7 @@
 #'   \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
 #'   \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 #'   \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
-#'   \item{dilution_par}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
+#'   \item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
 #' }
 #'
 #' @section Methods:
@@ -69,7 +69,7 @@ bma <- function(
   round = 4,
   EMS = NULL,
   dilution = 0,
-  dilution_par = 0.5
+  omega = 0.5
 ) {
   reg_names <- model_space[[3]]
   # Regressors with lag
@@ -139,9 +139,9 @@ bma <- function(
 
   ###### CONDITION for dilution prior
   if (dilution == 1) {
-    if (!exists("dilution_par")) {
-      dilution_par <- 0.5
-    } # CONDITION for setting the default value of dilution_par
+    if (!exists("omega")) {
+      omega <- 0.5
+    } # CONDITION for setting the default value of omega
     df <- model_space[[5]]
     for_dilut <- df[, -(1:3)]
     for_dilut <- na.omit(for_dilut)
@@ -153,7 +153,7 @@ bma <- function(
         dilut[i, 1] <- 1
       } else {
         cols_to_extract <- which(table[i, 1:R] == 1)
-        dilut[i, 1] <- (det(stats::cor(for_dilut[, cols_to_extract, drop = FALSE])))^dilution_par
+        dilut[i, 1] <- (det(stats::cor(for_dilut[, cols_to_extract, drop = FALSE])))^omega
       }
     }
 
@@ -316,13 +316,13 @@ bma <- function(
   bma_list <- list(
     uniform_table, random_table, reg_names, R, num_of_models, forJointness,
     forBestModels, EMS, sizePriors, PMPs, modelPriors, dilution,
-    alphas, betas_nonzero, d_free, PMStable, dilution_par
+    alphas, betas_nonzero, d_free, PMStable, omega
   )
   names(bma_list) <- c(
     "uniform_table", "random_table", "reg_names", "R",
     "num_of_models", "jointness_data", "best_models_data",
     "EMS", "size_priors", "PMPs", "model_priors", "dilution",
-    "alphas", "betas_nonzero", "df_free", "PMS_table", "dilution_par"
+    "alphas", "betas_nonzero", "df_free", "PMS_table", "omega"
   )
   class(bma_list) <- "badp_bma"
 
