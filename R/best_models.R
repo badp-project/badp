@@ -65,7 +65,7 @@ best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estim
   info <- bma_list[[7]][,1:(R+3*K)]
   PMP_uniform <- matrix(bma_list[[7]][,R+3*K+1], nrow = M, ncol = 1)
   PMP_random <- matrix(bma_list[[7]][,R+3*K+2], nrow = M, ncol = 1)
-  d_free <-bma_list[[15]]
+  df_free <- bma_list[[15]]
 
   if (best>M){
     message("best > M - number of best models cannot be bigger than the total number of models. We set best = M and continue :)")
@@ -75,7 +75,7 @@ best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estim
   # pick PMPs corresponding to the model prior chosen by the user
   ranking <- if (prior == "binomial") PMP_uniform else PMP_random
 
-  Ranking<-cbind(ranking,info,d_free) # PMP column followed by per-model info
+  Ranking<-cbind(ranking,info,df_free) # PMP column followed by per-model info
 
   # ordering the models according to PMP criterion
   Ranking <- Ranking[order(Ranking[,1],decreasing=T),] # ordering of the models
@@ -91,7 +91,7 @@ best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estim
   bestSTDRs <- Ranking[1:best, (R+2*K+2):(R+3*K+1)] # robust standard errors
   bestSTDRs[bestSTDRs == 0] <- NA
   bestSTDRs <- t(round(bestSTDRs,round))
-  best_d_free <- matrix( Ranking[1:best, R+3*K+2], nrow = best, ncol = 1)
+  best_df_free <- matrix( Ranking[1:best, R+3*K+2], nrow = best, ncol = 1)
 
   inclusion_table <- t(cbind(matrix(1, nrow = best, ncol = 1), Best_models, Ranks))
   row.names(inclusion_table) <- rbind(reg_names,"PMP")
@@ -116,8 +116,8 @@ best_models <- function(bma_list, prior = "binomial", best = 5, round = 3, estim
       if (!is.na(bestBetas[i,j])){
         models_std[i,j] = paste0(bestBetas[i,j]," (",bestSTDs[i,j],")")
         models_stdR[i,j] = paste0(bestBetas[i,j]," (",bestSTDRs[i,j],")")
-        p_values[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDs[i,j]), df = best_d_free[j,1], lower.tail = FALSE)
-        p_valuesR[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDRs[i,j]), df =best_d_free[j,1], lower.tail = FALSE)
+        p_values[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDs[i,j]), df = best_df_free[j,1], lower.tail = FALSE)
+        p_valuesR[i,j] = 2*stats::pt(abs(bestBetas[i,j]/bestSTDRs[i,j]), df =best_df_free[j,1], lower.tail = FALSE)
 
         if (is.na(p_values[i,j]) || p_values[i,j] >= 0.1){
           asterisks[i,j] = NA

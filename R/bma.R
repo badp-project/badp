@@ -248,11 +248,11 @@ bma <- function(
   PM_random_nonzero <- matrix(0, nrow = num_of_models / 2, ncol = R)
   Positive_betas <- matrix(0, nrow = R, ncol = 1)
   Positive_alpha <- 0
-  d_free <- matrix(0, nrow = num_of_models, ncol = 1) # Degrees of freedom
+  df_free <- matrix(0, nrow = num_of_models, ncol = 1) # Degrees of freedom
   reg_sums <- matrix(rowSums(reg_ID), nrow = num_of_models, ncol = 1)
 
   for (i in 1:num_of_models) {
-    d_free[i, 1] <- observations_num - reg_sums[i, 1] - 1
+    df_free[i, 1] <- observations_num - reg_sums[i, 1] - 1
     if (alphas[i, 1] > 0) {
       Positive_alpha <- 1 / num_of_models + Positive_alpha
     }
@@ -316,7 +316,7 @@ bma <- function(
   bma_list <- list(
     uniform_table, random_table, reg_names, R, num_of_models, forJointness,
     forBestModels, EMS, sizePriors, PMPs, modelPriors, dilution,
-    alphas, betas_nonzero, d_free, PMStable, omega
+    alphas, betas_nonzero, df_free, PMStable, omega
   )
   names(bma_list) <- c(
     "uniform_table", "random_table", "reg_names", "R",
