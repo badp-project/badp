@@ -139,9 +139,6 @@ bma <- function(
 
   ###### CONDITION for dilution prior
   if (dilution == 1) {
-    if (!exists("omega")) {
-      omega <- 0.5
-    } # CONDITION for setting the default value of omega
     df <- model_space[[5]]
     for_dilut <- df[, -(1:3)]
     for_dilut <- na.omit(for_dilut)
