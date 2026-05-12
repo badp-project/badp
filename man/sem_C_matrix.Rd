@@ -11,7 +11,7 @@ sem_C_matrix(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL)
 
 \item{phi_0}{numeric}
 
-\item{n_periods}{numeric}
+\item{n_periods}{integer}
 
 \item{beta}{numeric vector. Default is c() for no regressors case.}
 

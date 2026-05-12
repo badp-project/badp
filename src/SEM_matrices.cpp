@@ -97,7 +97,7 @@ Rcpp::List sem_B_matrix(double alpha, int n_periods,
 //'
 //' @param alpha numeric
 //' @param phi_0 numeric
-//' @param n_periods numeric
+//' @param n_periods integer
 //' @param beta numeric vector. Default is c() for no regressors case.
 //' @param phi_1 numeric vector. Default is c() for no regressors case.
 //'

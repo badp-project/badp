@@ -54,7 +54,7 @@ sem_B_matrix <- function(alpha, n_periods, beta = NULL) {
 #'
 #' @param alpha numeric
 #' @param phi_0 numeric
-#' @param n_periods numeric
+#' @param n_periods integer
 #' @param beta numeric vector. Default is c() for no regressors case.
 #' @param phi_1 numeric vector. Default is c() for no regressors case.
 #'
