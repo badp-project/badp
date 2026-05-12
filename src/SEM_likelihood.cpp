@@ -61,7 +61,7 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
     return wrap(NumericVector::create(NA_REAL));
   }
   
-  // this term shoudl be 0 if lag. dep. var is the only regressor
+  // this term should be 0 if lag. dep. var is the only regressor
   // then likelihood is calc. based on the  
   double H_logdet = 0.;
   
