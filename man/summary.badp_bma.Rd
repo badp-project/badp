@@ -18,7 +18,7 @@ An object of class \code{summary.badp_bma} containing:
 \item \code{num_regressors} - Number of regressors (excluding lagged dependent variable)
 \item \code{expected_model_size} - Expected model size
 \item \code{dilution_applied} - Logical indicating if dilution prior was used
-\item \code{dilution_param} - Numeric value of the dilution parameter (\code{dilution_par}); only relevant when \code{dilution_applied} is \code{TRUE}
+\item \code{omega} - Numeric value of the dilution parameter (\code{omega}); only relevant when \code{dilution_applied} is \code{TRUE}
 \item \code{results_binomial} - Coefficient table for binomial prior
 \item \code{results_beta} - Coefficient table for binomial-beta prior
 \item \code{model_sizes} - Prior and posterior model sizes table
