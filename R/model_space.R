@@ -382,7 +382,7 @@ optim_model_space_params <- function(
 #' @param n_periods Number of periods - passed to save calc. time
 #'
 #' @returns
-#' #' Matrix with columns describing likelihood and standard deviations for each
+#' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
 #' parameters in the provided model space). The second row is almost 1/2 * BIC_k
 #' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
@@ -495,7 +495,7 @@ nested_std_dev_from_params <- function(
 #' @param n_periods Number of periods - passed to save calc. time
 #'
 #' @returns
-#' #' Matrix with columns describing likelihood and standard deviations for each
+#' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
 #' parameters in the provided model space). The second row is almost 1/2 * BIC_k
 #' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
