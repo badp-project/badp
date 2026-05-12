@@ -368,7 +368,7 @@ optim_model_space_params <- function(
 }
 
 #' Helper function - wraps single execution of the log-likelihood & deviation
-#' parameters calculations. Used for non nested version of SEM likelihood.
+#' parameters calculations. Used for non-nested version of SEM likelihood.
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with
@@ -482,7 +482,7 @@ nested_std_dev_from_params <- function(
 
 
 #' Helper function - wraps single execution of the log-likelihood & deviation
-#' parameters calculations. Used for non nested version of SEM likelihood.
+#' parameters calculations. Used for non-nested version of SEM likelihood.
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with

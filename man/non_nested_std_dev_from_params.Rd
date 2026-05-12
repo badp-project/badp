@@ -3,7 +3,7 @@
 \name{non_nested_std_dev_from_params}
 \alias{non_nested_std_dev_from_params}
 \title{Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for non nested version of SEM likelihood.}
+parameters calculations. Used for non-nested version of SEM likelihood.}
 \usage{
 non_nested_std_dev_from_params(
   params,
@@ -43,6 +43,6 @@ with robust standard deviation (not sure yet what exactly "robust" means).
 }
 \description{
 Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for non nested version of SEM likelihood.
+parameters calculations. Used for non-nested version of SEM likelihood.
 }
 \keyword{internal}
