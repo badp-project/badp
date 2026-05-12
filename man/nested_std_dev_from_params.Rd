@@ -36,7 +36,7 @@ to a model. Each row specifies model parameters. Compare with
 \item{n_periods}{Number of periods - passed to save calc. time}
 }
 \value{
-#' Matrix with columns describing likelihood and standard deviations for each
+Matrix with columns describing likelihood and standard deviations for each
 model. The first row is the likelihood for the model (computed using the
 parameters in the provided model space). The second row is almost 1/2 * BIC_k
 as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
