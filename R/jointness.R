@@ -9,7 +9,7 @@
 #' \cr
 #' REFERENCES \cr
 #' Doppelhofer G, Weeks M (2009) Jointness of growth determinants. Journal of Applied Econometrics., 24(2), 209-244. doi: 10.1002/jae.1046 \cr
-#' Hofmarcher P, Crespo Cuaresma J, Grün B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
+#' Hofmarcher P, Crespo Cuaresma J, Gr\enc{ü}{u}n B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
 #' Ley E, Steel M (2007) Jointness in Bayesian variable selection with applications to growth regression. Journal of Macroeconomics, 29(3), 476-493. doi: 10.1016/j.jmacro.2006.12.002
 #'
 #' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
@@ -47,133 +47,77 @@
 #'
 #' jointness_table <- jointness(bma_results, measure = "HCGHM", rho = 0.5, round = 3)
 #' }
-
-
-jointness <- function(bma_list, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3){
+jointness <- function(bma_list, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3) {
   measure <- match.arg(measure)
 
   # Extraction of the elements of the bma object
-  reg_names <- bma_list[[3]] # vector with names of the regressors from bma object
-  reg_names <- reg_names[-1]
-  R <- bma_list[[4]] # total number of regressors from bma object
-  M <- bma_list[[5]] # size of the mode space from bma object
-  forJointness <- bma_list[[6]] # matrix from bma object
-  reg_ID <- forJointness[,1:R] # we extract regressor IDs
-  PMP_uniform <- as.matrix(forJointness[,R+1]) # PMP under uniform prior
-  PMP_random <- as.matrix(forJointness[,R+2]) # PMP under random prior
+  reg_names <- bma_list[[3]]      # names of all regressors incl. lagged dep var
+  reg_names <- reg_names[-1]      # drop lagged dep var: keep only the R regressors
+  R <- bma_list[[4]]              # number of regressors
+  forJointness <- bma_list[[6]]   # M x (R + 2): inclusion flags + two prior PMP columns
 
-  reg_ID2 <- matrix(0, nrow = M, ncol = R)
+  # Inclusion matrix (0/1), M x R
+  Z <- as.matrix(forJointness[, 1:R])
+  # PMP weights of length M, one per model, under each model prior
+  w_uniform <- as.numeric(forJointness[, R + 1])  # binomial (uniform) prior
+  w_random  <- as.numeric(forJointness[, R + 2])  # binomial-beta (random) prior
 
-  for (i in 1:M){
-    for (j in 1:R){
-      if (reg_ID[i,j]==1){
-        reg_ID2[i,j]=j
-      }
-    }
+  # All pairwise joint inclusion probabilities, vectorised over (a, b):
+  # Pab[a, b] = sum over models containing BOTH a and b, weighted by PMP.
+  # crossprod(Z * w, Z) == t(Z * w) %*% Z; Z * w scales each row by w[i].
+  Pab_U <- crossprod(Z * w_uniform, Z)
+  Pab_R <- crossprod(Z * w_random,  Z)
+
+  # Marginal inclusion probabilities (length R), Pa[k] = sum_i w[i] * Z[i, k].
+  Pa_U <- as.numeric(crossprod(w_uniform, Z))
+  Pa_R <- as.numeric(crossprod(w_random,  Z))
+
+  # Remaining cell probabilities via inclusion-exclusion. In all R x R matrices
+  # below, row index = a and column index = b, so byrow=TRUE replicates Pa
+  # along rows (giving P(b)) and byrow=FALSE replicates it down columns
+  # (giving P(a)).
+  Pb_mat_U <- matrix(Pa_U, nrow = R, ncol = R, byrow = TRUE)
+  Pa_mat_U <- matrix(Pa_U, nrow = R, ncol = R, byrow = FALSE)
+  Pb_mat_R <- matrix(Pa_R, nrow = R, ncol = R, byrow = TRUE)
+  Pa_mat_R <- matrix(Pa_R, nrow = R, ncol = R, byrow = FALSE)
+
+  Na_b_U  <- Pb_mat_U - Pab_U                       # P(NOT a and b)
+  a_Nb_U  <- Pa_mat_U - Pab_U                       # P(a and NOT b)
+  Na_Nb_U <- 1 - Pa_mat_U - Pb_mat_U + Pab_U        # P(NOT a and NOT b)
+  Na_b_R  <- Pb_mat_R - Pab_R
+  a_Nb_R  <- Pa_mat_R - Pab_R
+  Na_Nb_R <- 1 - Pa_mat_R - Pb_mat_R + Pab_R
+
+  # Measure formulas (element-wise on R x R matrices). `first` is the measure
+  # under the binomial prior (uniform), `second` under binomial-beta (random).
+  if (measure == "HCGHM") {
+    num_U <- (Pab_U + rho) * (Na_Nb_U + rho) - (Na_b_U + rho) * (a_Nb_U + rho)
+    den_U <- (Pab_U + rho) * (Na_Nb_U + rho) + (Na_b_U + rho) * (a_Nb_U + rho) - rho
+    first  <- num_U / den_U
+    num_R <- (Pab_R + rho) * (Na_Nb_R + rho) - (Na_b_R + rho) * (a_Nb_R + rho)
+    den_R <- (Pab_R + rho) * (Na_Nb_R + rho) + (Na_b_R + rho) * (a_Nb_R + rho) - rho
+    second <- num_R / den_R
+  } else if (measure == "LS") {
+    first  <- Pab_U / (Na_b_U + a_Nb_U)
+    second <- Pab_R / (Na_b_R + a_Nb_R)
+  } else if (measure == "DW") {
+    first  <- log((Pab_U / Na_b_U) * (Na_Nb_U / a_Nb_U))
+    second <- log((Pab_R / Na_b_R) * (Na_Nb_R / a_Nb_R))
+  } else {  # "PPI"
+    first  <- Pab_U
+    second <- Pab_R
   }
 
-  reg_ID <-reg_ID2
+  # Assemble final table: above diagonal = uniform measure, below = random.
+  # The four jointness measures are symmetric in (a, b), so first and second
+  # are themselves symmetric; we just need the right halves in the output.
+  jointness_table <- first
+  jointness_table[lower.tri(jointness_table)] <- second[lower.tri(second)]
+  diag(jointness_table) <- NA_real_
 
-  # Information about pairs of regressors: number of pairs, list of all possible regressors pairs
-  c = choose(R,2) # number of pairs i.e. jointness measures
-  Pairs <- as.matrix(utils::combn(1:R,2)) # a list of all possible pairs of regressors
+  jointness_table <- round(jointness_table, digits = round)
+  rownames(jointness_table) <- reg_names
+  colnames(jointness_table) <- reg_names
 
-  # introducing notation a matrices to store posterior objects
-  PMP_uniform_a_b <- matrix(0, nrow = c, ncol = 1) # a_b - P(a and b) for uniform prior
-  PMP_uniform_Na_b <- matrix(0, nrow = c, ncol = 1) # Na_b - P(NOT a and b) for uniform prior
-  PMP_uniform_a_Nb <- matrix(0, nrow = c, ncol = 1) # a_Nb - P(a and NOT b) for uniform prior
-  PMP_uniform_Na_Nb <- matrix(0, nrow = c, ncol = 1) # Na_Nb - P(NOT a and NOT b) for uniform prior
-  PMP_random_a_b <- matrix(0, nrow = c, ncol = 1) # a_b - P(a and b) for random prior
-  PMP_random_Na_b <- matrix(0, nrow = c, ncol = 1) # Na_b - P(NOT a and b) for random prior
-  PMP_random_a_Nb <- matrix(0, nrow = c, ncol = 1) # a_Nb - P(a and NOT b) for random prior
-  PMP_random_Na_Nb <- matrix(0, nrow = c, ncol = 1) # Na_Nb - P(NOT a and NOT b) for random prior
-
-  for (j in 1:c){
-    a <- Pairs[1,j] # ID of the first regressor
-    b <- Pairs[2,j] # ID of the second regressor
-    for (i in 1:M){
-      aIN <- 0 # setting the initial value before the LOOP
-      bIN <- 0 # setting the initial value before the LOOP
-      for (t in 1:R){
-        if (reg_ID[i,t]==a){aIN <- 1} # CONDITION for presence of the regressors a in the model
-        if (reg_ID[i,t]==b){bIN <- 1} # CONDITION for presence of the regressors b in the model
-      }
-      if (aIN==1&bIN==1){# CONDITION for both variables being included in the model
-        PMP_uniform_a_b[j,1] = PMP_uniform_a_b[j,1] + PMP_uniform[i,1]
-        PMP_random_a_b[j,1] = PMP_random_a_b[j,1] + PMP_random[i,1]
-      }
-      else if(aIN==0&bIN==1) {# CONDITION for only regressor b being included in the model
-        PMP_uniform_Na_b[j,1] = PMP_uniform_Na_b[j,1] + PMP_uniform[i,1]
-        PMP_random_Na_b[j,1] = PMP_random_Na_b[j,1] + PMP_random[i,1]
-      }
-      else if(aIN==1&bIN==0) {# CONDITION for only regressor a being included in the model
-        PMP_uniform_a_Nb[j,1] = PMP_uniform_a_Nb[j,1] + PMP_uniform[i,1]
-        PMP_random_a_Nb[j,1] = PMP_random_a_Nb[j,1] + PMP_random[i,1]
-      }
-      else if(aIN==0&bIN==0) {# CONDITION for both variables being excluded from the model
-        PMP_uniform_Na_Nb[j,1] = PMP_uniform_Na_Nb[j,1] + PMP_uniform[i,1]
-        PMP_random_Na_Nb[j,1] = PMP_random_Na_Nb[j,1] + PMP_random[i,1]
-      }
-    }
-  }
-
-  # MEASURES OF JOINTNESS
-  if (measure=="HCGHM"){
-    PMP_uniform_HCGHM_m <- matrix(0, nrow = c, ncol = 1) # Hofmarcher et al. (2018)
-    PMP_random_HCGHM_m <- matrix(0, nrow = c, ncol = 1) # Hofmarcher et al. (2018)
-    for (j in 1:c){
-      PMP_uniform_HCGHM_m[j,1] = ((PMP_uniform_a_b[j,1]+rho)*(PMP_uniform_Na_Nb[j,1]+rho)-(PMP_uniform_Na_b[j,1]+rho)*(PMP_uniform_a_Nb[j,1]+rho))/((PMP_uniform_a_b[j,1]+rho)*(PMP_uniform_Na_Nb[j,1]+rho)+(PMP_uniform_Na_b[j,1]+rho)*(PMP_uniform_a_Nb[j,1]+rho)-rho)
-      PMP_random_HCGHM_m[j,1] = ((PMP_random_a_b[j,1]+rho)*(PMP_random_Na_Nb[j,1]+rho)-(PMP_random_Na_b[j,1]+rho)*(PMP_random_a_Nb[j,1]+rho))/((PMP_random_a_b[j,1]+rho)*(PMP_random_Na_Nb[j,1]+rho)+(PMP_random_Na_b[j,1]+rho)*(PMP_random_a_Nb[j,1]+rho)-rho)
-    }
-    first <- PMP_uniform_HCGHM_m
-    second <- PMP_random_HCGHM_m
-  }
-  if (measure=="LS"){
-    PMP_uniform_LS_m <- matrix(0, nrow = c, ncol = 1) # Ley & Steel (2007)
-    PMP_random_LS_m <- matrix(0, nrow = c, ncol = 1) # Ley & Steel (2007)
-    for (j in 1:c){
-      PMP_uniform_LS_m[j,1] = PMP_uniform_a_b[j,1] / (PMP_uniform_Na_b[j,1] + PMP_uniform_a_Nb[j,1])
-      PMP_random_LS_m[j,1] = PMP_random_a_b[j,1] / (PMP_random_Na_b[j,1] + PMP_random_a_Nb[j,1])
-    }
-    first <- PMP_uniform_LS_m
-    second <- PMP_random_LS_m
-  }
-  if (measure=="DW"){
-    PMP_uniform_DW_m <- matrix(0, nrow = c, ncol = 1) # Doppelhofer & Weeks (2009)
-    PMP_random_DW_m <- matrix(0, nrow = c, ncol = 1) # Doppelhofer & Weeks (2009)
-    for (j in 1:c){
-      PMP_uniform_DW_m[j,1] = log((PMP_uniform_a_b[j,1] / PMP_uniform_Na_b[j,1])*(PMP_uniform_Na_Nb[j,1] / PMP_uniform_a_Nb[j,1]))
-      PMP_random_DW_m[j,1] = log((PMP_random_a_b[j,1] / PMP_random_Na_b[j,1])*(PMP_random_Na_Nb[j,1] / PMP_random_a_Nb[j,1]))
-    }
-    first <- PMP_uniform_DW_m
-    second <- PMP_random_DW_m
-  }
-  if (measure=="PPI"){
-    first <- PMP_uniform_a_b
-    second <- PMP_random_a_b
-  }
-
-  # Table to store the jointness results
-  jointness_table <- matrix(1, nrow = R , ncol = R)
-
-  for (j in 1:c){
-    # ABOVE THE DIAGONAL
-    jointness_table[Pairs[1,j],Pairs[2,j]] = first[j,1]
-    # BELOW THE DIAGONAL
-    jointness_table[Pairs[2,j],Pairs[1,j]] = second[j,1]
-  }
-
-  # Rounding up the numbers in a table
-  jointness_table <- round(jointness_table, digits=round)
-
-  for (i in 1:R){
-    jointness_table[i,i] = NA
-  }
-
-  # Adding names to rows and columns
-  rownames(jointness_table) <- reg_names # we add regressor names to the rows
-  colnames(jointness_table) <- reg_names # we add regressor names to the columns
-
-  # creation of the Jointness object
   return(jointness_table)
 }

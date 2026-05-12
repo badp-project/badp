@@ -7,11 +7,11 @@
 coef_hist(
   bma_list,
   weight = NULL,
-  BW = c("FD", "SC", "vec"),
-  binW = NULL,
-  BN = 0,
-  num = NULL,
-  kernel = 0
+  bin_method = c("FD", "SC", "vec"),
+  bin_widths = NULL,
+  use_bin_count = 0,
+  bin_counts = NULL,
+  use_kernel = 0
 )
 }
 \arguments{
@@ -24,21 +24,21 @@ coef_hist(
 \item "beta" - using posterior model probabilities based on binomial-beta model prior
 }}
 
-\item{BW}{Character string specifying the method for bin widths (default: \code{"FD"}). One of: \cr
+\item{bin_method}{Character string specifying the method for bin widths (default: \code{"FD"}). One of: \cr
 \code{"FD"} - Freedman-Diaconis method; \cr
 \code{"SC"} - Scott method; \cr
-\code{"vec"} - user specified bin widths provided through a vector (parameter: binW).}
+\code{"vec"} - user specified bin widths provided through a vector (parameter: \code{bin_widths}).}
 
-\item{binW}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BW="vec".}
+\item{bin_widths}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter \code{bin_method = "vec"}.}
 
-\item{BN}{Parameter taking the values (default: BN = 0): \cr
-1 - the histogram will be build based on the number of bins specified by the user through parameter num. If BN=1, the function ignores parameters BW. \cr
-0 - the histogram will be build in line with parameter BW}
+\item{use_bin_count}{Parameter taking the values (default: \code{use_bin_count = 0}): \cr
+1 - the histogram will be built based on the number of bins specified by the user through parameter \code{bin_counts}. If \code{use_bin_count = 1}, the function ignores parameter \code{bin_method}. \cr
+0 - the histogram will be built in line with parameter \code{bin_method}.}
 
-\item{num}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.}
+\item{bin_counts}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin counts is used only if parameter \code{use_bin_count = 1}.}
 
-\item{kernel}{A parameter taking the values (default: kernel = 0):\cr
-1 - the function will build graphs using kernel density for the distribution of coefficients (with kernel=1, the function ignores parameters BW and BN) \cr
+\item{use_kernel}{A parameter taking the values (default: \code{use_kernel = 0}):\cr
+1 - the function will build graphs using kernel density for the distribution of coefficients (with \code{use_kernel = 1}, the function ignores parameters \code{bin_method} and \code{use_bin_count}) \cr
 0 - the function will build regular histogram density for the distribution of coefficients}
 }
 \value{
@@ -67,6 +67,6 @@ bma_results <- bma(
   dilution    = 0
 )
 
-coef_plots <- coef_hist(bma_results, kernel = 1)
+coef_plots <- coef_hist(bma_results, use_kernel = 1)
 }
 }
