@@ -678,16 +678,6 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
   n_entities <- nrow(matrices_shared_across_models$Z)
   n_periods <- nrow(df) / n_entities - 1
 
-  prior_exp_model_size <- n_regressors / 2
-  prior_inc_prob <- prior_exp_model_size / n_regressors
-
-  # THIS WILL BE DELETED
-  #print(paste("Prior Mean Model Size:", prior_exp_model_size))
-  #print(paste("Prior Inclusion Probability:", prior_inc_prob))
-
-  # parameter for beta (random) distribution of the prior inclusion probability
-  b <- (n_regressors - prior_exp_model_size) / prior_exp_model_size
-
   if (nested) {
     return(
       pbapply::pbapply(params, MARGIN = 2,  function(x) {
