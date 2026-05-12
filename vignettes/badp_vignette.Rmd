@@ -854,8 +854,8 @@ It returns a list containing a number of objects equal to the number of regresso
 The first object in the list is a graph of the coefficients for the lagged dependent variable, while the remaining objects are graphs of the coefficients for the other regressors.
 The graph for the lagged dependent variable collects coefficients from the entire model space, whereas the graphs for the other regressors only collect coefficients from the models that include the given regressor (half of the model space).
 
-There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The `coef_hist` function provides the user with options for controlling the bin widths of the histogram (`BW`, `binW`, `BN`, and `num`).
-The default is `BW = FD`, which selects bin widths using the Freedman-Diaconis method.
+There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The `coef_hist` function provides the user with options for controlling the bin widths of the histogram (`bin_method`, `bin_widths`, `use_bin_count`, and `bin_counts`).
+The default is `bin_method = "FD"`, which selects bin widths using the Freedman-Diaconis method.
 
 ```{r fig=TRUE}
 coef_plots <- coef_hist(bma_results)
@@ -865,7 +865,7 @@ coef_plots[[1]]
 The second option allows the user to plot kernel densities.
 
 ```{r fig=TRUE}
-coef_plots2 <- coef_hist(bma_results, kernel = 1)
+coef_plots2 <- coef_hist(bma_results, use_kernel = 1)
 coef_plots2[[1]]
 ```
 
