@@ -22,21 +22,21 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
   arma::mat res_maker_matrix = residual_maker_matrix(cur_Z);
   
   int n_entities = Y1.n_rows;
-  int periods_n = dep_vars.n_elem;
-  int tot_regressors_n = Y2.n_cols / (periods_n - 1);
-  int lin_related_regressors_n =
+  int n_periods = dep_vars.n_elem;
+  int n_tot_regressors = Y2.n_cols / (n_periods - 1);
+  int n_lin_related_regressors =
       beta.isNotNull() ? as<arma::vec>(beta).n_elem : 0;
 
 
-  Rcpp::List B = sem_B_matrix(alpha, periods_n, beta);
-  arma::mat C = sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1);
+  Rcpp::List B = sem_B_matrix(alpha, n_periods, beta);
+  arma::mat C = sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1);
   Rcpp::List S = sem_sigma_matrix(err_var, dep_vars, phis, psis);
 
   arma::mat B1 = as<arma::mat>(B[0]);
   arma::mat S1 = as<arma::mat>(S[0]);
   
   arma::mat U1;
-  if (lin_related_regressors_n == 0) {
+  if (n_lin_related_regressors == 0) {
     U1 = Y1 * B1.t() - cur_Z * C.t();
   } else {
     arma::mat B2 = as<arma::mat>(B[1]);
@@ -51,9 +51,9 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
   
   double gaussian_normalization_const =
   log(2 * M_PI) * n_entities *
-  (periods_n + (periods_n - 1) * tot_regressors_n) / 2.0;
+  (n_periods + (n_periods - 1) * n_tot_regressors) / 2.0;
   double trace_simplification_term =
-  0.5 * n_entities * (periods_n - 1) * tot_regressors_n;
+  0.5 * n_entities * (n_periods - 1) * n_tot_regressors;
   
   double S1_logdet{}, S1_sign{};
   arma::log_det(S1_logdet, S1_sign, S1);
@@ -65,7 +65,7 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
   // then likelihood is calc. based on the  
   double H_logdet = 0.;
   
-  if (tot_regressors_n >= 1) {
+  if (n_tot_regressors >= 1) {
     arma::mat S2 = as<arma::mat>(S[1]);
     arma::mat M = Y2 - U1 * S11_inverse * S2;
     arma::mat H = trans(M) * res_maker_matrix * M;

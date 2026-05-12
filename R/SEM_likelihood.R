@@ -7,52 +7,52 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom RcppArmadillo armadillo_version
 
-generate_params_vector <- function(value, timestamps_n, regressors_n,
-                                   lin_related_regressors_n) {
+generate_params_vector <- function(value, n_timestamps, n_regressors,
+                                   n_lin_related_regressors) {
   alpha <- value
   phi_0 <- value
   err_var <- value
-  dep_vars <- rep(value, timestamps_n)
-  beta <- rep(value, lin_related_regressors_n)
-  phi_1 <- rep(value, lin_related_regressors_n)
-  phis_n <- regressors_n*(timestamps_n - 1)
-  phis <- rep(value, phis_n)
-  psis_n <- regressors_n*timestamps_n*(timestamps_n - 1)/2
-  psis <- rep(value, psis_n)
+  dep_vars <- rep(value, n_timestamps)
+  beta <- rep(value, n_lin_related_regressors)
+  phi_1 <- rep(value, n_lin_related_regressors)
+  n_phis <- n_regressors*(n_timestamps - 1)
+  phis <- rep(value, n_phis)
+  n_psis <- n_regressors*n_timestamps*(n_timestamps - 1)/2
+  psis <- rep(value, n_psis)
 
   matrix(c(alpha, phi_0, err_var, dep_vars, phi_1, beta, phis, psis))
 }
 
-sem_params_to_list <- function(params, periods_n, tot_regressors_n,
-                               lin_related_regressors_n) {
-  phis_n <- tot_regressors_n*(periods_n - 1)
-  psis_n <- tot_regressors_n*periods_n*(periods_n - 1)/2
+sem_params_to_list <- function(params, n_periods, n_tot_regressors,
+                               n_lin_related_regressors) {
+  n_phis <- n_tot_regressors*(n_periods - 1)
+  n_psis <- n_tot_regressors*n_periods*(n_periods - 1)/2
 
   alpha <- params[1]
   phi_0 <- params[2]
   err_var <- params[3]
-  dep_vars <- params[4:(4 + periods_n - 1)]
-  betas_first_ind <- 4 + periods_n
-  if (tot_regressors_n == 0) {
+  dep_vars <- params[4:(4 + n_periods - 1)]
+  betas_first_ind <- 4 + n_periods
+  if (n_tot_regressors == 0) {
     beta <- c()
     phi_1 <- c()
     phis <- c()
     psis <- c()
   } else {
-    if (lin_related_regressors_n == 0) {
+    if (n_lin_related_regressors == 0) {
       beta <- c()
       phi_1 <- c()
     } else {
       beta <-
-        params[betas_first_ind:(betas_first_ind + lin_related_regressors_n - 1)]
-      phi_1_first_ind <- betas_first_ind + lin_related_regressors_n
+        params[betas_first_ind:(betas_first_ind + n_lin_related_regressors - 1)]
+      phi_1_first_ind <- betas_first_ind + n_lin_related_regressors
       phi_1 <-
-        params[phi_1_first_ind:(phi_1_first_ind + lin_related_regressors_n - 1)]
+        params[phi_1_first_ind:(phi_1_first_ind + n_lin_related_regressors - 1)]
     }
     phis <-
-      params[(4 + 2*lin_related_regressors_n + periods_n):(3 + 2*lin_related_regressors_n + periods_n + phis_n)]
+      params[(4 + 2*n_lin_related_regressors + n_periods):(3 + 2*n_lin_related_regressors + n_periods + n_phis)]
     psis <-
-      params[(4 + 2*lin_related_regressors_n + periods_n + phis_n):(3 + 2*lin_related_regressors_n + periods_n + phis_n + psis_n)]
+      params[(4 + 2*n_lin_related_regressors + n_periods + n_phis):(3 + 2*n_lin_related_regressors + n_periods + n_phis + n_psis)]
   }
 
   list(alpha = alpha, phi_0 = phi_0, err_var = err_var, dep_vars = dep_vars,
@@ -197,13 +197,13 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
 #' \code{phis} double vector which together with \code{psis} determines upper
 #' right and bottom left part of the covariance matrix; The vector should have
 #' length equal to the number of regressors times number of time stamps minus 1,
-#' i.e. \code{regressors_n * (periods_n - 1)}
+#' i.e. \code{n_regressors * (n_periods - 1)}
 #'
 #' \code{psis} double vector which together with \code{psis} determines upper
 #' right and bottom left part of the covariance matrix; The vector should have
 #' length equal to the number of regressors times number of time stamps minus 1
 #' times number of time stamps divided by 2, i.e.
-#' \code{regressors_n * (periods_n - 1) * periods_n / 2}
+#' \code{n_regressors * (n_periods - 1) * n_periods / 2}
 #'
 #'
 #' @return
@@ -247,27 +247,27 @@ sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
                          lin_related_regressors = lin_related_regressors)
     }
     if (!is.list(params)) {
-      periods_n <- ncol(data$Y1)
-      tot_regressors_n <- ncol(data$Y2) / (periods_n - 1)
-      lin_related_regressors_n <- if (is.null(data$cur_Y2)) {
+      n_periods <- ncol(data$Y1)
+      n_tot_regressors <- ncol(data$Y2) / (n_periods - 1)
+      n_lin_related_regressors <- if (is.null(data$cur_Y2)) {
         0
       } else {
-        ncol(data$cur_Y2) / (periods_n - 1)
+        ncol(data$cur_Y2) / (n_periods - 1)
       }
 
       if (is.double(params)) {
         params <-
           generate_params_vector(
-            value = params, timestamps_n = periods_n,
-            regressors_n = tot_regressors_n,
-            lin_related_regressors_n = lin_related_regressors_n
+            value = params, n_timestamps = n_periods,
+            n_regressors = n_tot_regressors,
+            n_lin_related_regressors = n_lin_related_regressors
             )
       }
 
       params <-
-        sem_params_to_list(params, periods_n = periods_n,
-                           tot_regressors_n = tot_regressors_n,
-                           lin_related_regressors_n = lin_related_regressors_n)
+        sem_params_to_list(params, n_periods = n_periods,
+                           n_tot_regressors = n_tot_regressors,
+                           n_lin_related_regressors = n_lin_related_regressors)
     }
     likelihood <-
       sem_likelihood(params = params, data = data, per_entity = per_entity,

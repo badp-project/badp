@@ -34,7 +34,7 @@ arma::mat residual_maker_matrix(const arma::mat &m) {
 //' representation.
 //'
 //' @param alpha numeric
-//' @param periods_n integer
+//' @param n_periods integer
 //' @param beta numeric vector. Default is c() for no regressors case.
 //'
 //' @return List with two matrices B11 and B12
@@ -45,16 +45,16 @@ arma::mat residual_maker_matrix(const arma::mat &m) {
 //'
 //' @keywords internal
 // [[Rcpp::export]]
-Rcpp::List sem_B_matrix(double alpha, int periods_n,
+Rcpp::List sem_B_matrix(double alpha, int n_periods,
                         Rcpp::Nullable<arma::vec> beta = R_NilValue) {
   // Create B11 matrix
-  arma::mat B11 = arma::eye(periods_n, periods_n);
+  arma::mat B11 = arma::eye(n_periods, n_periods);
 
   // Create alpha_matrix (diagonal matrix with -alpha values)
-  arma::mat alpha_matrix = arma::diagmat(arma::vec(periods_n - 1).fill(-alpha));
+  arma::mat alpha_matrix = arma::diagmat(arma::vec(n_periods - 1).fill(-alpha));
 
-  // Add alpha_matrix to B11[2:periods_n, 1:(periods_n-1)]
-  B11.submat(1, 0, periods_n - 1, periods_n - 2) += alpha_matrix;
+  // Add alpha_matrix to B11[2:n_periods, 1:(n_periods-1)]
+  B11.submat(1, 0, n_periods - 1, n_periods - 2) += alpha_matrix;
 
   // Create B12 matrix
   arma::mat B12;
@@ -64,17 +64,17 @@ Rcpp::List sem_B_matrix(double alpha, int periods_n,
     arma::vec beta_vec = Rcpp::as<arma::vec>(beta);
     if (beta_vec.n_elem > 0) {
       has_beta = true;
-      int regressors_n = beta_vec.n_elem;
-      int n_cols = regressors_n * (periods_n - 1);
+      int n_regressors = beta_vec.n_elem;
+      int n_cols = n_regressors * (n_periods - 1);
 
       // Initialize B12 with zeros
-      B12 = arma::zeros(periods_n, n_cols);
+      B12 = arma::zeros(n_periods, n_cols);
 
-      // Fill beta_matrix for rows 2 to periods_n
-      for (int row_ind = 1; row_ind < periods_n; row_ind++) {
+      // Fill beta_matrix for rows 2 to n_periods
+      for (int row_ind = 1; row_ind < n_periods; row_ind++) {
         // Place -beta values in the appropriate position
-        int start_col = (row_ind - 1) * regressors_n;
-        B12(row_ind, arma::span(start_col, start_col + regressors_n - 1)) =
+        int start_col = (row_ind - 1) * n_regressors;
+        B12(row_ind, arma::span(start_col, start_col + n_regressors - 1)) =
             -beta_vec.t();
       }
     }
@@ -97,7 +97,7 @@ Rcpp::List sem_B_matrix(double alpha, int periods_n,
 //'
 //' @param alpha numeric
 //' @param phi_0 numeric
-//' @param periods_n numeric
+//' @param n_periods numeric
 //' @param beta numeric vector. Default is c() for no regressors case.
 //' @param phi_1 numeric vector. Default is c() for no regressors case.
 //'
@@ -109,16 +109,16 @@ Rcpp::List sem_B_matrix(double alpha, int periods_n,
 //' phi_0 <- 19
 //' beta <- 11:15
 //' phi_1 <- 21:25
-//' periods_n <- 4
-//' sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+//' n_periods <- 4
+//' sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1)
 //'
 //' @keywords internal
 // [[Rcpp::export]]
-arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
+arma::mat sem_C_matrix(double alpha, double phi_0, int n_periods,
                        Rcpp::Nullable<arma::vec> beta = R_NilValue,
                        Rcpp::Nullable<arma::vec> phi_1 = R_NilValue) {
-  // Create C1 matrix - column vector with phi_0 repeated periods_n times
-  arma::mat C1(periods_n, 1, arma::fill::value(phi_0));
+  // Create C1 matrix - column vector with phi_0 repeated n_periods times
+  arma::mat C1(n_periods, 1, arma::fill::value(phi_0));
 
   // Add alpha to the first element
   C1(0, 0) += alpha;
@@ -129,7 +129,7 @@ arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
     arma::vec phi_1_vec = Rcpp::as<arma::vec>(phi_1);
 
     if (beta_vec.n_elem > 0) {
-      arma::mat col2(periods_n, phi_1_vec.n_elem);
+      arma::mat col2(n_periods, phi_1_vec.n_elem);
 
       col2.each_row() = phi_1_vec.t();
 
@@ -145,13 +145,13 @@ arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
 //' Matrix with psi parameters for SEM representation
 //'
 //' @param psis double vector with psi parameter values
-//' @param timestamps_n number of time stamps (e.g. years)
-//' @param features_n number of features (e.g. population size, investment rate)
+//' @param n_timestamps number of time stamps (e.g. years)
+//' @param n_features number of features (e.g. population size, investment rate)
 //'
 //' @return
-//' A matrix with \code{timestamps_n} rows and
-//' \code{(timestamps_n - 1) * feature_n} columns. Psis are filled in row by row
-//' in a block manner, i.e. blocks of size \code{feature_n} are placed next to
+//' A matrix with \code{n_timestamps} rows and
+//' \code{(n_timestamps - 1) * n_features} columns. Psis are filled in row by row
+//' in a block manner, i.e. blocks of size \code{n_features} are placed next to
 //' each other
 //'
 //' @export
@@ -161,33 +161,33 @@ arma::mat sem_C_matrix(double alpha, double phi_0, int periods_n,
 //'
 //' @keywords internal
 // [[Rcpp::export]]
-arma::mat sem_psi_matrix(const arma::vec &psis, int timestamps_n,
-                         int features_n) {
-  int matrix_row_n = timestamps_n;
-  int n_cols = (timestamps_n - 1) * features_n;
-  arma::mat result(matrix_row_n, n_cols, arma::fill::zeros);
+arma::mat sem_psi_matrix(const arma::vec &psis, int n_timestamps,
+                         int n_features) {
+  int n_matrix_rows = n_timestamps;
+  int n_cols = (n_timestamps - 1) * n_features;
+  arma::mat result(n_matrix_rows, n_cols, arma::fill::zeros);
 
-  for (int row_ind = 1; row_ind <= matrix_row_n; row_ind++) {
+  for (int row_ind = 1; row_ind <= n_matrix_rows; row_ind++) {
     // Calculate psi indices for this row
     unsigned int psi_start_ind_in_row =
-        row_ind * (row_ind - 1) * features_n / 2 +
-        (row_ind - 1) * (timestamps_n - row_ind) * features_n + 1;
+        row_ind * (row_ind - 1) * n_features / 2 +
+        (row_ind - 1) * (n_timestamps - row_ind) * n_features + 1;
 
     if (row_ind == 1) {
       // First row: fill with psis[psi_start_ind_in_row:psi_end_ind_in_row]
-      for (int j = 0; j < (timestamps_n - row_ind) * features_n; j++) {
+      for (int j = 0; j < (n_timestamps - row_ind) * n_features; j++) {
         if (psi_start_ind_in_row - 1 + j < psis.n_elem) {
           result(row_ind - 1, j) = psis(psi_start_ind_in_row - 1 + j);
         }
       }
-    } else if (row_ind == matrix_row_n) {
+    } else if (row_ind == n_matrix_rows) {
       // Last row: all zeros (already filled with zeros)
     } else {
       // Other rows: zeros followed by psis
-      int n_zeros_front = (row_ind - 1) * features_n;
+      int n_zeros_front = (row_ind - 1) * n_features;
 
       // Fill the psi values after the zeros
-      for (int j = 0; j < (timestamps_n - row_ind) * features_n; j++) {
+      for (int j = 0; j < (n_timestamps - row_ind) * n_features; j++) {
         if (psi_start_ind_in_row - 1 + j < psis.n_elem) {
           result(row_ind - 1, n_zeros_front + j) =
               psis(psi_start_ind_in_row - 1 + j);
@@ -225,10 +225,10 @@ arma::mat sem_psi_matrix(const arma::vec &psis, int timestamps_n,
 Rcpp::List sem_sigma_matrix(double err_var, const arma::vec &dep_vars,
                             Rcpp::Nullable<arma::vec> phis = R_NilValue,
                             Rcpp::Nullable<arma::vec> psis = R_NilValue) {
-  int periods_n = dep_vars.n_elem;
+  int n_periods = dep_vars.n_elem;
 
   // Create O11 matrix
-  arma::mat O11 = err_var * err_var * arma::ones(periods_n, periods_n) +
+  arma::mat O11 = err_var * err_var * arma::ones(n_periods, n_periods) +
                   arma::diagmat(arma::square(dep_vars));
 
   if (phis.isNull()) {
@@ -240,15 +240,15 @@ Rcpp::List sem_sigma_matrix(double err_var, const arma::vec &dep_vars,
     return Rcpp::List::create(O11, R_NilValue);
   }
 
-  int regressors_n = phis_vec.n_elem / (periods_n - 1);
+  int n_regressors = phis_vec.n_elem / (n_periods - 1);
 
-  arma::mat phi_matrix(periods_n, phis_vec.n_elem);
+  arma::mat phi_matrix(n_periods, phis_vec.n_elem);
   phi_matrix.each_row() = phis_vec.t();
 
-  arma::mat psi_matrix = arma::zeros(periods_n, phis_vec.n_elem);
+  arma::mat psi_matrix = arma::zeros(n_periods, phis_vec.n_elem);
   if (psis.isNotNull()) {
     const arma::vec psis_vec = Rcpp::as<arma::vec>(psis);
-    psi_matrix = sem_psi_matrix(psis_vec, periods_n, regressors_n);
+    psi_matrix = sem_psi_matrix(psis_vec, n_periods, n_regressors);
   }
 
   arma::mat O12 = phi_matrix + psi_matrix;

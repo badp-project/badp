@@ -13,7 +13,7 @@ non_nested_optimization_wrapper(
   dep_var_col,
   exact_value,
   n_all_regressors,
-  n_timestamp,
+  n_timestamps,
   control
 )
 }
@@ -38,7 +38,7 @@ full (maximal) model space. Used to compute the full parameter dimension
 (for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
 regressors can be padded with \code{NA} in the non-nested setup.}
 
-\item{n_timestamp}{Integer. Number of time periods in the panel (i.e. the
+\item{n_timestamps}{Integer. Number of time periods in the panel (i.e. the
 number of distinct values in \code{timestamp_col}). Used to determine the
 required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
 and for the full model.}

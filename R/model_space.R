@@ -45,16 +45,16 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
     regressor_names(timestamp_col = {{ timestamp_col }},
                     entity_col = {{ entity_col }},
                     dep_var_col = {{ dep_var_col }})
-  regressors_n <- length(regressors)
+  n_regressors <- length(regressors)
 
   counts <- df %>% dplyr::select({{ timestamp_col }}, {{ entity_col }}) %>%
     sapply(function(x) dplyr::n_distinct(x))
 
-  timestamps_n <- counts[[1]] - 1
-  entities_n <- counts[[2]]
+  n_timestamps <- counts[[1]] - 1
+  n_entities <- counts[[2]]
 
   regressors_subsets_matrix <-
-    (rje::powerSetMat(regressors_n) * init_value)
+    (rje::powerSetMat(n_regressors) * init_value)
 
   linear_params_matrix <-
     t(cbind(regressors_subsets_matrix, regressors_subsets_matrix))
@@ -63,15 +63,15 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
     c(paste('beta', regressors, sep="_"), paste('phi_1', regressors, sep="_"))
 
   dep_var_matrix <-
-    t(matrix(init_value, nrow = 2^regressors_n, ncol = 3 + timestamps_n))
+    t(matrix(init_value, nrow = 2^n_regressors, ncol = 3 + n_timestamps))
   rownames(dep_var_matrix) <- c(c('alpha', 'phi_0', 'err_var'),
-                                paste('dep_var', 1:timestamps_n, sep = '_'))
+                                paste('dep_var', 1:n_timestamps, sep = '_'))
 
-  phis_n <- regressors_n * (timestamps_n - 1)
-  psis_n <- regressors_n * (timestamps_n - 1) * timestamps_n / 2
+  n_phis <- n_regressors * (n_timestamps - 1)
+  n_psis <- n_regressors * (n_timestamps - 1) * n_timestamps / 2
 
   psis_phis_matrix <-
-    matrix(init_value, nrow = phis_n + psis_n, ncol = 2^regressors_n)
+    matrix(init_value, nrow = n_phis + n_psis, ncol = 2^n_regressors)
 
   . <- NULL
   rbind(dep_var_matrix, linear_params_matrix, psis_phis_matrix) %>%
@@ -186,7 +186,7 @@ nested_optimization_wrapper <- function(
 #' full (maximal) model space. Used to compute the full parameter dimension
 #' (for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
 #' regressors can be padded with \code{NA} in the non-nested setup.
-#' @param n_timestamp Integer. Number of time periods in the panel (i.e. the
+#' @param n_timestamps Integer. Number of time periods in the panel (i.e. the
 #' number of distinct values in \code{timestamp_col}). Used to determine the
 #' required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
 #' and for the full model.
@@ -203,7 +203,7 @@ non_nested_optimization_wrapper <- function(
     dep_var_col,
     exact_value,
     n_all_regressors,
-    n_timestamp,
+    n_timestamps,
     control
   ) {
   # derive the set of all matrices needed, based on reduced df
@@ -229,11 +229,11 @@ non_nested_optimization_wrapper <- function(
   # set last n params to NA, for n - difference model params
   # for full matrix & model params for current setup
   curr_n_regressors <- length(regressors_subset)
-  curr_n_phi <- curr_n_regressors * (n_timestamp - 1)
-  curr_n_psi <- curr_n_regressors * (n_timestamp - 1) * n_timestamp / 2
+  curr_n_phi <- curr_n_regressors * (n_timestamps - 1)
+  curr_n_psi <- curr_n_regressors * (n_timestamps - 1) * n_timestamps / 2
 
-  full_n_phi <- n_all_regressors * (n_timestamp - 1)
-  full_n_psi <- n_all_regressors * (n_timestamp - 1) * n_timestamp / 2
+  full_n_phi <- n_all_regressors * (n_timestamps - 1)
+  full_n_psi <- n_all_regressors * (n_timestamps - 1) * n_timestamps / 2
 
   num_new_na <- (full_n_phi + full_n_psi) - (curr_n_phi + curr_n_psi)
 
@@ -344,7 +344,7 @@ optim_model_space_params <- function(
   } else {
     # optimization performed for non-nested version
     n_all_regressors = ncol(all_regressors)
-    n_timestamp = df %>%
+    n_timestamps = df %>%
       dplyr::distinct({{timestamp_col}}) %>%
       nrow() - 1
 
@@ -359,7 +359,7 @@ optim_model_space_params <- function(
           dep_var_col = {{ dep_var_col }},
           exact_value = exact_value,
           n_all_regressors = n_all_regressors,
-          n_timestamp = n_timestamp,
+          n_timestamps = n_timestamps,
           control = control
           )
       }, cl = cl)
@@ -379,7 +379,7 @@ optim_model_space_params <- function(
 #' @param entity_col Column with entities (e.g. countries)
 #' @param dep_var_col Column with the dependent variable
 #' @param n_entities Number of entities - passed to save calc. time
-#' @param periods_n Number of periods - passed to save calc. time
+#' @param n_periods Number of periods - passed to save calc. time
 #'
 #' @returns
 #' #' Matrix with columns describing likelihood and standard deviations for each
@@ -399,13 +399,13 @@ nested_std_dev_from_params <- function(
     entity_col,
     dep_var_col,
     n_entities,
-    periods_n
+    n_periods
     ) {
   regressors_subset <-
     regressor_names_from_params_vector(params)
 
-  lin_features_n <- length(regressors_subset) + 1
-  features_n <- ncol(data$Z)
+  n_lin_features <- length(regressors_subset) + 1
+  n_features <- ncol(data$Z)
 
   model_specific_matrices <- df %>%
     matrices_from_df(timestamp_col = {{ timestamp_col }},
@@ -441,8 +441,8 @@ nested_std_dev_from_params <- function(
   # This is most likely why hessian is used to compute standard errors.
   # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
   # all this works
-  stdr <- rep(0, features_n)
-  stdh <- rep(0, features_n)
+  stdr <- rep(0, n_features)
+  stdh <- rep(0, n_features)
 
   . <- NULL
   linear_params <- t(params) %>% as.data.frame() %>%
@@ -450,8 +450,8 @@ nested_std_dev_from_params <- function(
                   tidyselect::matches('beta')) %>%
     as.matrix() %>% t()
 
-  betas_first_ind <- 4 + periods_n
-  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  betas_first_ind <- 4 + n_periods
+  betas_last_ind <- betas_first_ind + n_lin_features - 2
   inds <- if (betas_first_ind > betas_last_ind) {
     c(1)
   } else {
@@ -472,7 +472,7 @@ nested_std_dev_from_params <- function(
 
   # Eq. 19
   loglikelihood <-
-    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+    (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   # Eq. 35
   bic <- exp(loglikelihood)
@@ -492,7 +492,7 @@ nested_std_dev_from_params <- function(
 #' @param entity_col Column with entities (e.g. countries)
 #' @param dep_var_col Column with the dependent variable
 #' @param n_entities Number of entities - passed to save calc. time
-#' @param periods_n Number of periods - passed to save calc. time
+#' @param n_periods Number of periods - passed to save calc. time
 #'
 #' @returns
 #' #' Matrix with columns describing likelihood and standard deviations for each
@@ -512,7 +512,7 @@ non_nested_std_dev_from_params <- function(
     entity_col,
     dep_var_col,
     n_entities,
-    periods_n) {
+    n_periods) {
 
   regressors_subset <-
     regressor_names_from_params_vector(params)
@@ -532,8 +532,8 @@ non_nested_std_dev_from_params <- function(
       lin_related_regressors = regressors_subset,
       which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix", "cur_Y2", "cur_Z"))
 
-  lin_features_n <- length(regressors_subset) + 1
-  features_n <- ncol(data$Z)
+  n_lin_features <- length(regressors_subset) + 1
+  n_features <- ncol(data$Z)
 
   params_no_na <- params %>% stats::na.omit()
   likelihood <-
@@ -558,8 +558,8 @@ non_nested_std_dev_from_params <- function(
   # This is most likely why hessian is used to compute standard errors.
   # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
   # all this works
-  stdr <- rep(0, features_n)
-  stdh <- rep(0, features_n)
+  stdr <- rep(0, n_features)
+  stdh <- rep(0, n_features)
 
   . <- NULL
   linear_params <- t(params) %>% as.data.frame() %>%
@@ -567,8 +567,8 @@ non_nested_std_dev_from_params <- function(
                   tidyselect::matches('beta')) %>%
     as.matrix() %>% t()
 
-  betas_first_ind <- 4 + periods_n
-  betas_last_ind <- betas_first_ind + lin_features_n - 2
+  betas_first_ind <- 4 + n_periods
+  betas_last_ind <- betas_first_ind + n_lin_features - 2
   inds <- if (betas_first_ind > betas_last_ind) {
     c(1)
   } else {
@@ -589,7 +589,7 @@ non_nested_std_dev_from_params <- function(
 
   # Eq. 19
   loglikelihood <-
-    (likelihood - (lin_features_n/2)*(log(n_entities*periods_n)))/n_entities
+    (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   # Eq. 35
   bic <- exp(loglikelihood)
@@ -666,8 +666,8 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
     regressor_names(timestamp_col = {{ timestamp_col }},
                     entity_col = {{ entity_col }},
                     dep_var_col = {{ dep_var_col }})
-  regressors_n <- length(regressors)
-  variables_n <- regressors_n + 1
+  n_regressors <- length(regressors)
+  n_variables <- n_regressors + 1
 
   matrices_shared_across_models <- df %>%
     matrices_from_df(timestamp_col = {{ timestamp_col }},
@@ -676,17 +676,17 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
                      which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
 
   n_entities <- nrow(matrices_shared_across_models$Z)
-  periods_n <- nrow(df) / n_entities - 1
+  n_periods <- nrow(df) / n_entities - 1
 
-  prior_exp_model_size <- regressors_n / 2
-  prior_inc_prob <- prior_exp_model_size / regressors_n
+  prior_exp_model_size <- n_regressors / 2
+  prior_inc_prob <- prior_exp_model_size / n_regressors
 
   # THIS WILL BE DELETED
   #print(paste("Prior Mean Model Size:", prior_exp_model_size))
   #print(paste("Prior Inclusion Probability:", prior_inc_prob))
 
   # parameter for beta (random) distribution of the prior inclusion probability
-  b <- (regressors_n - prior_exp_model_size) / prior_exp_model_size
+  b <- (n_regressors - prior_exp_model_size) / prior_exp_model_size
 
   if (nested) {
     return(
@@ -699,7 +699,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
           entity_col = {{ entity_col }},
           dep_var_col = {{  dep_var_col}},
           n_entities = n_entities,
-          periods_n = periods_n
+          n_periods = n_periods
           )
       }, cl = cl)
     )
@@ -713,7 +713,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
           entity_col = {{ entity_col }},
           dep_var_col = {{  dep_var_col}},
           n_entities = n_entities,
-          periods_n = periods_n
+          n_periods = n_periods
           )
       }, cl = cl)
     )

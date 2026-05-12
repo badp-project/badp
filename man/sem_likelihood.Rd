@@ -83,13 +83,13 @@ The vector should have length equal to the number of regressors.
 \code{phis} double vector which together with \code{psis} determines upper
 right and bottom left part of the covariance matrix; The vector should have
 length equal to the number of regressors times number of time stamps minus 1,
-i.e. \code{regressors_n * (periods_n - 1)}
+i.e. \code{n_regressors * (n_periods - 1)}
 
 \code{psis} double vector which together with \code{psis} determines upper
 right and bottom left part of the covariance matrix; The vector should have
 length equal to the number of regressors times number of time stamps minus 1
 times number of time stamps divided by 2, i.e.
-\code{regressors_n * (periods_n - 1) * periods_n / 2}
+\code{n_regressors * (n_periods - 1) * n_periods / 2}
 }
 \examples{
 data(economic_growth)

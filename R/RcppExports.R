@@ -31,7 +31,7 @@ residual_maker_matrix <- function(m) {
 #' representation.
 #'
 #' @param alpha numeric
-#' @param periods_n integer
+#' @param n_periods integer
 #' @param beta numeric vector. Default is c() for no regressors case.
 #'
 #' @return List with two matrices B11 and B12
@@ -41,8 +41,8 @@ residual_maker_matrix <- function(m) {
 #' sem_B_matrix(3, 4, 4:6)
 #'
 #' @keywords internal
-sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
-    .Call(`_badp_sem_B_matrix`, alpha, periods_n, beta)
+sem_B_matrix <- function(alpha, n_periods, beta = NULL) {
+    .Call(`_badp_sem_B_matrix`, alpha, n_periods, beta)
 }
 
 #' Coefficients matrix for initial conditions
@@ -54,7 +54,7 @@ sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
 #'
 #' @param alpha numeric
 #' @param phi_0 numeric
-#' @param periods_n numeric
+#' @param n_periods numeric
 #' @param beta numeric vector. Default is c() for no regressors case.
 #' @param phi_1 numeric vector. Default is c() for no regressors case.
 #'
@@ -66,24 +66,24 @@ sem_B_matrix <- function(alpha, periods_n, beta = NULL) {
 #' phi_0 <- 19
 #' beta <- 11:15
 #' phi_1 <- 21:25
-#' periods_n <- 4
-#' sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1)
+#' n_periods <- 4
+#' sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1)
 #'
 #' @keywords internal
-sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
-    .Call(`_badp_sem_C_matrix`, alpha, phi_0, periods_n, beta, phi_1)
+sem_C_matrix <- function(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL) {
+    .Call(`_badp_sem_C_matrix`, alpha, phi_0, n_periods, beta, phi_1)
 }
 
 #' Matrix with psi parameters for SEM representation
 #'
 #' @param psis double vector with psi parameter values
-#' @param timestamps_n number of time stamps (e.g. years)
-#' @param features_n number of features (e.g. population size, investment rate)
+#' @param n_timestamps number of time stamps (e.g. years)
+#' @param n_features number of features (e.g. population size, investment rate)
 #'
 #' @return
-#' A matrix with \code{timestamps_n} rows and
-#' \code{(timestamps_n - 1) * feature_n} columns. Psis are filled in row by row
-#' in a block manner, i.e. blocks of size \code{feature_n} are placed next to
+#' A matrix with \code{n_timestamps} rows and
+#' \code{(n_timestamps - 1) * n_features} columns. Psis are filled in row by row
+#' in a block manner, i.e. blocks of size \code{n_features} are placed next to
 #' each other
 #'
 #' @export
@@ -92,8 +92,8 @@ sem_C_matrix <- function(alpha, phi_0, periods_n, beta = NULL, phi_1 = NULL) {
 #' sem_psi_matrix(1:30, 4, 5)
 #'
 #' @keywords internal
-sem_psi_matrix <- function(psis, timestamps_n, features_n) {
-    .Call(`_badp_sem_psi_matrix`, psis, timestamps_n, features_n)
+sem_psi_matrix <- function(psis, n_timestamps, n_features) {
+    .Call(`_badp_sem_psi_matrix`, psis, n_timestamps, n_features)
 }
 
 #' Covariance matrix for SEM representation
