@@ -1,7 +1,12 @@
 #' Table with the best models according to one of the posterior criteria
 #'
-#' This function creates a ranking of best models according to one of the possible criterion (PMP under binomial model prior, PMP under binomial-beta model prior, R^2 under binomial model prior, R^2 under binomial-beta model prior).
-#' The function gives two types of tables in three different formats: inclusion table (where 1 indicates presence of the regressor in the model and 0 indicates that the variable is excluded from the model) and estimation results table (it displays the best models and estimation output for those models: point estimates, standard errors, significance level, and R^2).
+#' This function ranks the best models according to posterior model probabilities
+#' calculated using one of the available model priors: binomial or beta-binomial.
+#' It returns three types of tables in three different formats: an inclusion table,
+#' where 1 indicates that a regressor is included in the model and 0 indicates that
+#' it is excluded; an estimation results table, which displays the best models and
+#' their estimation output, including point estimates, standard errors, and
+#' significance levels; and an estimation results table with robust standard errors.
 #'
 #' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param prior Character string specifying the model prior used for the
