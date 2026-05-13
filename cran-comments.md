@@ -1,3 +1,34 @@
+# 0.5.0
+
+## Minor release
+
+This release adds S3 classes and methods for `bma()` and `optim_model_space()`
+output (for JSS compliance), tightens the public API, and ships new example
+datasets. See `NEWS.md` for the full list of changes. Notable user-visible
+changes:
+
+* `bma()` now returns an object of class `badp_bma` with `print()`, `summary()`, `coef()`, and `plot()` methods. `optim_model_space()` returns a
+  `badp_model_space` object with a `print()` method.
+* Breaking change: `best_models()` now takes a character `prior` argument
+  ("binomial" / "beta") in place of the integer `criterion` argument, aligning
+  it with `summary.badp_bma()`.
+* Breaking change: the `dil.Par` parameter has been renamed to `omega` for
+  consistency with the statistical literature.
+* New `migration_data` dataset and two example model space objects
+  (`migration_model_space`, `migration_model_space_nonnested`) from
+  Afonso, Alves, & Beck (2025).
+* Removed `ggpubr` dependency; plot arrangement now uses `patchwork`.
+* Documentation, internal naming, and spelling cleanups throughout.
+
+## R CMD check results
+
+0 errors | 0 warnings | 0 notes
+
+Checked locally with `R CMD check --as-cran` against R 4.5.1 on
+macOS (aarch64-apple-darwin20) and via the GitHub Actions
+R-CMD-check workflow on Linux, macOS, and Windows across release,
+oldrel, and devel.
+
 # 0.4.0.1
 
 ## Patch release

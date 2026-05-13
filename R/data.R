@@ -173,7 +173,7 @@
 #' Data used in the manuscript Afonso, A., Alves, J., & Beck, K. (2025).
 #' Drivers of migration flows in the European Union: Earnings or unemployment?
 #' International Labour Review, 164(2), 1-23.
-#' https://doi.org/10.16995/ilr.18845
+#' \doi{10.16995/ilr.18845}
 #'
 #' @format ## `migration_data`
 #' A data frame with 1012 rows and 8 columns
@@ -188,7 +188,7 @@
 #'   \item{Social}{Difference in average social benefits in PPP}
 #'   \item{Tax}{Difference in average tax rate}
 #' }
-#' @source <https://doi.org/10.7910/DVN/GTOFJB>
+#' @source \doi{10.7910/DVN/GTOFJB}
 "migration_data"
 
 #' Example output of \code{\link{optim_model_space}} in the case of migration data
