@@ -36,10 +36,9 @@ to a model. Each row specifies model parameters. Compare with
 Matrix with columns describing likelihood and standard deviations for each
 model. The first row is the likelihood for the model (computed using the
 parameters in the provided model space). The second row is almost 1/2 * BIC_k
-as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
-in the code below). The third row is model posterior probability. Then there
+as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
 are rows with standard deviations for each parameter. After that we have rows
-with robust standard deviation (not sure yet what exactly "robust" means).
+with robust standard deviation.
 }
 \description{
 Helper function - wraps single execution of the log-likelihood & deviation
