@@ -68,6 +68,13 @@ jointness <- function(bma_list, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0
   Pab_U <- crossprod(Z * w_uniform, Z)
   Pab_R <- crossprod(Z * w_random,  Z)
 
+  # The diagonal is meaningless (jointness of a regressor with itself) and would
+  # produce 0/0 or log(0) under LS/DW. Masking it here lets NA propagate through
+  # all derived matrices and every measure formula automatically, so we never
+  # divide by zero or take log of a (possibly roundoff-negative) zero.
+  diag(Pab_U) <- NA_real_
+  diag(Pab_R) <- NA_real_
+
   # Marginal inclusion probabilities (length R), Pa[k] = sum_i w[i] * Z[i, k].
   Pa_U <- as.numeric(crossprod(w_uniform, Z))
   Pa_R <- as.numeric(crossprod(w_random,  Z))
