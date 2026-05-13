@@ -385,10 +385,9 @@ optim_model_space_params <- function(
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
 #' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
-#' in the code below). The third row is model posterior probability. Then there
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
 #' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' with robust standard deviation.
 #' @export
 #' @keywords internal
 nested_std_dev_from_params <- function(
@@ -428,19 +427,10 @@ nested_std_dev_from_params <- function(
   likelihood_per_entity <-
     sem_likelihood(params_no_na, data = data, per_entity = TRUE)
 
-  # TODO: how to interpret the Gmat and Imat
   Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
                               per_entity = TRUE)
   Imat <- crossprod(Gmat)
 
-  # Section 2.3.3 in Moral-Benito
-  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
-  # "Finally, each model-specific posterior is given by a normal distribution
-  # with mean at the MLE and dispersion matrix equal to the inverse of the
-  # Fisher information."
-  # This is most likely why hessian is used to compute standard errors.
-  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
-  # all this works
   stdr <- rep(0, n_features)
   stdh <- rep(0, n_features)
 
@@ -461,20 +451,9 @@ nested_std_dev_from_params <- function(
   stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
   stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
 
-  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
-  # in Social Research eq. 19. The part with reference model M_1 is skipped,
-  # because we use this formula to compute exp(logl) which is in turn used to
-  # compute posterior probabilities using eqs. 34/35. Since the part connected
-  # with M_1 model would be present in all posteriors it cancels out. Hence
-  # the important part is the one computed below.
-  #
-  # TODO: Why everything is divided by n_entities?
-
-  # Eq. 19
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
-  # Eq. 35
   bic <- exp(loglikelihood)
 
   c(likelihood, bic, stdh, stdr)
@@ -498,10 +477,9 @@ nested_std_dev_from_params <- function(
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
 #' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
-#' in the code below). The third row is model posterior probability. Then there
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
 #' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' with robust standard deviation.
 #' @export
 #'
 #' @keywords internal
@@ -545,19 +523,10 @@ non_nested_std_dev_from_params <- function(
   likelihood_per_entity <-
     sem_likelihood(params_no_na, data = data, per_entity = TRUE)
 
-  # TODO: how to interpret the Gmat and Imat
   Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
                               per_entity = TRUE)
   Imat <- crossprod(Gmat)
 
-  # Section 2.3.3 in Moral-Benito
-  # GROWTH EMPIRICS IN PANEL DATA UNDER MODEL UNCERTAINTY AND WEAK EXOGENEITY:
-  # "Finally, each model-specific posterior is given by a normal distribution
-  # with mean at the MLE and dispersion matrix equal to the inverse of the
-  # Fisher information."
-  # This is most likely why hessian is used to compute standard errors.
-  # TODO: Learn the Bernstein–von Mises theorem which explain in detail how
-  # all this works
   stdr <- rep(0, n_features)
   stdh <- rep(0, n_features)
 
@@ -578,20 +547,9 @@ non_nested_std_dev_from_params <- function(
   stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
   stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
 
-  # Below we have almost 1/2 * BIC_k as in Raftery's Bayesian Model Selection
-  # in Social Research eq. 19. The part with reference model M_1 is skipped,
-  # because we use this formula to compute exp(logl) which is in turn used to
-  # compute posterior probabilities using eqs. 34/35. Since the part connected
-  # with M_1 model would be present in all posteriors it cancels out. Hence
-  # the important part is the one computed below.
-  #
-  # TODO: Why everything is divided by n_entities?
-
-  # Eq. 19
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
-  # Eq. 35
   bic <- exp(loglikelihood)
 
   c(likelihood, bic, stdh, stdr)
@@ -629,10 +587,9 @@ non_nested_std_dev_from_params <- function(
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
 #' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
-#' in the code below). The third row is model posterior probability. Then there
+#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
 #' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation (not sure yet what exactly "robust" means).
+#' with robust standard deviation.
 #'
 #' @importFrom pbapply pbapply
 #' @export
