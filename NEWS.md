@@ -5,7 +5,7 @@
   (default) instead of `criterion = 1`, and `prior = "beta"` instead of
   `criterion = 2`. This brings the API in line with `summary.badp_bma()`,
   which already used `prior = "binomial" | "beta"`.
-* **Breaking change**: Renamed `dilution_par` parameter to `omega` for clarity and consistency with statistical literature.
+* **Breaking change**: Renamed `dil.Par` parameter to `omega` for clarity and consistency with statistical literature.
 * Added S3 classes and methods for JSS compliance:
     * `bma()` now returns an object of class `badp_bma` (previously unclassed list).
     * `optim_model_space()` now returns an object of class `badp_model_space`.
