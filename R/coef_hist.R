@@ -127,7 +127,7 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
     # CONDITION for graphs plotted with binwidth:
     if (use_bin_count==0){### Rules for bin width
       # 1) Freedman-Diaconis (FD)
-      if (bin_method=="FD"){bw<-(stats::IQR(alpha[,1])*2)/sqrt(length(alpha[,1]))}
+      if (bin_method=="FD"){bw<-(stats::IQR(alpha[,1])*2)/(length(alpha[,1])^(1/3))}
       # 2) Scott (SC)
       if (bin_method=="SC"){bw<-(stats::sd(alpha[,1])*3.5)/(length(alpha[,1])^(1/3))}
       # 3) Binwidth sizes
@@ -152,7 +152,7 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
         # runs 2..K=R+1 over x_names, so we index betas with i-1.
         beta_col <- betas[, i - 1]
         # 1) Freedman-Diaconis (FD)
-        if (bin_method=="FD"){bw<-(stats::IQR(beta_col)*2)/sqrt(length(beta_col))}
+        if (bin_method=="FD"){bw<-(stats::IQR(beta_col)*2)/(length(beta_col)^(1/3))}
         # 2) Scott (SC)
         if (bin_method=="SC"){bw<-(stats::sd(beta_col)*3.5)/(length(beta_col)^(1/3))}
         # 3) Binwidth sizes
