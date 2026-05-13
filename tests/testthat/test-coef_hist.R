@@ -16,7 +16,7 @@ test_that("coef_hist works with default histogram (FD bin method)", {
   # Default bin_method = "FD", use_kernel = 0. This exercises the per-regressor
   # IQR computation across all betas columns; regression test for the
   # off-by-one where betas[, K] was accessed but betas only has R columns.
-  coef_plots <- expect_no_error(coef_hist(bma_results))
+  coef_plots <- coef_hist(bma_results)
   expect_equal(class(coef_plots), "list")
   expect_equal(length(coef_plots), bma_results$R + 1)
   for (p in coef_plots) {
@@ -27,7 +27,7 @@ test_that("coef_hist works with default histogram (FD bin method)", {
 test_that("coef_hist works with Scott (SC) bin method", {
   bma_results <- bma(badp::small_model_space, round = 3, dilution = 0)
 
-  coef_plots <- expect_no_error(coef_hist(bma_results, bin_method = "SC"))
+  coef_plots <- coef_hist(bma_results, bin_method = "SC")
   expect_equal(length(coef_plots), bma_results$R + 1)
 })
 
@@ -35,9 +35,7 @@ test_that("coef_hist works with user-supplied bin widths", {
   bma_results <- bma(badp::small_model_space, round = 3, dilution = 0)
   K <- bma_results$R + 1
 
-  coef_plots <- expect_no_error(
-    coef_hist(bma_results, bin_method = "vec", bin_widths = rep(0.05, K))
-  )
+  coef_plots <- coef_hist(bma_results, bin_method = "vec", bin_widths = rep(0.05, K))
   expect_equal(length(coef_plots), K)
 })
 
@@ -45,9 +43,7 @@ test_that("coef_hist works with user-supplied bin counts", {
   bma_results <- bma(badp::small_model_space, round = 3, dilution = 0)
   K <- bma_results$R + 1
 
-  coef_plots <- expect_no_error(
-    coef_hist(bma_results, use_bin_count = 1, bin_counts = rep(20, K))
-  )
+  coef_plots <- coef_hist(bma_results, use_bin_count = 1, bin_counts = rep(20, K))
   expect_equal(length(coef_plots), K)
 })
 
