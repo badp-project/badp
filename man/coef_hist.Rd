@@ -29,23 +29,25 @@ coef_hist(
 \code{"SC"} - Scott method; \cr
 \code{"vec"} - user specified bin widths provided through a vector (parameter: \code{bin_widths}).}
 
-\item{bin_widths}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter \code{bin_method = "vec"}.}
+\item{bin_widths}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors plus one for the lagged dependent variable. The vector with bin widths is used only if parameter \code{bin_method = "vec"}.}
 
 \item{use_bin_count}{Parameter taking the values (default: \code{use_bin_count = 0}): \cr
 1 - the histogram will be built based on the number of bins specified by the user through parameter \code{bin_counts}. If \code{use_bin_count = 1}, the function ignores parameter \code{bin_method}. \cr
 0 - the histogram will be built in line with parameter \code{bin_method}.}
 
-\item{bin_counts}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin counts is used only if parameter \code{use_bin_count = 1}.}
+\item{bin_counts}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors plus one for the lagged dependent variable. The vector with bin counts is used only if parameter \code{use_bin_count = 1}.}
 
 \item{use_kernel}{A parameter taking the values (default: \code{use_kernel = 0}):\cr
 1 - the function will build graphs using kernel density for the distribution of coefficients (with \code{use_kernel = 1}, the function ignores parameters \code{bin_method} and \code{use_bin_count}) \cr
 0 - the function will build regular histogram density for the distribution of coefficients}
 }
 \value{
-A list with the graphs of the distribution of coefficients for all the considered regressors.
+A list with the graphs of the distribution of coefficients for all the considered regressors and the lagged dependent variable.
 }
 \description{
-This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes these regressors (half of the model space).
+This function draws graphs of the distribution (in the form of histogram or kernel density) of
+the coefficients for all the considered regressors over the part of the model space that includes
+these regressors (half of the model space).
 }
 \examples{
 \donttest{
