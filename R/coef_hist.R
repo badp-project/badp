@@ -104,7 +104,7 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
                                 ggplot2::labs(
                                   title = paste("Distribution of", x_names[1], "coefficients"),
                                   x = paste0("Coefficients on ",x_names[1]),
-                                  y = "Frequency") +
+                                  y = "Density") +
                                 ggplot2::theme_minimal(base_size = 12) +
                                 ggplot2::theme(
                                   plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
@@ -116,7 +116,7 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
                                   ggplot2::labs(
                                     title = paste("Distribution of", x_names[i], "coefficients"),
                                     x = paste0("Coefficients on ",x_names[i]),
-                                    y = "Frequency") +
+                                    y = "Density") +
                                   ggplot2::theme_minimal(base_size = 12) +
                                   ggplot2::theme(
                                     plot.title = ggplot2::element_text(size = 12, hjust = 0.5, face = "bold"),
