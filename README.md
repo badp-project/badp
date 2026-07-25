@@ -99,7 +99,18 @@ data_prepared <- badp::economic_growth[, 1:5] %>%
 
 The function `optim_model_space()` estimates all possible models (each
 possible subset of regressors) via maximum likelihood, storing the
-results in a list object. For small to moderately sized datasets:
+results in a list object.
+
+**Note:** with strongly correlated regressors, both the estimation and the
+subsequent statistics step may emit warnings (e.g. `NaNs produced`, or a
+message that some models did not converge). The exact reason is
+non-trivial: it is typically connected to degenerate behaviour of the
+likelihood function for some of the models, and understanding it for a
+particular dataset requires inspecting the data (e.g. correlations between
+regressors), the behaviour of the likelihood, and the per-model
+diagnostics stored in the `convergence` element of the result.
+
+For small to moderately sized datasets:
 
 ``` r
 model_space <- badp::optim_model_space(
