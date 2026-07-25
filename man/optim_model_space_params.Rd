@@ -13,7 +13,9 @@ optim_model_space_params(
   nested,
   exact_value = FALSE,
   cl = NULL,
-  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
+  max_restarts = 5,
+  restart_tol = 0.001
 )
 }
 \arguments{
@@ -45,9 +47,26 @@ cluster for parallel processing. If \code{NULL} (the default),
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
 \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+
+\item{max_restarts}{Maximum number of times the BFGS optimization is
+restarted from its previous solution for a single model. A restart resets
+the internal curvature approximation of BFGS, which often makes further
+progress on ill-conditioned likelihood ridges where a single run stalls.
+Default is \code{5}.}
+
+\item{restart_tol}{Log-likelihood improvement between restarts below which
+the optimization is considered converged. Improvements of this size are
+immaterial for posterior model probabilities. Default is \code{1e-3}.}
 }
 \value{
-List (or matrix) of parameters describing analyzed models.
+List (or matrix) of parameters describing analyzed models. The returned
+matrix carries a \code{"convergence"} attribute: a matrix with one column
+per model and rows \code{converged} (1 if the likelihood value stalled,
+0 if the restart budget was exhausted while still improving),
+\code{optim_code} (the \link[stats]{optim} convergence code of the final
+run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+gradient with \code{converged = 1} indicates parameters on a degenerate
+(nearly collinear) likelihood ridge rather than a failed optimization.
 }
 \description{
 Given a dataset and an initial value for parameters, initializes a model

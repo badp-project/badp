@@ -145,10 +145,18 @@ test_that(paste("model_space computes correct model_space list"), {
     init_value    = 0.5
   )
 
-  expect_equal(length(model_space), 6)
+  expect_equal(length(model_space), 7)
   expect_s3_class(model_space, "badp_model_space")
   expect_equal(class(model_space[[1]]), c("matrix","array"))
   expect_equal(class(model_space[[2]]), c("matrix","array"))
+
+  convergence <- model_space$convergence
+  expect_equal(
+    rownames(convergence),
+    c("converged", "optim_code", "n_restarts", "max_abs_gradient")
+  )
+  expect_equal(ncol(convergence), ncol(model_space$params))
+  expect_true(all(convergence["converged", ] %in% c(0, 1)))
 })
 
 

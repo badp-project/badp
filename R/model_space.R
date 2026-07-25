@@ -109,6 +109,54 @@ regressor_names_from_params_vector <- function(params) {
   names(regressors_subset)
 }
 
+# Run BFGS repeatedly, each time starting from the previous solution, until
+# the log-likelihood value stops improving. A restart resets BFGS's internal
+# curvature approximation, which often makes further progress on
+# ill-conditioned ridges where a single run stalls at its relative tolerance.
+#
+# The value is considered converged when a restart improves it by no more
+# than restart_tol. Note that the gradient norm is deliberately not used as
+# the convergence criterion: for models with nearly collinear regressors the
+# likelihood forms a razor-thin curved ridge on which the value converges
+# while the gradient stays large (the parameters along the ridge are simply
+# not identified by the data). The final gradient norm is reported in the
+# diagnostics so that such models can be identified downstream.
+optim_with_restarts <- function(par, lik_tape, control, max_restarts,
+                                restart_tol) {
+  gr <- function(p) as.numeric(lik_tape$jacobian(p))
+  maximize <- !is.null(control$fnscale) && control$fnscale < 0
+  gain <- function(new, old) {
+    if (maximize) new$value - old$value else old$value - new$value
+  }
+
+  fit <- stats::optim(par, lik_tape, gr = gr, method = "BFGS",
+                      control = control)
+
+  n_restarts <- 0
+  value_stalled <- FALSE
+  while (n_restarts < max_restarts) {
+    refit <- stats::optim(fit$par, lik_tape, gr = gr, method = "BFGS",
+                          control = control)
+    n_restarts <- n_restarts + 1
+    improvement <- gain(refit, fit)
+    if (improvement > 0) fit <- refit
+    if (improvement <= restart_tol && refit$convergence == 0) {
+      value_stalled <- TRUE
+      break
+    }
+  }
+
+  list(
+    par = fit$par,
+    diagnostics = c(
+      converged = as.numeric(value_stalled && fit$convergence == 0),
+      optim_code = fit$convergence,
+      n_restarts = n_restarts,
+      max_abs_gradient = max(abs(gr(fit$par)))
+    )
+  )
+}
+
 #' Helper-function - finds parameters minimizing log-likelihood function
 #' for the nested version of the SEM setup, using BFGS method
 #'
@@ -125,6 +173,14 @@ regressor_names_from_params_vector <- function(params) {
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
+#' @param max_restarts Maximum number of times the BFGS optimization is
+#' restarted from its previous solution for a single model. A restart resets
+#' the internal curvature approximation of BFGS, which often makes further
+#' progress on ill-conditioned likelihood ridges where a single run stalls.
+#' Default is \code{5}.
+#' @param restart_tol Log-likelihood improvement between restarts below which
+#' the optimization is considered converged. Improvements of this size are
+#' immaterial for posterior model probabilities. Default is \code{1e-3}.
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
@@ -137,7 +193,9 @@ nested_optimization_wrapper <- function(
     dep_var_col,
     data,
     exact_value,
-    control
+    control,
+    max_restarts,
+    restart_tol
     ) {
   regressors_subset <- regressor_names_from_params_vector(params)
 
@@ -164,13 +222,13 @@ nested_optimization_wrapper <- function(
     as.numeric(params_no_na)
   )
 
-  optimized <- stats::optim(as.numeric(params_no_na), lik_tape,
-                            gr = function(p) as.numeric(lik_tape$jacobian(p)),
-                            method = "BFGS",
-                            control = control)
+  optimized <- optim_with_restarts(as.numeric(params_no_na), lik_tape,
+                                   control = control,
+                                   max_restarts = max_restarts,
+                                   restart_tol = restart_tol)
 
-  params[!is.na(params)] <- optimized[[1]]
-  params
+  params[!is.na(params)] <- optimized$par
+  c(params, optimized$diagnostics)
 }
 
 
@@ -197,6 +255,14 @@ nested_optimization_wrapper <- function(
 #' number of distinct values in \code{timestamp_col}). Used to determine the
 #' required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
 #' and for the full model.
+#' @param max_restarts Maximum number of times the BFGS optimization is
+#' restarted from its previous solution for a single model. A restart resets
+#' the internal curvature approximation of BFGS, which often makes further
+#' progress on ill-conditioned likelihood ridges where a single run stalls.
+#' Default is \code{5}.
+#' @param restart_tol Log-likelihood improvement between restarts below which
+#' the optimization is considered converged. Improvements of this size are
+#' immaterial for posterior model probabilities. Default is \code{1e-3}.
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
@@ -211,7 +277,9 @@ non_nested_optimization_wrapper <- function(
     exact_value,
     n_all_regressors,
     n_timestamps,
-    control
+    control,
+    max_restarts,
+    restart_tol
   ) {
   # derive the set of all matrices needed, based on reduced df
   regressors_subset <- regressor_names_from_params_vector(params)
@@ -262,13 +330,13 @@ non_nested_optimization_wrapper <- function(
     as.numeric(params_no_na)
   )
 
-  optimized <- stats::optim(as.numeric(params_no_na), lik_tape,
-                            gr = function(p) as.numeric(lik_tape$jacobian(p)),
-                            method = "BFGS",
-                            control = control)
+  optimized <- optim_with_restarts(as.numeric(params_no_na), lik_tape,
+                                   control = control,
+                                   max_restarts = max_restarts,
+                                   restart_tol = restart_tol)
 
-  params[!is.na(params)] <- optimized[[1]]
-  params
+  params[!is.na(params)] <- optimized$par
+  c(params, optimized$diagnostics)
 }
 
 
@@ -300,9 +368,24 @@ non_nested_optimization_wrapper <- function(
 #' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
 #' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
 #' approximation routine is used for each model in \code{params}.
+#' @param max_restarts Maximum number of times the BFGS optimization is
+#' restarted from its previous solution for a single model. A restart resets
+#' the internal curvature approximation of BFGS, which often makes further
+#' progress on ill-conditioned likelihood ridges where a single run stalls.
+#' Default is \code{5}.
+#' @param restart_tol Log-likelihood improvement between restarts below which
+#' the optimization is considered converged. Improvements of this size are
+#' immaterial for posterior model probabilities. Default is \code{1e-3}.
 #'
 #' @return
-#' List (or matrix) of parameters describing analyzed models.
+#' List (or matrix) of parameters describing analyzed models. The returned
+#' matrix carries a \code{"convergence"} attribute: a matrix with one column
+#' per model and rows \code{converged} (1 if the likelihood value stalled,
+#' 0 if the restart budget was exhausted while still improving),
+#' \code{optim_code} (the \link[stats]{optim} convergence code of the final
+#' run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+#' gradient with \code{converged = 1} indicates parameters on a degenerate
+#' (nearly collinear) likelihood ridge rather than a failed optimization.
 #'
 #' @importFrom pbapply pbapply
 #'
@@ -315,7 +398,9 @@ optim_model_space_params <- function(
   init_value,
   nested,
   exact_value = FALSE, cl = NULL,
-  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
+  max_restarts = 5,
+  restart_tol = 1e-3
   ) {
 
   all_regressors <- df %>%
@@ -341,20 +426,21 @@ optim_model_space_params <- function(
                        which_matrices = c("Y1", "Y2", "Z", "res_maker_matrix"))
 
     # optimization performed for nested version
-    return(
-      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
-        nested_optimization_wrapper(
-          x,
-          df = df,
-          timestamp_col = {{ timestamp_col }},
-          entity_col = {{ entity_col }},
-          dep_var_col = {{ dep_var_col }},
-          data = matrices_shared_across_models,
-          exact_value = exact_value,
-          control = control
-          )
-      }, cl = cl)
-    )
+    raw <- pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+      nested_optimization_wrapper(
+        x,
+        df = df,
+        timestamp_col = {{ timestamp_col }},
+        entity_col = {{ entity_col }},
+        dep_var_col = {{ dep_var_col }},
+        data = matrices_shared_across_models,
+        exact_value = exact_value,
+        control = control,
+        max_restarts = max_restarts,
+        restart_tol = restart_tol
+        )
+    }, cl = cl)
+    return(split_convergence_diagnostics(raw, nrow(init_params)))
   } else {
     # optimization performed for non-nested version
     n_all_regressors = ncol(all_regressors)
@@ -363,22 +449,34 @@ optim_model_space_params <- function(
       nrow() - 1
 
 
-    return(
-      pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
-        non_nested_optimization_wrapper(
-          x,
-          df = df,
-          timestamp_col = {{ timestamp_col }},
-          entity_col = {{ entity_col }},
-          dep_var_col = {{ dep_var_col }},
-          exact_value = exact_value,
-          n_all_regressors = n_all_regressors,
-          n_timestamps = n_timestamps,
-          control = control
-          )
-      }, cl = cl)
-    )
+    raw <- pbapply::pbapply(init_params, MARGIN = 2,  function(x) {
+      non_nested_optimization_wrapper(
+        x,
+        df = df,
+        timestamp_col = {{ timestamp_col }},
+        entity_col = {{ entity_col }},
+        dep_var_col = {{ dep_var_col }},
+        exact_value = exact_value,
+        n_all_regressors = n_all_regressors,
+        n_timestamps = n_timestamps,
+        control = control,
+        max_restarts = max_restarts,
+        restart_tol = restart_tol
+        )
+    }, cl = cl)
+    return(split_convergence_diagnostics(raw, nrow(init_params)))
   }
+}
+
+# The optimization wrappers return the optimized parameter vector with four
+# convergence-diagnostic values appended, so that pbapply can carry both
+# through a single matrix. Split them apart again: the diagnostics travel as
+# an attribute so that the params matrix keeps its documented shape.
+split_convergence_diagnostics <- function(raw, n_param_rows) {
+  params <- raw[seq_len(n_param_rows), , drop = FALSE]
+  diagnostics <- raw[-seq_len(n_param_rows), , drop = FALSE]
+  attr(params, "convergence") <- diagnostics
+  params
 }
 
 #' Helper function - wraps single execution of the log-likelihood & deviation
@@ -725,6 +823,14 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' \code{nested_std_dev_from_params()}. If \code{FALSE}, use the non-nested
 #' approach via \code{non_nested_std_dev_from_params()}. The choice affects which
 #' approximation routine is used for each model in \code{params}.
+#' @param max_restarts Maximum number of times the BFGS optimization is
+#' restarted from its previous solution for a single model. A restart resets
+#' the internal curvature approximation of BFGS, which often makes further
+#' progress on ill-conditioned likelihood ridges where a single run stalls.
+#' Default is \code{5}.
+#' @param restart_tol Log-likelihood improvement between restarts below which
+#' the optimization is considered converged. Improvements of this size are
+#' immaterial for posterior model probabilities. Default is \code{1e-3}.
 #'
 #' @importFrom parallel parApply
 #'
@@ -736,7 +842,15 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' 3) reg_names - vector with the names of the variables \cr
 #' 4) observations_num - number of observations \cr
 #' 5) df - data frame used in estimation \cr
-#' 6) is_nested - logical indicating whether nested approach was used
+#' 6) is_nested - logical indicating whether nested approach was used \cr
+#' 7) convergence - matrix of per-model convergence diagnostics with rows
+#' \code{converged} (1 if the likelihood value stalled across restarts, 0 if
+#' the restart budget was exhausted while the value was still improving),
+#' \code{optim_code} (the \link[stats]{optim} convergence code of the final
+#' run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+#' gradient with \code{converged = 1} indicates parameters on a degenerate
+#' (nearly collinear) likelihood ridge; the likelihood value is trustworthy
+#' but the standard errors of the affected coordinates are not.
 #'
 #' @section Methods:
 #' Objects of class \code{badp_model_space} have the following methods available:
@@ -778,7 +892,9 @@ optim_model_space <-
     nested = TRUE,
     exact_value = FALSE,
     cl = NULL,
-    control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+    control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
+    max_restarts = 5,
+    restart_tol = 1e-3
   ) {
     params <- optim_model_space_params(
       df            = df,
@@ -789,8 +905,27 @@ optim_model_space <-
       nested        = nested,
       exact_value   = exact_value,
       cl            = cl,
-      control       = control
+      control       = control,
+      max_restarts  = max_restarts,
+      restart_tol   = restart_tol
     )
+
+    convergence <- attr(params, "convergence")
+    attr(params, "convergence") <- NULL
+
+    if (!is.null(convergence)) {
+      n_nonconverged <- sum(convergence["converged", ] == 0)
+      if (n_nonconverged > 0) {
+        warning(sprintf(
+          paste("%d of %d models did not converge (restart budget exhausted",
+                "while the likelihood was still improving). Their",
+                "likelihoods may be understated and their standard errors",
+                "unreliable; see the 'convergence' element of the returned",
+                "object. Consider increasing max_restarts."),
+          n_nonconverged, ncol(convergence)
+        ))
+      }
+    }
 
     stats <- compute_model_space_stats(
       df            = df,
@@ -807,7 +942,8 @@ optim_model_space <-
 
     structure(
       list(params = params, stats = stats, reg_names = reg_names,
-           observations_num = observations_num, df = df, is_nested = nested),
+           observations_num = observations_num, df = df, is_nested = nested,
+           convergence = convergence),
       class = "badp_model_space"
     )
   }

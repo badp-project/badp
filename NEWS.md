@@ -9,6 +9,14 @@
   likelihood values at given parameters are unchanged. The finite-difference
   `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
   and `optimbase` dependencies were dropped in favour of `RTMB`.
+* Per-model optimization is now restarted until the log-likelihood value
+  stops improving (`max_restarts` and `restart_tol` arguments of
+  `optim_model_space()`), and per-model convergence diagnostics (converged
+  flag, `optim` code, number of restarts, final gradient norm) are stored in
+  the new `convergence` element of `badp_model_space` objects. Non-converged
+  models trigger a warning in `optim_model_space()` and `bma()` and are
+  reported by `summary()`/`print()`; they are deliberately not excluded from
+  the analysis.
 * **Breaking change**: `best_models()` now takes a character `prior` argument
   in place of the integer `criterion` argument. Use `prior = "binomial"`
   (default) instead of `criterion = 1`, and `prior = "beta"` instead of
