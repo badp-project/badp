@@ -1,12 +1,3 @@
-#' @useDynLib badp, .registration = TRUE
-
-# Import C++ dependencies to satisfy CRAN checks.
-# Fixes the following NOTE:
-# Namespace in Imports field not imported from: ‘X’
-#   All declared Imports should be used.
-#' @importFrom Rcpp sourceCpp
-#' @importFrom RcppArmadillo armadillo_version
-
 generate_params_vector <- function(value, n_timestamps, n_regressors,
                                    n_lin_related_regressors) {
   alpha <- value
@@ -57,6 +48,99 @@ sem_params_to_list <- function(params, n_periods, n_tot_regressors,
 
   list(alpha = alpha, phi_0 = phi_0, err_var = err_var, dep_vars = dep_vars,
        beta = beta, phi_1 = phi_1, phis = phis, psis = psis)
+}
+
+# Core SEM likelihood computation (cf. Moral-Benito, Appendix A.1).
+#
+# AD-generic: parameters may be plain numerics or RTMB AD types, so the same
+# code serves direct evaluation and automatic-differentiation taping.
+#
+# On the plain numeric path, a parameter point whose implied covariance
+# matrices S1 or H are not (numerically) positive definite yields NA: the
+# likelihood is undefined there. On the AD path the Cholesky guards cannot
+# early-return (values flow through the tape), so an infeasible point
+# surfaces as NaN instead, which optimizers treat the same way.
+sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2,
+                                     cur_Z, cur_Y2 = NULL, beta = NULL,
+                                     phi_1 = NULL, phis = NULL, psis = NULL,
+                                     per_entity = FALSE, exact_value = TRUE) {
+  res_maker_matrix <- residual_maker_matrix(cur_Z)
+
+  n_entities <- nrow(Y1)
+  n_periods <- length(dep_vars)
+  n_tot_regressors <- ncol(Y2) / (n_periods - 1)
+  n_lin_related_regressors <- length(beta)
+
+  B <- sem_B_matrix(alpha, n_periods, beta)
+  C <- sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1)
+  S <- sem_sigma_matrix(err_var, dep_vars, phis, psis)
+
+  B1 <- B[[1]]
+  S1 <- S[[1]]
+
+  U1 <- if (n_lin_related_regressors == 0) {
+    Y1 %*% t(B1) - cur_Z %*% t(C)
+  } else {
+    cur_Y2 %*% t(B[[2]]) + Y1 %*% t(B1) - cur_Z %*% t(C)
+  }
+
+  taping <- inherits(S1, "advector")
+
+  if (taping) {
+    S1_chol <- chol(S1)
+    S11_inverse <- solve(S1)
+  } else {
+    S1_chol <- tryCatch(chol(S1), error = function(e) NULL)
+    if (is.null(S1_chol)) return(NA_real_)
+    S11_inverse <- chol2inv(S1_chol)
+  }
+  S1_logdet <- 2 * sum(log(diag(S1_chol)))
+  if (!taping && !is.finite(S1_logdet)) return(NA_real_)
+
+  # this term should be 0 if the lagged dependent variable is the only
+  # regressor
+  H_logdet <- 0
+  if (n_tot_regressors >= 1) {
+    S2 <- S[[2]]
+    M <- Y2 - U1 %*% S11_inverse %*% S2
+    # In theory H = M' P M with P a projection matrix (eigenvalues zero or
+    # one), so H is guaranteed to be positive semi-definite. In practice,
+    # when the true H is singular or close to singular, numerical imprecision
+    # can make it singular or non-positive-definite. Cholesky factorization
+    # detects exactly that, in which case the likelihood is undefined at this
+    # parameter point. R's chol() only reads the upper triangle, which
+    # resolves the floating-point asymmetry between the triangles of H.
+    H_scaled <- (t(M) %*% res_maker_matrix %*% M) / n_entities
+    if (taping) {
+      H_chol <- chol(H_scaled)
+    } else {
+      H_chol <- tryCatch(chol(H_scaled), error = function(e) NULL)
+      if (is.null(H_chol)) return(NA_real_)
+    }
+    H_logdet <- 2 * sum(log(diag(H_chol)))
+    if (!taping && !is.finite(H_logdet)) return(NA_real_)
+  }
+
+  likelihood <- -n_entities / 2 * (S1_logdet + H_logdet)
+
+  if (exact_value) {
+    gaussian_normalization_const <- log(2 * pi) * n_entities *
+      (n_periods + (n_periods - 1) * n_tot_regressors) / 2
+    trace_simplification_term <-
+      0.5 * n_entities * (n_periods - 1) * n_tot_regressors
+    likelihood <- likelihood -
+      gaussian_normalization_const - trace_simplification_term
+  }
+
+  if (!per_entity) {
+    # sum(A * B) with symmetric A, B is trace(A %*% B)
+    likelihood - 0.5 * sum(S11_inverse * (t(U1) %*% U1))
+  } else {
+    # row-wise diag(U1 %*% S11_inverse %*% t(U1)) without forming the
+    # n_entities x n_entities product
+    entity_terms <- ((U1 %*% S11_inverse) * U1) %*% matrix(1, n_periods, 1)
+    likelihood / n_entities - 0.5 * entity_terms[, 1]
+  }
 }
 
 #' List of matrices for SEM model
@@ -210,6 +294,13 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
 #' The value of the likelihood for SEM model (or a part of interest of the
 #' likelihood)
 #'
+# RTMB exports solve and diag as S4 generics because the base versions cannot
+# dispatch on AD types. They must be imported into the package namespace,
+# otherwise the AD path would silently fall through to base::solve/diag,
+# which treat AD objects as plain doubles. For numeric input the RTMB
+# generics fall back to the base behaviour.
+#' @importFrom RTMB solve diag MakeTape ADoverload
+#'
 #' @export
 #'
 #' @examples
@@ -255,7 +346,9 @@ sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
         ncol(data$cur_Y2) / (n_periods - 1)
       }
 
-      if (is.double(params)) {
+      # scalar shorthand: expand a single starting value to a full parameter
+      # vector (a full-length vector, numeric or AD, is used as is)
+      if (is.double(params) && length(params) == 1) {
         params <-
           generate_params_vector(
             value = params, n_timestamps = n_periods,

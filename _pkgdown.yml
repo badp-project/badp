@@ -91,7 +91,6 @@ reference:
       - sem_dep_var_matrix
       - sem_regressors_matrix
       - residual_maker_matrix
-      - hessian
 
   - title: "Datasets"
     desc: "Bundled example datasets and pre-computed model spaces."
