@@ -22,8 +22,13 @@ natural numbers can be used as timestamps}
 
 \item{dep_var_col}{Column with dependent variable}
 
-\item{init_value}{Initial value for parameters present in the model. Default
-is \code{1}.}
+\item{init_value}{Either a single number -- every parameter present in a
+model starts at that value (the default behaviour) -- or a function of one
+argument \code{n} returning \code{n} starting values (e.g.
+\code{function(n) runif(n, 0.1, 1)}), which draws an independent random
+starting point for every parameter of every model and thus enables
+randomized multi-start experiments. Generated values must be non-zero,
+because zeros encode excluded parameters. Default is \code{1}.}
 }
 \value{
 matrix of model parameters

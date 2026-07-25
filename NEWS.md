@@ -9,6 +9,10 @@
   likelihood values at given parameters are unchanged. The finite-difference
   `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
   and `optimbase` dependencies were dropped in favour of `RTMB`.
+* `init_value` (in `optim_model_space()` and related functions) now also
+  accepts a generator function of one argument `n` returning `n` starting
+  values (e.g. `function(n) runif(n, 0.1, 1)`), enabling randomized
+  multi-start experiments. Passing a single number behaves as before.
 * Per-model optimization is now restarted until the log-likelihood value
   stops improving (`max_restarts` and `restart_tol` arguments of
   `optim_model_space()`), and per-model convergence diagnostics (converged

@@ -27,8 +27,13 @@ optim_model_space(
 
 \item{dep_var_col}{Column with the dependent variable}
 
-\item{init_value}{The value with which the model space will be initialized.
-This will be the starting point for the numerical optimization.}
+\item{init_value}{Starting point for the numerical optimization. Either a single number -- every parameter present in a
+model starts at that value (the default behaviour) -- or a function of one
+argument \code{n} returning \code{n} starting values (e.g.
+\code{function(n) runif(n, 0.1, 1)}), which draws an independent random
+starting point for every parameter of every model and thus enables
+randomized multi-start experiments. Generated values must be non-zero,
+because zeros encode excluded parameters.}
 
 \item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
 deviations using the nested-model approach via
