@@ -13,7 +13,9 @@ optim_model_space(
   nested = TRUE,
   exact_value = FALSE,
   cl = NULL,
-  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
+  max_restarts = 5,
+  restart_tol = 0.001
 )
 }
 \arguments{
@@ -46,6 +48,16 @@ cluster for parallel processing. If \code{NULL} (the default),
 passed to \link[stats]{optim}. Default is
 \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}, but note
 that \code{scale} is used only for adjusting the \code{parscale} element added later in the function code.}
+
+\item{max_restarts}{Maximum number of times the BFGS optimization is
+restarted from its previous solution for a single model. A restart resets
+the internal curvature approximation of BFGS, which often makes further
+progress on ill-conditioned likelihood ridges where a single run stalls.
+Default is \code{5}.}
+
+\item{restart_tol}{Log-likelihood improvement between restarts below which
+the optimization is considered converged. Improvements of this size are
+immaterial for posterior model probabilities. Default is \code{1e-3}.}
 }
 \value{
 An object of class \code{badp_model_space}, which is a list with the following elements: \cr
@@ -56,7 +68,15 @@ standard errors for all estimated models \cr
 \item reg_names - vector with the names of the variables \cr
 \item observations_num - number of observations \cr
 \item df - data frame used in estimation \cr
-\item is_nested - logical indicating whether nested approach was used
+\item is_nested - logical indicating whether nested approach was used \cr
+\item convergence - matrix of per-model convergence diagnostics with rows
+\code{converged} (1 if the likelihood value stalled across restarts, 0 if
+the restart budget was exhausted while the value was still improving),
+\code{optim_code} (the \link[stats]{optim} convergence code of the final
+run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+gradient with \code{converged = 1} indicates parameters on a degenerate
+(nearly collinear) likelihood ridge; the likelihood value is trustworthy
+but the standard errors of the affected coordinates are not.
 }
 }
 \description{

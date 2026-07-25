@@ -58,6 +58,9 @@ print.badp_model_space <- function(x, ...) {
 #'     \code{NULL} if not stored.
 #'   \item \code{likelihoods} - Per-model log-likelihood values (row 1 of
 #'     \code{object$stats}), or \code{NULL} if not available.
+#'   \item \code{num_nonconverged} - Number of models whose optimization did
+#'     not converge, or \code{NULL} if the model space carries no convergence
+#'     diagnostics (e.g. objects created before badp 0.5.0).
 #' }
 #'
 #' @seealso \code{\link{print.badp_model_space}},
@@ -85,6 +88,12 @@ summary.badp_model_space <- function(object, ...) {
 
   data_dim <- if (!is.null(object$df)) dim(object$df) else NULL
 
+  num_nonconverged <- if (!is.null(object$convergence)) {
+    sum(object$convergence["converged", ] == 0)
+  } else {
+    NULL
+  }
+
   result <- list(
     num_models       = num_models,
     num_regressors   = R,
@@ -95,7 +104,8 @@ summary.badp_model_space <- function(object, ...) {
     dep_var_name     = reg[1L],
     regressor_names  = reg[-1L],
     data_dim         = data_dim,
-    likelihoods      = likelihoods
+    likelihoods      = likelihoods,
+    num_nonconverged = num_nonconverged
   )
   class(result) <- "summary.badp_model_space"
   result
@@ -141,6 +151,17 @@ print.summary.badp_model_space <- function(x, ...) {
   cat("  Nested model space:      ",
       if (isTRUE(x$is_nested)) "yes" else "no", "\n", sep = "")
   cat("\n")
+
+  if (!is.null(x$num_nonconverged)) {
+    cat("Optimization:\n")
+    if (x$num_nonconverged > 0) {
+      cat("  Non-converged models:    ", x$num_nonconverged,
+          "  (see the 'convergence' element)\n", sep = "")
+    } else {
+      cat("  All models converged.\n")
+    }
+    cat("\n")
+  }
 
   if (!is.null(x$likelihoods) && length(x$likelihoods) > 0L) {
     finite_lik <- x$likelihoods[is.finite(x$likelihoods)]

@@ -71,6 +71,18 @@ bma <- function(
   dilution = 0,
   omega = 0.5
 ) {
+  if (!is.null(model_space$convergence)) {
+    n_nonconverged <- sum(model_space$convergence["converged", ] == 0)
+    if (n_nonconverged > 0) {
+      warning(sprintf(
+        paste("%d of %d models in the model space did not converge; their",
+              "posterior model probabilities may be understated. See the",
+              "'convergence' element of the model space object."),
+        n_nonconverged, ncol(model_space$convergence)
+      ))
+    }
+  }
+
   reg_names <- model_space[[3]]
   # Regressors with lag
   K <- length(reg_names)

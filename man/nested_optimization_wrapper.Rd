@@ -13,7 +13,9 @@ nested_optimization_wrapper(
   dep_var_col,
   data,
   exact_value,
-  control
+  control,
+  max_restarts,
+  restart_tol
 )
 }
 \arguments{
@@ -37,6 +39,16 @@ computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
 \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+
+\item{max_restarts}{Maximum number of times the BFGS optimization is
+restarted from its previous solution for a single model. A restart resets
+the internal curvature approximation of BFGS, which often makes further
+progress on ill-conditioned likelihood ridges where a single run stalls.
+Default is \code{5}.}
+
+\item{restart_tol}{Log-likelihood improvement between restarts below which
+the optimization is considered converged. Improvements of this size are
+immaterial for posterior model probabilities. Default is \code{1e-3}.}
 }
 \value{
 List (or matrix) of parameters describing analyzed models.
