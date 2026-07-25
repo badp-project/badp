@@ -1,5 +1,14 @@
 # badp 0.5.0
 
+* Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
+  R implementation differentiated via `RTMB` (automatic differentiation).
+  Optimization now uses exact gradients instead of finite differences, and
+  standard errors are computed from the exact Hessian and per-entity score
+  vectors instead of finite-difference approximations. Optimized parameters
+  and standard errors may therefore differ slightly (and are more accurate);
+  likelihood values at given parameters are unchanged. The finite-difference
+  `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
+  and `optimbase` dependencies were dropped in favour of `RTMB`.
 * **Breaking change**: `best_models()` now takes a character `prior` argument
   in place of the integer `criterion` argument. Use `prior = "binomial"`
   (default) instead of `criterion = 1`, and `prior = "beta"` instead of

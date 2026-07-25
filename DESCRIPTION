@@ -49,22 +49,16 @@ Imports:
     gridExtra,
     knitr,
     magrittr,
-    optimbase,
     parallel,
     patchwork (>= 1.1.0),
     pbapply,
-    Rcpp,
-    RcppArmadillo,
     rje,
     rlang,
-    rootSolve,
+    RTMB,
     stats,
     tibble,
     tidyr,
     tidyselect
-LinkingTo:
-    Rcpp,
-    RcppArmadillo
 VignetteBuilder: knitr
 Depends:
     R (>= 3.5)

@@ -157,8 +157,15 @@ nested_optimization_wrapper <- function(
   control$parscale <- control$scale * params_no_na
   control$scale <- NULL
 
-  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                            exact_value = exact_value,
+  # Tape the likelihood once for this model; BFGS then uses the exact
+  # (automatically differentiated) gradient instead of finite differences.
+  lik_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, exact_value = exact_value),
+    as.numeric(params_no_na)
+  )
+
+  optimized <- stats::optim(as.numeric(params_no_na), lik_tape,
+                            gr = function(p) as.numeric(lik_tape$jacobian(p)),
                             method = "BFGS",
                             control = control)
 
@@ -248,8 +255,15 @@ non_nested_optimization_wrapper <- function(
   control$parscale <- control$scale * params_no_na
   control$scale <- NULL
 
-  optimized <- stats::optim(params_no_na, sem_likelihood, data = data,
-                            exact_value = exact_value,
+  # Tape the likelihood once for this model; BFGS then uses the exact
+  # (automatically differentiated) gradient instead of finite differences.
+  lik_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, exact_value = exact_value),
+    as.numeric(params_no_na)
+  )
+
+  optimized <- stats::optim(as.numeric(params_no_na), lik_tape,
+                            gr = function(p) as.numeric(lik_tape$jacobian(p)),
                             method = "BFGS",
                             control = control)
 
@@ -422,13 +436,21 @@ nested_std_dev_from_params <- function(
     sem_likelihood(params = params_no_na, data = data,
                    exact_value = TRUE)
 
-  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+  # Exact derivatives from the AD tape. hess is the negative Hessian of the
+  # log-likelihood (observed information), matching the sign convention of
+  # the finite-difference hessian() used previously. Gmat holds the
+  # per-entity score vectors.
+  lik_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, exact_value = TRUE),
+    as.numeric(params_no_na)
+  )
+  hess <- -lik_tape$jacfun()$jacobian(as.numeric(params_no_na))
 
-  likelihood_per_entity <-
-    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
-
-  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
-                              per_entity = TRUE)
+  per_entity_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, per_entity = TRUE),
+    as.numeric(params_no_na)
+  )
+  Gmat <- per_entity_tape$jacobian(as.numeric(params_no_na))
   Imat <- crossprod(Gmat)
 
   stdr <- rep(0, n_features)
@@ -518,13 +540,21 @@ non_nested_std_dev_from_params <- function(
     sem_likelihood(params = params_no_na, data = data,
                    exact_value = TRUE)
 
-  hess <- hessian(sem_likelihood, theta = params_no_na, data = data)
+  # Exact derivatives from the AD tape. hess is the negative Hessian of the
+  # log-likelihood (observed information), matching the sign convention of
+  # the finite-difference hessian() used previously. Gmat holds the
+  # per-entity score vectors.
+  lik_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, exact_value = TRUE),
+    as.numeric(params_no_na)
+  )
+  hess <- -lik_tape$jacfun()$jacobian(as.numeric(params_no_na))
 
-  likelihood_per_entity <-
-    sem_likelihood(params_no_na, data = data, per_entity = TRUE)
-
-  Gmat <- rootSolve::gradient(sem_likelihood, params_no_na, data = data,
-                              per_entity = TRUE)
+  per_entity_tape <- RTMB::MakeTape(
+    function(p) sem_likelihood(p, data = data, per_entity = TRUE),
+    as.numeric(params_no_na)
+  )
+  Gmat <- per_entity_tape$jacobian(as.numeric(params_no_na))
   Imat <- crossprod(Gmat)
 
   stdr <- rep(0, n_features)
