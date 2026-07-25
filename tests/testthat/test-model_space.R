@@ -212,3 +212,29 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
   expect_true(all(model_space$stats[masks$non_zero == 1] != 0))
   expect_true(all(model_space$stats[masks$greater_than_zero == 1] > 0))
 })
+
+
+test_that("init_model_space_params accepts a generator function for init_value", {
+  df <- badp::economic_growth[, 1:5]
+
+  constant_params <- init_model_space_params(df, year, country, gdp,
+                                             init_value = 0.7)
+
+  set.seed(42)
+  random_params <- init_model_space_params(
+    df, year, country, gdp, init_value = function(n) runif(n, 0.1, 1))
+
+  # same shape and the same exclusion (NA) pattern as the constant version
+  expect_equal(dim(random_params), dim(constant_params))
+  expect_equal(is.na(random_params), is.na(constant_params))
+
+  values <- random_params[!is.na(random_params)]
+  expect_true(all(values >= 0.1 & values <= 1))
+  expect_gt(length(unique(values)), 1)
+
+  # reproducible under a seed
+  set.seed(42)
+  random_params_again <- init_model_space_params(
+    df, year, country, gdp, init_value = function(n) runif(n, 0.1, 1))
+  expect_equal(random_params, random_params_again)
+})

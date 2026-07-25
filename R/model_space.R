@@ -18,8 +18,13 @@
 #' natural numbers can be used as timestamps
 #' @param entity_col Column which determines entities (e.g. countries, people)
 #' @param dep_var_col Column with dependent variable
-#' @param init_value Initial value for parameters present in the model. Default
-#' is \code{1}.
+#' @param init_value Either a single number, then every parameter present in a
+#' model starts at that value (the default behaviour), or a function of one
+#' argument \code{n} returning \code{n} starting values (e.g.
+#' \code{function(n) runif(n, 0.1, 1)}), which generates
+#' starting point for every parameter of every model and thus enables, e.g., grid or
+#' randomized multi-start experiments. Generated values must be non-zero,
+#' because zeros encode excluded parameters. Default is \code{1}.
 #'
 #' @return matrix of model parameters
 #'
@@ -53,17 +58,31 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_timestamps <- counts[[1]] - 1
   n_entities <- counts[[2]]
 
-  regressors_subsets_matrix <-
-    (rje::powerSetMat(n_regressors) * init_value)
+  # init_value can be a single number (every parameter starts there) or a
+  # generator function of one argument n returning n starting values, which
+  # allows randomized multi-start experiments. Zeros must not be generated:
+  # a zero encodes an excluded parameter and is turned into NA below.
+  init_fun <- if (is.function(init_value)) {
+    init_value
+  } else {
+    function(n) rep(init_value, n)
+  }
+
+  fill_mask <- function(mask) {
+    mask[mask == 1] <- init_fun(sum(mask == 1))
+    mask
+  }
+  inclusion_mask <- rje::powerSetMat(n_regressors)
 
   linear_params_matrix <-
-    t(cbind(regressors_subsets_matrix, regressors_subsets_matrix))
+    t(cbind(fill_mask(inclusion_mask), fill_mask(inclusion_mask)))
 
   rownames(linear_params_matrix) <-
     c(paste('beta', regressors, sep="_"), paste('phi_1', regressors, sep="_"))
 
   dep_var_matrix <-
-    t(matrix(init_value, nrow = 2^n_regressors, ncol = 3 + n_timestamps))
+    t(matrix(init_fun(2^n_regressors * (3 + n_timestamps)),
+             nrow = 2^n_regressors, ncol = 3 + n_timestamps))
   rownames(dep_var_matrix) <- c(c('alpha', 'phi_0', 'err_var'),
                                 paste('dep_var', 1:n_timestamps, sep = '_'))
 
@@ -71,7 +90,8 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_psis <- n_regressors * (n_timestamps - 1) * n_timestamps / 2
 
   psis_phis_matrix <-
-    matrix(init_value, nrow = n_phis + n_psis, ncol = 2^n_regressors)
+    matrix(init_fun((n_phis + n_psis) * 2^n_regressors),
+           nrow = n_phis + n_psis, ncol = 2^n_regressors)
 
   . <- NULL
   rbind(dep_var_matrix, linear_params_matrix, psis_phis_matrix) %>%
@@ -212,7 +232,9 @@ nested_optimization_wrapper <- function(
   params_no_na <- stats::na.omit(params)
 
   # Adjust the optimization control parameters.
-  control$parscale <- control$scale * params_no_na
+  # parscale entries must be positive; initial values can be negative when
+  # init_value is a generator function.
+  control$parscale <- control$scale * abs(params_no_na)
   control$scale <- NULL
 
   # Tape the likelihood once for this model; BFGS then uses the exact
@@ -320,7 +342,9 @@ non_nested_optimization_wrapper <- function(
   params_no_na <- stats::na.omit(params)
 
   # Adjust the optimization control parameters.
-  control$parscale <- control$scale * params_no_na
+  # parscale entries must be positive; initial values can be negative when
+  # init_value is a generator function.
+  control$parscale <- control$scale * abs(params_no_na)
   control$scale <- NULL
 
   # Tape the likelihood once for this model; BFGS then uses the exact
@@ -352,8 +376,13 @@ non_nested_optimization_wrapper <- function(
 #' @param timestamp_col The name of the column with time stamps.
 #' @param entity_col Column with entities (e.g. countries).
 #' @param dep_var_col Column with the dependent variable.
-#' @param init_value The value with which the model space will be initialized.
-#' This will be the starting point for the numerical optimization.
+#' @param init_value Starting point for the numerical optimization. Either a single number -- every parameter present in a
+#' model starts at that value (the default behaviour) -- or a function of one
+#' argument \code{n} returning \code{n} starting values (e.g.
+#' \code{function(n) runif(n, 0.1, 1)}), which draws an independent random
+#' starting point for every parameter of every model and thus enables
+#' randomized multi-start experiments. Generated values must be non-zero,
+#' because zeros encode excluded parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
@@ -806,8 +835,13 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @param timestamp_col The name of the column with time stamps
 #' @param entity_col Column with entities (e.g. countries)
 #' @param dep_var_col Column with the dependent variable
-#' @param init_value The value with which the model space will be initialized.
-#' This will be the starting point for the numerical optimization.
+#' @param init_value Starting point for the numerical optimization. Either a single number -- every parameter present in a
+#' model starts at that value (the default behaviour) -- or a function of one
+#' argument \code{n} returning \code{n} starting values (e.g.
+#' \code{function(n) runif(n, 0.1, 1)}), which draws an independent random
+#' starting point for every parameter of every model and thus enables
+#' randomized multi-start experiments. Generated values must be non-zero,
+#' because zeros encode excluded parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.

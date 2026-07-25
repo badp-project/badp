@@ -115,10 +115,10 @@ For small to moderately sized datasets:
 ``` r
 model_space <- badp::optim_model_space(
   df             = data_prepared,
-  dep_var_col    = gdp,      # Dependent variable
+  dep_var_col    = gdp,
   timestamp_col  = year,
   entity_col     = country,
-  init_value     = 0.5,
+  init_value     = function(n) runif(n, 0.1, 1)
 )
 ```
 
@@ -141,7 +141,7 @@ model_space <- badp::optim_model_space(
   timestamp_col  = year,
   entity_col     = country,
   dep_var_col    = gdp,
-  init_value     = 0.5,
+  init_value     =  function(n) runif(n, 0.1, 1),
   cl             = cl
 )
 
