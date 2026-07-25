@@ -71,9 +71,21 @@ SEXP sem_likelihood_calculate(double alpha, double phi_0, double err_var,
     arma::mat H = trans(M) * res_maker_matrix * M;
     
     arma::mat H_scaled = H / static_cast<double>(n_entities);
-    double H_sign{};
-    arma::log_det(H_logdet, H_sign, H_scaled);
-    if (!std::isfinite(H_logdet) || H_sign <= 0) {
+    // In theory H = M' P M with P a projection matrix (eigenvalues zero or
+    // one), so H is guaranteed to be positive semi-definite. In practice,
+    // when the true H is singular or close to singular, numerical imprecision
+    // can make it singular or non-positive-definite. Cholesky factorization
+    // detects exactly that, in which case the likelihood is undefined at this
+    // parameter point.
+    // We need symmatu(), as H is exactly symmetric only on paper.
+    // The call resolves floating-point asymmetry between the triangles of H,
+    // which is necessary for atma::chol as it expect a symmetric input.
+    arma::mat H_chol;
+    if (!arma::chol(H_chol, arma::symmatu(H_scaled))) {
+      return wrap(NumericVector::create(NA_REAL));
+    }
+    H_logdet = 2.0 * arma::sum(arma::log(H_chol.diag()));
+    if (!std::isfinite(H_logdet)) {
       return wrap(NumericVector::create(NA_REAL));
     }
   }
