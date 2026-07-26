@@ -16,6 +16,7 @@ optim_model_space_params(
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
   max_restarts = 5,
   restart_tol = 0.001,
+  max_reoptimizations = 5,
   max_init_attempts = 100
 )
 }
@@ -65,6 +66,20 @@ Default is \code{5}.}
 the optimization is considered converged. Improvements of this size are
 immaterial for posterior model probabilities. Default is \code{1e-3}.}
 
+\item{max_reoptimizations}{Maximum number of times a model is re-optimized
+from a fresh starting point drawn from \code{init_value}, when the solution
+reached turns out to be one no standard errors can be computed from. BFGS
+stops wherever the gradient vanishes, which need not be a maximum, and from
+a randomly drawn starting point a model occasionally ends up in a
+degenerate region instead - hundreds of log-likelihood units below its
+maximum, with an observed information matrix so rank-deficient that
+inverting it into standard errors fails with \sQuote{system is
+computationally singular}. Such a solution is therefore discarded and the
+whole optimization repeated from a new starting point. A model whose every
+attempt ends this way keeps the likeliest of them and is reported with
+\code{converged = 0}; no error is raised, so a single model cannot bring
+down the estimation of the whole model space. Default is \code{5}.}
+
 \item{max_init_attempts}{Maximum number of starting points drawn from
 \code{init_value} for a single model. Not every parameter vector is a
 usable starting point: at some of them the covariance matrix implied by
@@ -83,8 +98,10 @@ of draws each model actually needed is reported in the
 \value{
 List (or matrix) of parameters describing analyzed models. The returned
 matrix carries a \code{"convergence"} attribute: a matrix with one column
-per model and rows \code{converged} (1 if the likelihood value stalled,
-0 if the restart budget was exhausted while still improving),
+per model and rows \code{converged} (1 if the likelihood value stalled at a
+solution standard errors can be computed from, 0 if the restart budget was
+exhausted while still improving or every re-optimization ended in a
+degenerate region),
 \code{optim_code} (the \link[stats]{optim} convergence code of the final
 run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
 (the number of starting points drawn from \code{init_value} before one at

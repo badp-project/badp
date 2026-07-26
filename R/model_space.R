@@ -223,6 +223,109 @@ feasible_init_params <- function(params_no_na, data, exact_value, init_value,
   list(par = par, n_init_draws = n_init_draws)
 }
 
+# The standard errors of a model are read off the inverse of the observed
+# information at its solution (see nested_std_dev_from_params()), so a
+# solution is only of any use if that matrix can be inverted. solve() refuses
+# once the reciprocal condition number drops below .Machine$double.eps, and
+# requiring positive definiteness on top of that rejects stationary points
+# which are not maxima - their inverse has negative entries on the diagonal
+# and the square root of those is NaN.
+usable_solution <- function(observed_information) {
+  positive_definite <- tryCatch({
+    chol(observed_information)
+    TRUE
+  }, error = function(e) FALSE)
+
+  positive_definite &&
+    isTRUE(rcond(observed_information) > .Machine$double.eps)
+}
+
+# Optimize a single model, from a starting point drawn from init_value, until
+# the solution is one the standard errors can be computed from.
+#
+# BFGS stops wherever the gradient vanishes, which need not be a maximum. From
+# a randomly drawn starting point a model occasionally ends up in a degenerate
+# region instead - hundreds of log-likelihood units below its maximum, with an
+# observed information matrix so rank-deficient that it cannot be inverted.
+# The remedy attempted here is to draw a fresh starting point and run the
+# whole optimization again, up to max_reoptimizations times.
+#
+# If every attempt ends in a degenerate region the best of them is returned
+# with converged = 0 rather than an error, so that a single model cannot bring
+# down the estimation of the whole model space.
+optim_from_usable_start <- function(params_no_na, data, exact_value,
+                                    init_value, max_init_attempts, control,
+                                    max_restarts, restart_tol,
+                                    max_reoptimizations, regressors_subset) {
+  scale <- control$scale
+  control$scale <- NULL
+
+  optimize_from <- function(start) {
+    # parscale entries must be positive; starting values can be negative when
+    # init_value generates negative numbers.
+    control$parscale <- scale * abs(start)
+
+    # Tape the likelihood once for this attempt; BFGS then uses the exact
+    # (automatically differentiated) gradient instead of finite differences.
+    lik_tape <- RTMB::MakeTape(
+      function(p) sem_likelihood(p, data = data, exact_value = exact_value),
+      start
+    )
+
+    # The Hessian tape has to be derived here, before any optimization:
+    # jacfun() re-traces the likelihood at the point the tape was last
+    # evaluated at, and once the line search has visited a point where the
+    # likelihood is undefined that re-trace throws from inside RTMB, which
+    # leaves the tape unusable for everything afterwards. Right now the tape
+    # has only ever seen the starting point, which is known to be feasible.
+    # Evaluating the derived tape later on is unaffected.
+    hessian_tape <- lik_tape$jacfun()
+
+    optimized <- optim_with_restarts(start, lik_tape, control = control,
+                                     max_restarts = max_restarts,
+                                     restart_tol = restart_tol)
+    # observed information: minus the Hessian of the log-likelihood
+    optimized$observed_information <- -hessian_tape$jacobian(optimized$par)
+    optimized$value <- suppressWarnings(
+      sem_likelihood(optimized$par, data = data, exact_value = exact_value))
+    optimized
+  }
+
+  draw <- feasible_init_params(params_no_na, data = data,
+                               exact_value = exact_value,
+                               init_value = init_value,
+                               max_init_attempts = max_init_attempts,
+                               regressors_subset = regressors_subset)
+  n_init_draws <- draw$n_init_draws
+  best <- optimize_from(draw$par)
+
+  n_reoptimizations <- 0
+  while (!usable_solution(best$observed_information) &&
+         n_reoptimizations < max_reoptimizations) {
+    n_reoptimizations <- n_reoptimizations + 1
+    draw <- feasible_init_params(init_value(length(params_no_na)),
+                                 data = data, exact_value = exact_value,
+                                 init_value = init_value,
+                                 max_init_attempts = max_init_attempts,
+                                 regressors_subset = regressors_subset)
+    n_init_draws <- n_init_draws + draw$n_init_draws
+
+    candidate <- optimize_from(draw$par)
+    # A usable solution always wins; between two unusable ones keep the
+    # likelier, so that an exhausted budget still returns the best attempt.
+    if (usable_solution(candidate$observed_information) ||
+        isTRUE(candidate$value > best$value)) {
+      best <- candidate
+    }
+  }
+
+  best$diagnostics["converged"] <-
+    best$diagnostics["converged"] *
+    usable_solution(best$observed_information)
+  best$diagnostics <- c(best$diagnostics, n_init_draws = n_init_draws)
+  best
+}
+
 #' Helper-function - finds parameters minimizing log-likelihood function
 #' for the nested version of the SEM setup, using BFGS method
 #'
@@ -253,6 +356,10 @@ feasible_init_params <- function(params_no_na, data, exact_value, init_value,
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_reoptimizations Maximum number of times this model is
+#' re-optimized from a fresh starting point when its solution turns out to be
+#' one no standard errors can be computed from. See
+#' \link[badp]{optim_model_space}.
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
@@ -269,7 +376,8 @@ nested_optimization_wrapper <- function(
     max_init_attempts,
     control,
     max_restarts,
-    restart_tol
+    restart_tol,
+    max_reoptimizations
     ) {
   regressors_subset <- regressor_names_from_params_vector(params)
 
@@ -285,31 +393,15 @@ nested_optimization_wrapper <- function(
 
   params_no_na <- stats::na.omit(params)
 
-  init <- feasible_init_params(params_no_na, data = data,
-                               exact_value = exact_value,
-                               init_value = init_value,
-                               max_init_attempts = max_init_attempts,
-                               regressors_subset = regressors_subset)
-
-  # Adjust the optimization control parameters.
-  # parscale entries must be positive; init_value can generate negative numbers.
-  control$parscale <- control$scale * abs(init$par)
-  control$scale <- NULL
-
-  # Tape the likelihood once for this model; BFGS then uses the exact
-  # (automatically differentiated) gradient instead of finite differences.
-  lik_tape <- RTMB::MakeTape(
-    function(p) sem_likelihood(p, data = data, exact_value = exact_value),
-    init$par
-  )
-
-  optimized <- optim_with_restarts(init$par, lik_tape,
-                                   control = control,
-                                   max_restarts = max_restarts,
-                                   restart_tol = restart_tol)
+  optimized <- optim_from_usable_start(
+    params_no_na, data = data, exact_value = exact_value,
+    init_value = init_value, max_init_attempts = max_init_attempts,
+    control = control, max_restarts = max_restarts, restart_tol = restart_tol,
+    max_reoptimizations = max_reoptimizations,
+    regressors_subset = regressors_subset)
 
   params[!is.na(params)] <- optimized$par
-  c(params, optimized$diagnostics, n_init_draws = init$n_init_draws)
+  c(params, optimized$diagnostics)
 }
 
 
@@ -350,6 +442,10 @@ nested_optimization_wrapper <- function(
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_reoptimizations Maximum number of times this model is
+#' re-optimized from a fresh starting point when its solution turns out to be
+#' one no standard errors can be computed from. See
+#' \link[badp]{optim_model_space}.
 #'
 #' @returns List (or matrix) of parameters describing analyzed models.
 #' @export
@@ -368,7 +464,8 @@ non_nested_optimization_wrapper <- function(
     n_timestamps,
     control,
     max_restarts,
-    restart_tol
+    restart_tol,
+    max_reoptimizations
   ) {
   # derive the set of all matrices needed, based on reduced df
   regressors_subset <- regressor_names_from_params_vector(params)
@@ -408,32 +505,15 @@ non_nested_optimization_wrapper <- function(
 
   params_no_na <- stats::na.omit(params)
 
-  init <- feasible_init_params(params_no_na, data = data,
-                               exact_value = exact_value,
-                               init_value = init_value,
-                               max_init_attempts = max_init_attempts,
-                               regressors_subset = regressors_subset)
-
-  # Adjust the optimization control parameters.
-  # parscale entries must be positive; initial values can be negative when
-  # init_value generates negative numbers.
-  control$parscale <- control$scale * abs(init$par)
-  control$scale <- NULL
-
-  # Tape the likelihood once for this model; BFGS then uses the exact
-  # (automatically differentiated) gradient instead of finite differences.
-  lik_tape <- RTMB::MakeTape(
-    function(p) sem_likelihood(p, data = data, exact_value = exact_value),
-    init$par
-  )
-
-  optimized <- optim_with_restarts(init$par, lik_tape,
-                                   control = control,
-                                   max_restarts = max_restarts,
-                                   restart_tol = restart_tol)
+  optimized <- optim_from_usable_start(
+    params_no_na, data = data, exact_value = exact_value,
+    init_value = init_value, max_init_attempts = max_init_attempts,
+    control = control, max_restarts = max_restarts, restart_tol = restart_tol,
+    max_reoptimizations = max_reoptimizations,
+    regressors_subset = regressors_subset)
 
   params[!is.na(params)] <- optimized$par
-  c(params, optimized$diagnostics, n_init_draws = init$n_init_draws)
+  c(params, optimized$diagnostics)
 }
 
 
@@ -479,6 +559,19 @@ non_nested_optimization_wrapper <- function(
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_reoptimizations Maximum number of times a model is re-optimized
+#' from a fresh starting point drawn from \code{init_value}, when the solution
+#' reached turns out to be one no standard errors can be computed from. BFGS
+#' stops wherever the gradient vanishes, which need not be a maximum, and from
+#' a randomly drawn starting point a model occasionally ends up in a
+#' degenerate region instead - hundreds of log-likelihood units below its
+#' maximum, with an observed information matrix so rank-deficient that
+#' inverting it into standard errors fails with \sQuote{system is
+#' computationally singular}. Such a solution is therefore discarded and the
+#' whole optimization repeated from a new starting point. A model whose every
+#' attempt ends this way keeps the likeliest of them and is reported with
+#' \code{converged = 0}; no error is raised, so a single model cannot bring
+#' down the estimation of the whole model space. Default is \code{5}.
 #' @param max_init_attempts Maximum number of starting points drawn from
 #' \code{init_value} for a single model. Not every parameter vector is a
 #' usable starting point: at some of them the covariance matrix implied by
@@ -497,8 +590,10 @@ non_nested_optimization_wrapper <- function(
 #' @return
 #' List (or matrix) of parameters describing analyzed models. The returned
 #' matrix carries a \code{"convergence"} attribute: a matrix with one column
-#' per model and rows \code{converged} (1 if the likelihood value stalled,
-#' 0 if the restart budget was exhausted while still improving),
+#' per model and rows \code{converged} (1 if the likelihood value stalled at a
+#' solution standard errors can be computed from, 0 if the restart budget was
+#' exhausted while still improving or every re-optimization ended in a
+#' degenerate region),
 #' \code{optim_code} (the \link[stats]{optim} convergence code of the final
 #' run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
 #' (the number of starting points drawn from \code{init_value} before one at
@@ -520,6 +615,7 @@ optim_model_space_params <- function(
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
   max_restarts = 5,
   restart_tol = 1e-3,
+  max_reoptimizations = 5,
   max_init_attempts = 100
   ) {
 
@@ -559,7 +655,8 @@ optim_model_space_params <- function(
         max_init_attempts = max_init_attempts,
         control = control,
         max_restarts = max_restarts,
-        restart_tol = restart_tol
+        restart_tol = restart_tol,
+        max_reoptimizations = max_reoptimizations
         )
     }, cl = cl)
     return(split_convergence_diagnostics(raw, nrow(init_params)))
@@ -585,7 +682,8 @@ optim_model_space_params <- function(
         n_timestamps = n_timestamps,
         control = control,
         max_restarts = max_restarts,
-        restart_tol = restart_tol
+        restart_tol = restart_tol,
+        max_reoptimizations = max_reoptimizations
         )
     }, cl = cl)
     return(split_convergence_diagnostics(raw, nrow(init_params)))
@@ -961,6 +1059,19 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_reoptimizations Maximum number of times a model is re-optimized
+#' from a fresh starting point drawn from \code{init_value}, when the solution
+#' reached turns out to be one no standard errors can be computed from. BFGS
+#' stops wherever the gradient vanishes, which need not be a maximum, and from
+#' a randomly drawn starting point a model occasionally ends up in a
+#' degenerate region instead - hundreds of log-likelihood units below its
+#' maximum, with an observed information matrix so rank-deficient that
+#' inverting it into standard errors fails with \sQuote{system is
+#' computationally singular}. Such a solution is therefore discarded and the
+#' whole optimization repeated from a new starting point. A model whose every
+#' attempt ends this way keeps the likeliest of them and is reported with
+#' \code{converged = 0}; no error is raised, so a single model cannot bring
+#' down the estimation of the whole model space. Default is \code{5}.
 #' @param max_init_attempts Maximum number of starting points drawn from
 #' \code{init_value} for a single model. Not every parameter vector is a
 #' usable starting point: at some of them the covariance matrix implied by
@@ -988,8 +1099,10 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' 5) df - data frame used in estimation \cr
 #' 6) is_nested - logical indicating whether nested approach was used \cr
 #' 7) convergence - matrix of per-model convergence diagnostics with rows
-#' \code{converged} (1 if the likelihood value stalled across restarts, 0 if
-#' the restart budget was exhausted while the value was still improving),
+#' \code{converged} (1 if the likelihood value stalled across restarts at a
+#' solution standard errors can be computed from, 0 if the restart budget was
+#' exhausted while the value was still improving or every re-optimization
+#' ended in a degenerate region),
 #' \code{optim_code} (the \link[stats]{optim} convergence code of the final
 #' run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
 #' (the number of starting points drawn from \code{init_value} before one at
@@ -1041,6 +1154,7 @@ optim_model_space <-
     control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
     max_restarts = 5,
     restart_tol = 1e-3,
+    max_reoptimizations = 5,
     max_init_attempts = 100
   ) {
     params <- optim_model_space_params(
@@ -1054,8 +1168,9 @@ optim_model_space <-
       cl                = cl,
       control           = control,
       max_restarts      = max_restarts,
-      restart_tol       = restart_tol,
-      max_init_attempts = max_init_attempts
+      restart_tol         = restart_tol,
+      max_reoptimizations = max_reoptimizations,
+      max_init_attempts   = max_init_attempts
     )
 
     convergence <- attr(params, "convergence")
