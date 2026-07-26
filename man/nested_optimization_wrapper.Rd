@@ -13,6 +13,8 @@ nested_optimization_wrapper(
   dep_var_col,
   data,
   exact_value,
+  init_value,
+  max_init_attempts,
   control,
   max_restarts,
   restart_tol
@@ -35,6 +37,14 @@ natural numbers can be used as timestamps}
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 \link[badp]{sem_likelihood} for details.}
+
+\item{init_value}{The generator function the starting point in \code{params}
+was drawn from. It is used to redraw the starting point if the likelihood
+turns out to be undefined at the drawn point. See
+\link[badp]{optim_model_space}.}
+
+\item{max_init_attempts}{Maximum number of starting points drawn from
+\code{init_value} for this model. See \link[badp]{optim_model_space}.}
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is

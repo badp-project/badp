@@ -12,6 +12,8 @@ non_nested_optimization_wrapper(
   entity_col,
   dep_var_col,
   exact_value,
+  init_value,
+  max_init_attempts,
   n_all_regressors,
   n_timestamps,
   control,
@@ -34,6 +36,14 @@ natural numbers can be used as timestamps}
 \item{exact_value}{Whether the exact value of the likelihood should be
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 \link[badp]{sem_likelihood} for details.}
+
+\item{init_value}{The generator function the starting point in \code{params}
+was drawn from. It is used to redraw the starting point if the likelihood
+turns out to be undefined at the drawn point. See
+\link[badp]{optim_model_space}.}
+
+\item{max_init_attempts}{Maximum number of starting points drawn from
+\code{init_value} for this model. See \link[badp]{optim_model_space}.}
 
 \item{n_all_regressors}{Integer. Total number of potential regressors in the
 full (maximal) model space. Used to compute the full parameter dimension
