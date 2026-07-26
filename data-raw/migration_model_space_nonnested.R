@@ -22,7 +22,7 @@ migration_model_space_nonnested <- optim_model_space(
   entity_col = Pair,
   dep_var_col= Mig,
   cl=cl,
-  init_value = 0.5,
+  init_value = function(n) rep(0.5, n),
   nested = FALSE)
 
 stopCluster(cl)

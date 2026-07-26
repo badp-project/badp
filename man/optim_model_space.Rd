@@ -15,7 +15,8 @@ optim_model_space(
   cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
   max_restarts = 5,
-  restart_tol = 0.001
+  restart_tol = 0.001,
+  max_init_attempts = 100
 )
 }
 \arguments{
@@ -27,13 +28,14 @@ optim_model_space(
 
 \item{dep_var_col}{Column with the dependent variable}
 
-\item{init_value}{Starting point for the numerical optimization. Either a single number -- every parameter present in a
-model starts at that value (the default behaviour) -- or a function of one
-argument \code{n} returning \code{n} starting values (e.g.
-\code{function(n) runif(n, 0.1, 1)}), which draws an independent random
-starting point for every parameter of every model and thus enables
-randomized multi-start experiments. Generated values must be non-zero,
-because zeros encode excluded parameters.}
+\item{init_value}{Function of one argument \code{n} returning \code{n}
+starting values for the numerical optimization (e.g.
+\code{function(n) runif(n, 0.1, 1)}). It is called separately for every
+model, so every model gets its own starting point; with a random generator
+this turns the estimation into a randomized multi-start experiment. A
+constant starting point is obtained with \code{function(n) rep(0.5, n)}.
+Generated values must be non-zero, because zeros encode excluded
+parameters.}
 
 \item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
 deviations using the nested-model approach via
@@ -63,6 +65,21 @@ Default is \code{5}.}
 \item{restart_tol}{Log-likelihood improvement between restarts below which
 the optimization is considered converged. Improvements of this size are
 immaterial for posterior model probabilities. Default is \code{1e-3}.}
+
+\item{max_init_attempts}{Maximum number of starting points drawn from
+\code{init_value} for a single model. Not every parameter vector is a
+usable starting point: at some of them the covariance matrix implied by
+the parameters is not positive definite, so the likelihood is undefined
+there and the optimization cannot even start (taping the likelihood for
+automatic differentiation fails on the Cholesky factorization with an
+error such as \sQuote{the leading minor of order 13 is not positive}).
+Whether a starting point is usable depends on the model, so it can only be
+checked after the point has been drawn: unusable draws are discarded and
+replaced by fresh draws from \code{init_value}, and only after
+\code{max_init_attempts} unsuccessful draws is an error raised. The number
+of draws each model actually needed is reported in the
+\code{n_init_draws} row of the \code{convergence} element of the result.
+Default is \code{100}.}
 }
 \value{
 An object of class \code{badp_model_space}, which is a list with the following elements: \cr
@@ -78,7 +95,9 @@ standard errors for all estimated models \cr
 \code{converged} (1 if the likelihood value stalled across restarts, 0 if
 the restart budget was exhausted while the value was still improving),
 \code{optim_code} (the \link[stats]{optim} convergence code of the final
-run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
+(the number of starting points drawn from \code{init_value} before one at
+which the likelihood is defined was found). A large final
 gradient with \code{converged = 1} indicates parameters on a degenerate
 (nearly collinear) likelihood ridge; the likelihood value is trustworthy
 but the standard errors of the affected coordinates are not.
@@ -116,7 +135,7 @@ optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5
+  init_value    = function(n) runif(n, 0.1, 1)
 )
 }
 }

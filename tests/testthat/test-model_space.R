@@ -59,7 +59,7 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
     dep_var_col   = gdp,
     timestamp_col = year,
     entity_col    = country,
-    init_value    = 0.5,
+    init_value    = function(n) rep(0.5, n),
     nested        = TRUE
   )
 
@@ -142,7 +142,7 @@ test_that(paste("model_space computes correct model_space list"), {
     dep_var_col   = gdp,
     timestamp_col = year,
     entity_col    = country,
-    init_value    = 0.5
+    init_value    = function(n) rep(0.5, n)
   )
 
   expect_equal(length(model_space), 7)
@@ -153,10 +153,12 @@ test_that(paste("model_space computes correct model_space list"), {
   convergence <- model_space$convergence
   expect_equal(
     rownames(convergence),
-    c("converged", "optim_code", "n_restarts", "max_abs_gradient")
+    c("converged", "optim_code", "n_restarts", "max_abs_gradient",
+      "n_init_draws")
   )
   expect_equal(ncol(convergence), ncol(model_space$params))
   expect_true(all(convergence["converged", ] %in% c(0, 1)))
+  expect_true(all(convergence["n_init_draws", ] >= 1))
 })
 
 
@@ -187,7 +189,7 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
     timestamp_col  = year,
     entity_col     = country,
     dep_var_col    = gdp,
-    init_value     = 0.5,
+    init_value     = function(n) rep(0.5, n),
     cl             = cl
   )
 
@@ -214,11 +216,11 @@ test_that("Moral-Benito BMA results are replicated (main branch only)", {
 })
 
 
-test_that("init_model_space_params accepts a generator function for init_value", {
+test_that("init_model_space_params draws starting values from init_value", {
   df <- badp::economic_growth[, 1:5]
 
   constant_params <- init_model_space_params(df, year, country, gdp,
-                                             init_value = 0.7)
+                                             init_value = function(n) rep(0.7, n))
 
   set.seed(42)
   random_params <- init_model_space_params(
@@ -237,4 +239,40 @@ test_that("init_model_space_params accepts a generator function for init_value",
   random_params_again <- init_model_space_params(
     df, year, country, gdp, init_value = function(n) runif(n, 0.1, 1))
   expect_equal(random_params, random_params_again)
+})
+
+
+test_that("starting points at which the likelihood is undefined are redrawn", {
+  # stand-in for an infeasible point: the likelihood is undefined (NA)
+  # wherever the first parameter is negative
+  local_mocked_bindings(
+    sem_likelihood = function(params, ...) if (params[1] < 0) NA_real_ else 1
+  )
+
+  n_calls <- 0
+  init_value <- function(n) {
+    n_calls <<- n_calls + 1
+    rep(if (n_calls < 3) -1 else 0.5, n)
+  }
+
+  init <- feasible_init_params(
+    c(-1, -1, -1), data = NULL, exact_value = FALSE, init_value = init_value,
+    max_init_attempts = 100, regressors_subset = c("ish", "sed"))
+
+  expect_equal(init$par, c(0.5, 0.5, 0.5))
+  # the point passed in, plus the three redraws it took to find a feasible one
+  expect_equal(init$n_init_draws, 4)
+})
+
+
+test_that("drawing feasible starting points gives up after max_init_attempts", {
+  local_mocked_bindings(sem_likelihood = function(params, ...) NA_real_)
+
+  expect_error(
+    feasible_init_params(
+      c(-1, -1, -1), data = NULL, exact_value = FALSE,
+      init_value = function(n) rep(-1, n), max_init_attempts = 5,
+      regressors_subset = c("ish", "sed")),
+    "Could not draw a feasible starting point for the model with regressors: ish, sed in 5 attempts"
+  )
 })

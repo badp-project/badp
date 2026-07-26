@@ -18,13 +18,12 @@
 #' natural numbers can be used as timestamps
 #' @param entity_col Column which determines entities (e.g. countries, people)
 #' @param dep_var_col Column with dependent variable
-#' @param init_value Either a single number, then every parameter present in a
-#' model starts at that value (the default behaviour), or a function of one
-#' argument \code{n} returning \code{n} starting values (e.g.
-#' \code{function(n) runif(n, 0.1, 1)}), which generates
-#' starting point for every parameter of every model and thus enables, e.g., grid or
-#' randomized multi-start experiments. Generated values must be non-zero,
-#' because zeros encode excluded parameters. Default is \code{1}.
+#' @param init_value A function of one argument \code{n} returning \code{n}
+#' starting values (e.g. \code{function(n) runif(n, 0.1, 1)}). It generates the
+#' starting point for every parameter of every model and thus enables, e.g.,
+#' grid or randomized multi-start experiments. A constant starting point is
+#' obtained with \code{function(n) rep(0.5, n)}. Generated values must be
+#' non-zero, because zeros encode excluded parameters.
 #'
 #' @return matrix of model parameters
 #'
@@ -41,11 +40,12 @@
 #'     scale         = FALSE
 #'   )
 #'
-#' init_model_space_params(data_prepared, year, country, gdp)
+#' init_model_space_params(data_prepared, year, country, gdp,
+#'                         init_value = function(n) runif(n, 0.1, 1))
 #' @export
 #' @keywords internal
 init_model_space_params <- function(df, timestamp_col, entity_col,
-                                    dep_var_col, init_value = 1) {
+                                    dep_var_col, init_value) {
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},
                     entity_col = {{ entity_col }},
@@ -58,18 +58,8 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_timestamps <- counts[[1]] - 1
   n_entities <- counts[[2]]
 
-  # init_value can be a single number (every parameter starts there) or a
-  # generator function of one argument n returning n starting values, which
-  # allows randomized multi-start experiments. Zeros must not be generated:
-  # a zero encodes an excluded parameter and is turned into NA below.
-  init_fun <- if (is.function(init_value)) {
-    init_value
-  } else {
-    function(n) rep(init_value, n)
-  }
-
   fill_mask <- function(mask) {
-    mask[mask == 1] <- init_fun(sum(mask == 1))
+    mask[mask == 1] <- init_value(sum(mask == 1))
     mask
   }
   inclusion_mask <- rje::powerSetMat(n_regressors)
@@ -81,7 +71,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
     c(paste('beta', regressors, sep="_"), paste('phi_1', regressors, sep="_"))
 
   dep_var_matrix <-
-    t(matrix(init_fun(2^n_regressors * (3 + n_timestamps)),
+    t(matrix(init_value(2^n_regressors * (3 + n_timestamps)),
              nrow = 2^n_regressors, ncol = 3 + n_timestamps))
   rownames(dep_var_matrix) <- c(c('alpha', 'phi_0', 'err_var'),
                                 paste('dep_var', 1:n_timestamps, sep = '_'))
@@ -90,7 +80,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_psis <- n_regressors * (n_timestamps - 1) * n_timestamps / 2
 
   psis_phis_matrix <-
-    matrix(init_fun((n_phis + n_psis) * 2^n_regressors),
+    matrix(init_value((n_phis + n_psis) * 2^n_regressors),
            nrow = n_phis + n_psis, ncol = 2^n_regressors)
 
   . <- NULL
@@ -177,6 +167,47 @@ optim_with_restarts <- function(par, lik_tape, control, max_restarts,
   )
 }
 
+# Keep drawing starting points from the init_value generator until one is
+# feasible, i.e. until the likelihood is defined there (see the
+# max_init_attempts argument of optim_model_space() for why infeasible points
+# occur and why they cannot simply be optimized away).
+#
+# Feasibility is model-specific, because every model implies different
+# matrices, so it can only be checked here, once the model-specific data is
+# known.
+feasible_init_params <- function(params_no_na, data, exact_value, init_value,
+                                 max_init_attempts, regressors_subset) {
+  par <- as.numeric(params_no_na)
+
+  is_feasible <- function(p) {
+    value <- suppressWarnings(
+      sem_likelihood(p, data = data, exact_value = exact_value))
+    isTRUE(is.finite(value))
+  }
+
+  n_init_draws <- 1
+  while (!is_feasible(par)) {
+    if (n_init_draws >= max_init_attempts) {
+      model_label <- if (length(regressors_subset) == 0) {
+        "the model with no linearly related regressors"
+      } else {
+        paste0("the model with regressors: ",
+               paste(regressors_subset, collapse = ", "))
+      }
+      stop(sprintf(paste(
+        "Could not draw a feasible starting point for %s in %d attempts:",
+        "the likelihood is undefined at every drawn point (the implied",
+        "covariance matrix is not positive definite). Narrow the range of",
+        "the init_value generator or increase max_init_attempts."),
+        model_label, max_init_attempts), call. = FALSE)
+    }
+    par <- as.numeric(init_value(length(par)))
+    n_init_draws <- n_init_draws + 1
+  }
+
+  list(par = par, n_init_draws = n_init_draws)
+}
+
 #' Helper-function - finds parameters minimizing log-likelihood function
 #' for the nested version of the SEM setup, using BFGS method
 #'
@@ -190,6 +221,12 @@ optim_with_restarts <- function(par, lik_tape, control, max_restarts,
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
+#' @param init_value The generator function the starting point in \code{params}
+#' was drawn from. It is used to redraw the starting point if the likelihood
+#' turns out to be undefined at the drawn point. See
+#' \link[badp]{optim_model_space}.
+#' @param max_init_attempts Maximum number of starting points drawn from
+#' \code{init_value} for this model. See \link[badp]{optim_model_space}.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
@@ -213,6 +250,8 @@ nested_optimization_wrapper <- function(
     dep_var_col,
     data,
     exact_value,
+    init_value,
+    max_init_attempts,
     control,
     max_restarts,
     restart_tol
@@ -231,26 +270,31 @@ nested_optimization_wrapper <- function(
 
   params_no_na <- stats::na.omit(params)
 
+  init <- feasible_init_params(params_no_na, data = data,
+                               exact_value = exact_value,
+                               init_value = init_value,
+                               max_init_attempts = max_init_attempts,
+                               regressors_subset = regressors_subset)
+
   # Adjust the optimization control parameters.
-  # parscale entries must be positive; initial values can be negative when
-  # init_value is a generator function.
-  control$parscale <- control$scale * abs(params_no_na)
+  # parscale entries must be positive; init_value can generate negative numbers.
+  control$parscale <- control$scale * abs(init$par)
   control$scale <- NULL
 
   # Tape the likelihood once for this model; BFGS then uses the exact
   # (automatically differentiated) gradient instead of finite differences.
   lik_tape <- RTMB::MakeTape(
     function(p) sem_likelihood(p, data = data, exact_value = exact_value),
-    as.numeric(params_no_na)
+    init$par
   )
 
-  optimized <- optim_with_restarts(as.numeric(params_no_na), lik_tape,
+  optimized <- optim_with_restarts(init$par, lik_tape,
                                    control = control,
                                    max_restarts = max_restarts,
                                    restart_tol = restart_tol)
 
   params[!is.na(params)] <- optimized$par
-  c(params, optimized$diagnostics)
+  c(params, optimized$diagnostics, n_init_draws = init$n_init_draws)
 }
 
 
@@ -266,6 +310,12 @@ nested_optimization_wrapper <- function(
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
+#' @param init_value The generator function the starting point in \code{params}
+#' was drawn from. It is used to redraw the starting point if the likelihood
+#' turns out to be undefined at the drawn point. See
+#' \link[badp]{optim_model_space}.
+#' @param max_init_attempts Maximum number of starting points drawn from
+#' \code{init_value} for this model. See \link[badp]{optim_model_space}.
 #' @param control a list of control parameters for the optimization which are
 #' passed to \link[stats]{optim}. Default is
 #' \code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.
@@ -297,6 +347,8 @@ non_nested_optimization_wrapper <- function(
     entity_col,
     dep_var_col,
     exact_value,
+    init_value,
+    max_init_attempts,
     n_all_regressors,
     n_timestamps,
     control,
@@ -341,34 +393,40 @@ non_nested_optimization_wrapper <- function(
 
   params_no_na <- stats::na.omit(params)
 
+  init <- feasible_init_params(params_no_na, data = data,
+                               exact_value = exact_value,
+                               init_value = init_value,
+                               max_init_attempts = max_init_attempts,
+                               regressors_subset = regressors_subset)
+
   # Adjust the optimization control parameters.
   # parscale entries must be positive; initial values can be negative when
-  # init_value is a generator function.
-  control$parscale <- control$scale * abs(params_no_na)
+  # init_value generates negative numbers.
+  control$parscale <- control$scale * abs(init$par)
   control$scale <- NULL
 
   # Tape the likelihood once for this model; BFGS then uses the exact
   # (automatically differentiated) gradient instead of finite differences.
   lik_tape <- RTMB::MakeTape(
     function(p) sem_likelihood(p, data = data, exact_value = exact_value),
-    as.numeric(params_no_na)
+    init$par
   )
 
-  optimized <- optim_with_restarts(as.numeric(params_no_na), lik_tape,
+  optimized <- optim_with_restarts(init$par, lik_tape,
                                    control = control,
                                    max_restarts = max_restarts,
                                    restart_tol = restart_tol)
 
   params[!is.na(params)] <- optimized$par
-  c(params, optimized$diagnostics)
+  c(params, optimized$diagnostics, n_init_draws = init$n_init_draws)
 }
 
 
 
 #' Finds MLE parameters for each model in the given model space
 #'
-#' Given a dataset and an initial value for parameters, initializes a model
-#' space with parameters equal to the initial value for each model. Then for each
+#' Given a dataset and a generator of starting values, initializes a model
+#' space by drawing a starting point for each model. Then for each
 #' model performs a numerical optimization and finds parameters which maximize
 #' the likelihood.
 #'
@@ -376,13 +434,14 @@ non_nested_optimization_wrapper <- function(
 #' @param timestamp_col The name of the column with time stamps.
 #' @param entity_col Column with entities (e.g. countries).
 #' @param dep_var_col Column with the dependent variable.
-#' @param init_value Starting point for the numerical optimization. Either a single number -- every parameter present in a
-#' model starts at that value (the default behaviour) -- or a function of one
-#' argument \code{n} returning \code{n} starting values (e.g.
-#' \code{function(n) runif(n, 0.1, 1)}), which draws an independent random
-#' starting point for every parameter of every model and thus enables
-#' randomized multi-start experiments. Generated values must be non-zero,
-#' because zeros encode excluded parameters.
+#' @param init_value Function of one argument \code{n} returning \code{n}
+#' starting values for the numerical optimization (e.g.
+#' \code{function(n) runif(n, 0.1, 1)}). It is called separately for every
+#' model, so every model gets its own starting point; with a random generator
+#' this turns the estimation into a randomized multi-start experiment. A
+#' constant starting point is obtained with \code{function(n) rep(0.5, n)}.
+#' Generated values must be non-zero, because zeros encode excluded
+#' parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
@@ -405,6 +464,20 @@ non_nested_optimization_wrapper <- function(
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_init_attempts Maximum number of starting points drawn from
+#' \code{init_value} for a single model. Not every parameter vector is a
+#' usable starting point: at some of them the covariance matrix implied by
+#' the parameters is not positive definite, so the likelihood is undefined
+#' there and the optimization cannot even start (taping the likelihood for
+#' automatic differentiation fails on the Cholesky factorization with an
+#' error such as \sQuote{the leading minor of order 13 is not positive}).
+#' Whether a starting point is usable depends on the model, so it can only be
+#' checked after the point has been drawn: unusable draws are discarded and
+#' replaced by fresh draws from \code{init_value}, and only after
+#' \code{max_init_attempts} unsuccessful draws is an error raised. The number
+#' of draws each model actually needed is reported in the
+#' \code{n_init_draws} row of the convergence diagnostics. Default is
+#' \code{100}.
 #'
 #' @return
 #' List (or matrix) of parameters describing analyzed models. The returned
@@ -412,7 +485,9 @@ non_nested_optimization_wrapper <- function(
 #' per model and rows \code{converged} (1 if the likelihood value stalled,
 #' 0 if the restart budget was exhausted while still improving),
 #' \code{optim_code} (the \link[stats]{optim} convergence code of the final
-#' run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+#' run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
+#' (the number of starting points drawn from \code{init_value} before one at
+#' which the likelihood is defined was found). A large final
 #' gradient with \code{converged = 1} indicates parameters on a degenerate
 #' (nearly collinear) likelihood ridge rather than a failed optimization.
 #'
@@ -429,7 +504,8 @@ optim_model_space_params <- function(
   exact_value = FALSE, cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
   max_restarts = 5,
-  restart_tol = 1e-3
+  restart_tol = 1e-3,
+  max_init_attempts = 100
   ) {
 
   all_regressors <- df %>%
@@ -464,6 +540,8 @@ optim_model_space_params <- function(
         dep_var_col = {{ dep_var_col }},
         data = matrices_shared_across_models,
         exact_value = exact_value,
+        init_value = init_value,
+        max_init_attempts = max_init_attempts,
         control = control,
         max_restarts = max_restarts,
         restart_tol = restart_tol
@@ -486,6 +564,8 @@ optim_model_space_params <- function(
         entity_col = {{ entity_col }},
         dep_var_col = {{ dep_var_col }},
         exact_value = exact_value,
+        init_value = init_value,
+        max_init_attempts = max_init_attempts,
         n_all_regressors = n_all_regressors,
         n_timestamps = n_timestamps,
         control = control,
@@ -497,7 +577,7 @@ optim_model_space_params <- function(
   }
 }
 
-# The optimization wrappers return the optimized parameter vector with four
+# The optimization wrappers return the optimized parameter vector with the
 # convergence-diagnostic values appended, so that pbapply can carry both
 # through a single matrix. Split them apart again: the diagnostics travel as
 # an attribute so that the params matrix keeps its documented shape.
@@ -835,13 +915,14 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @param timestamp_col The name of the column with time stamps
 #' @param entity_col Column with entities (e.g. countries)
 #' @param dep_var_col Column with the dependent variable
-#' @param init_value Starting point for the numerical optimization. Either a single number -- every parameter present in a
-#' model starts at that value (the default behaviour) -- or a function of one
-#' argument \code{n} returning \code{n} starting values (e.g.
-#' \code{function(n) runif(n, 0.1, 1)}), which draws an independent random
-#' starting point for every parameter of every model and thus enables
-#' randomized multi-start experiments. Generated values must be non-zero,
-#' because zeros encode excluded parameters.
+#' @param init_value Function of one argument \code{n} returning \code{n}
+#' starting values for the numerical optimization (e.g.
+#' \code{function(n) runif(n, 0.1, 1)}). It is called separately for every
+#' model, so every model gets its own starting point; with a random generator
+#' this turns the estimation into a randomized multi-start experiment. A
+#' constant starting point is obtained with \code{function(n) rep(0.5, n)}.
+#' Generated values must be non-zero, because zeros encode excluded
+#' parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
@@ -865,6 +946,20 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' @param restart_tol Log-likelihood improvement between restarts below which
 #' the optimization is considered converged. Improvements of this size are
 #' immaterial for posterior model probabilities. Default is \code{1e-3}.
+#' @param max_init_attempts Maximum number of starting points drawn from
+#' \code{init_value} for a single model. Not every parameter vector is a
+#' usable starting point: at some of them the covariance matrix implied by
+#' the parameters is not positive definite, so the likelihood is undefined
+#' there and the optimization cannot even start (taping the likelihood for
+#' automatic differentiation fails on the Cholesky factorization with an
+#' error such as \sQuote{the leading minor of order 13 is not positive}).
+#' Whether a starting point is usable depends on the model, so it can only be
+#' checked after the point has been drawn: unusable draws are discarded and
+#' replaced by fresh draws from \code{init_value}, and only after
+#' \code{max_init_attempts} unsuccessful draws is an error raised. The number
+#' of draws each model actually needed is reported in the
+#' \code{n_init_draws} row of the \code{convergence} element of the result.
+#' Default is \code{100}.
 #'
 #' @importFrom parallel parApply
 #'
@@ -881,7 +976,9 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' \code{converged} (1 if the likelihood value stalled across restarts, 0 if
 #' the restart budget was exhausted while the value was still improving),
 #' \code{optim_code} (the \link[stats]{optim} convergence code of the final
-#' run), \code{n_restarts} and \code{max_abs_gradient}. A large final
+#' run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
+#' (the number of starting points drawn from \code{init_value} before one at
+#' which the likelihood is defined was found). A large final
 #' gradient with \code{converged = 1} indicates parameters on a degenerate
 #' (nearly collinear) likelihood ridge; the likelihood value is trustworthy
 #' but the standard errors of the affected coordinates are not.
@@ -911,7 +1008,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #'   dep_var_col   = gdp,
 #'   timestamp_col = year,
 #'   entity_col    = country,
-#'   init_value    = 0.5
+#'   init_value    = function(n) runif(n, 0.1, 1)
 #' )
 #'}
 #' @export
@@ -928,20 +1025,22 @@ optim_model_space <-
     cl = NULL,
     control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
     max_restarts = 5,
-    restart_tol = 1e-3
+    restart_tol = 1e-3,
+    max_init_attempts = 100
   ) {
     params <- optim_model_space_params(
-      df            = df,
-      timestamp_col = {{timestamp_col}},
-      entity_col    = {{entity_col}},
-      dep_var_col   = {{dep_var_col}},
-      init_value    = init_value,
-      nested        = nested,
-      exact_value   = exact_value,
-      cl            = cl,
-      control       = control,
-      max_restarts  = max_restarts,
-      restart_tol   = restart_tol
+      df                = df,
+      timestamp_col     = {{timestamp_col}},
+      entity_col        = {{entity_col}},
+      dep_var_col       = {{dep_var_col}},
+      init_value        = init_value,
+      nested            = nested,
+      exact_value       = exact_value,
+      cl                = cl,
+      control           = control,
+      max_restarts      = max_restarts,
+      restart_tol       = restart_tol,
+      max_init_attempts = max_init_attempts
     )
 
     convergence <- attr(params, "convergence")
