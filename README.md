@@ -118,7 +118,7 @@ model_space <- badp::optim_model_space(
   dep_var_col    = gdp,
   timestamp_col  = year,
   entity_col     = country,
-  init_value     = function(n) runif(n, 0.1, 1)
+  init_value     = function(n) runif(n, -10, 10)
 )
 ```
 
@@ -141,7 +141,7 @@ model_space <- badp::optim_model_space(
   timestamp_col  = year,
   entity_col     = country,
   dep_var_col    = gdp,
-  init_value     =  function(n) runif(n, 0.1, 1),
+  init_value     = function(n) runif(n, -10, 10),
   cl             = cl
 )
 
@@ -283,7 +283,7 @@ model_space <- badp::optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value     = 0.5,
+  init_value    = function(n) rep(0.5, n),
 )
 
 # 3) Run Bayesian Model Averaging
