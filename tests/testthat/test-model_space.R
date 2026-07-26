@@ -276,3 +276,36 @@ test_that("drawing feasible starting points gives up after max_init_attempts", {
     "Could not draw a feasible starting point for the model with regressors: ish, sed in 5 attempts"
   )
 })
+
+
+test_that("BFGS stepping out of the region where the likelihood is defined does not abort", {
+  # Stand-in for the SEM likelihood: chol() throws once the parameter stops
+  # being positive, and the maximum lies just inside that edge, so from this
+  # starting point the line search is bound to step across it.
+  lik_tape <- RTMB::MakeTape(
+    function(p) {
+      "[<-" <- RTMB::ADoverload("[<-")
+      m <- matrix(0, 1, 1)
+      m[1, 1] <- p[1]
+      -100 * (p[1] + 5)^2 + sum(log(diag(chol(m))))
+    },
+    1
+  )
+  gr <- function(p) as.numeric(lik_tape$jacobian(p))
+
+  # handed to optim() unguarded, the error escapes and would abort the whole
+  # model space
+  expect_error(
+    stats::optim(1, lik_tape, gr = gr, method = "BFGS",
+                 control = list(fnscale = -1)),
+    "leading minor"
+  )
+
+  fit <- optim_with_restarts(1, lik_tape,
+                             control = list(fnscale = -1, maxit = 200),
+                             max_restarts = 2, restart_tol = 1e-3)
+
+  # the maximizer of -100 (p + 5)^2 + log(p) / 2 over p > 0
+  expect_equal(fit$par, 5e-4, tolerance = 0.01)
+  expect_equal(unname(fit$diagnostics["converged"]), 1)
+})

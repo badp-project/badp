@@ -133,19 +133,34 @@ regressor_names_from_params_vector <- function(params) {
 # diagnostics so that such models can be identified downstream.
 optim_with_restarts <- function(par, lik_tape, control, max_restarts,
                                 restart_tol) {
+  # BFGS is unconstrained: its line search evaluates the likelihood at trial
+  # points of full step length, which - especially from a randomly drawn
+  # starting point, where the first gradient is large - can lie outside the
+  # region where the likelihood is defined. stats::optim() rejects a trial
+  # point whose value is not finite and shrinks the step, but an R error
+  # propagates and aborts the whole model space, and the Cholesky
+  # factorizations in the likelihood do throw rather than return NaN when the
+  # covariance matrix is not positive definite (both while taping and while
+  # replaying the tape). Reporting such points as NA turns the error back
+  # into the step rejection optim() knows how to handle.
+  #
+  # The gradient needs no such guard: optim() only evaluates it at points the
+  # line search has already accepted, i.e. where the likelihood is defined.
+  fn <- function(p) tryCatch(as.numeric(lik_tape(p)),
+                             error = function(e) NA_real_)
   gr <- function(p) as.numeric(lik_tape$jacobian(p))
   maximize <- !is.null(control$fnscale) && control$fnscale < 0
   gain <- function(new, old) {
     if (maximize) new$value - old$value else old$value - new$value
   }
 
-  fit <- stats::optim(par, lik_tape, gr = gr, method = "BFGS",
+  fit <- stats::optim(par, fn, gr = gr, method = "BFGS",
                       control = control)
 
   n_restarts <- 0
   value_stalled <- FALSE
   while (n_restarts < max_restarts) {
-    refit <- stats::optim(fit$par, lik_tape, gr = gr, method = "BFGS",
+    refit <- stats::optim(fit$par, fn, gr = gr, method = "BFGS",
                           control = control)
     n_restarts <- n_restarts + 1
     improvement <- gain(refit, fit)

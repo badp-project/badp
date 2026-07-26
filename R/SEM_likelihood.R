@@ -58,8 +58,10 @@ sem_params_to_list <- function(params, n_periods, n_tot_regressors,
 # On the plain numeric path, a parameter point whose implied covariance
 # matrices S1 or H are not (numerically) positive definite yields NA: the
 # likelihood is undefined there. On the AD path the Cholesky guards cannot
-# early-return (values flow through the tape), so an infeasible point
-# surfaces as NaN instead, which optimizers treat the same way.
+# early-return (values flow through the tape), so at such a point chol()
+# throws instead - both while taping and while replaying the tape at a new
+# parameter point. Code optimizing over a tape therefore has to catch that
+# error itself; see optim_with_restarts().
 sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2,
                                      cur_Z, cur_Y2 = NULL, beta = NULL,
                                      phi_1 = NULL, phis = NULL, psis = NULL,

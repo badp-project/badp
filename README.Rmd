@@ -155,7 +155,7 @@ model_space <- badp::optim_model_space(
   timestamp_col  = year,
   entity_col     = country,
   dep_var_col    = gdp,
-  init_value     = function(n) runif(n, -10, 10),
+  init_value     = function(n) runif(n, -10, -0.1),
   cl             = cl
 )
 
