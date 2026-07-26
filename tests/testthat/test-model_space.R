@@ -309,3 +309,81 @@ test_that("BFGS stepping out of the region where the likelihood is defined does 
   expect_equal(fit$par, 5e-4, tolerance = 0.01)
   expect_equal(unname(fit$diagnostics["converged"]), 1)
 })
+
+
+test_that("usable_solution accepts only invertible observed information", {
+  # a proper maximum: positive definite and well conditioned
+  expect_true(usable_solution(diag(c(2, 3))))
+  # a stationary point that is not a maximum
+  expect_false(usable_solution(diag(c(2, -3))))
+  # positive definite in theory, singular in floating point
+  expect_false(usable_solution(diag(c(1, 1e-20))))
+})
+
+
+
+test_that("a solution no standard errors can be computed from is re-optimized", {
+  # -(x - 1)^2 - (x y)^2 is taped for real, so the observed information below
+  # is the genuine Hessian of it. At (0, 0) it is singular in the second
+  # coordinate; at (1, 0) it is an ordinary maximum.
+  local_mocked_bindings(
+    sem_likelihood = function(params, ...) {
+      -(params[1] - 1)^2 - (params[1] * params[2])^2
+    }
+  )
+
+  attempts <- 0
+  solutions <- list(c(0, 0), c(1, 0))
+  local_mocked_bindings(
+    optim_with_restarts = function(par, lik_tape, ...) {
+      attempts <<- attempts + 1
+      list(par = solutions[[min(attempts, length(solutions))]],
+           diagnostics = c(converged = 1, optim_code = 0, n_restarts = 0,
+                           max_abs_gradient = 0))
+    }
+  )
+
+  control <- list(trace = 0, maxit = 1000, fnscale = -1, scale = 0.05)
+  fit <- optim_from_usable_start(
+    c(2, 2), data = NULL, exact_value = FALSE,
+    init_value = function(n) rep(2, n), max_init_attempts = 10,
+    control = control, max_restarts = 2, restart_tol = 1e-3,
+    max_reoptimizations = 3, regressors_subset = "x")
+
+  # the first solution was discarded and the second one kept
+  expect_equal(attempts, 2)
+  expect_equal(fit$par, c(1, 0))
+  expect_equal(unname(fit$diagnostics["converged"]), 1)
+})
+
+
+test_that("re-optimization gives up after max_reoptimizations without erroring", {
+  local_mocked_bindings(
+    sem_likelihood = function(params, ...) {
+      -(params[1] - 1)^2 - (params[1] * params[2])^2
+    }
+  )
+
+  attempts <- 0
+  local_mocked_bindings(
+    optim_with_restarts = function(par, lik_tape, ...) {
+      attempts <<- attempts + 1
+      list(par = c(0, 0),
+           diagnostics = c(converged = 1, optim_code = 0, n_restarts = 0,
+                           max_abs_gradient = 0))
+    }
+  )
+
+  control <- list(trace = 0, maxit = 1000, fnscale = -1, scale = 0.05)
+  fit <- optim_from_usable_start(
+    c(2, 2), data = NULL, exact_value = FALSE,
+    init_value = function(n) rep(2, n), max_init_attempts = 10,
+    control = control, max_restarts = 2, restart_tol = 1e-3,
+    max_reoptimizations = 2, regressors_subset = "x")
+
+  # the first attempt plus the two allowed re-optimizations
+  expect_equal(attempts, 3)
+  # the model is kept, but is not passed off as converged
+  expect_equal(fit$par, c(0, 0))
+  expect_equal(unname(fit$diagnostics["converged"]), 0)
+})

@@ -17,7 +17,8 @@ nested_optimization_wrapper(
   max_init_attempts,
   control,
   max_restarts,
-  restart_tol
+  restart_tol,
+  max_reoptimizations
 )
 }
 \arguments{
@@ -59,6 +60,11 @@ Default is \code{5}.}
 \item{restart_tol}{Log-likelihood improvement between restarts below which
 the optimization is considered converged. Improvements of this size are
 immaterial for posterior model probabilities. Default is \code{1e-3}.}
+
+\item{max_reoptimizations}{Maximum number of times this model is
+re-optimized from a fresh starting point when its solution turns out to be
+one no standard errors can be computed from. See
+\link[badp]{optim_model_space}.}
 }
 \value{
 List (or matrix) of parameters describing analyzed models.
