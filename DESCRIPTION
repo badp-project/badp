@@ -54,7 +54,7 @@ Imports:
     pbapply,
     rje,
     rlang,
-    RTMB,
+    RTMB (>= 1.6),
     stats,
     tibble,
     tidyr,
