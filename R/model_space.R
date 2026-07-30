@@ -230,7 +230,16 @@ feasible_init_params <- function(params_no_na, data, exact_value, init_value,
 # requiring positive definiteness on top of that rejects stationary points
 # which are not maxima - their inverse has negative entries on the diagonal
 # and the square root of those is NaN.
+#
+# Second derivatives taped through `^` can themselves come back NaN at a
+# point where the base is exactly zero (a CppAD/TMB pow() artifact: pow(x, y)
+# for non-integer-literal y is evaluated as exp(y * log(x)), so the reverse
+# sweep meets log(0) = -Inf). rcond() has no graceful failure mode for that -
+# it raises a raw LAPACK error instead of reporting non-invertibility - so
+# non-finite entries have to be rejected before reaching it.
 usable_solution <- function(observed_information) {
+  if (!all(is.finite(observed_information))) return(FALSE)
+
   positive_definite <- tryCatch({
     chol(observed_information)
     TRUE
