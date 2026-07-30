@@ -172,9 +172,14 @@ sem_sigma_matrix <- function(err_var, dep_vars, phis = NULL, psis = NULL) {
 
   n_periods <- length(dep_vars)
 
-  O11 <- err_var^2 * matrix(1, n_periods, n_periods)
+  # x * x rather than x^2: CppAD's pow() evaluates x^y as exp(y * log(x)) for
+  # non-integer-literal y, so its second derivative is NaN wherever the tape
+  # meets log(0) - even though the true derivative of x^2 is finite there.
+  # The Hessian of the likelihood is needed at the fitted parameters, and a
+  # fitted err_var or dep_var can legitimately land at (or very near) zero.
+  O11 <- (err_var * err_var) * matrix(1, n_periods, n_periods)
   for (i in 1:n_periods) {
-    O11[i, i] <- O11[i, i] + dep_vars[i]^2
+    O11[i, i] <- O11[i, i] + dep_vars[i] * dep_vars[i]
   }
 
   if (is.null(phis) || length(phis) == 0) {
