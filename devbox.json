@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.17.3/.schema/devbox.schema.json",
+  "packages": [
+    "R@4.4.1",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.pkgdown",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.pkgload",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.rmarkdown",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.roxygen2",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.spelling",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#rPackages.testthat",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#freetype",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#libjpeg",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#libpng",
+    "github:NixOS/nixpkgs/de1864217bfa9b5845f465e771e0ecb48b30e02d#libtiff",
+    "just@latest"
+  ],
+  "shell": {}
+}
