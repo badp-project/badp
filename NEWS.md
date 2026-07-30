@@ -27,6 +27,7 @@
 * Exported `join_lagged_col` function.
 * Standardized internal variable naming to R-idiomatic conventions (e.g., `n_` prefix for counts, `df_free` for degrees of freedom).
 * Fixed spelling mistakes and grammar in documentation.
+* Added a `devbox`-based reproducible development environment (`devbox.json`) and a `justfile` with shortcuts for common development tasks (`just test`, `just check`, `just document`, etc.).
 
 # badp 0.4.0
 
