@@ -325,10 +325,15 @@ test_that("usable_solution accepts only invertible observed information", {
 test_that("a solution no standard errors can be computed from is re-optimized", {
   # -(x - 1)^2 - (x y)^2 is taped for real, so the observed information below
   # is the genuine Hessian of it. At (0, 0) it is singular in the second
-  # coordinate; at (1, 0) it is an ordinary maximum.
+  # coordinate; at (1, 0) it is an ordinary maximum. Written with explicit
+  # multiplication rather than ^2: CppAD's pow() evaluates x^y as
+  # exp(y * log(x)) for non-integer-literal y, so its second derivative is
+  # NaN wherever the tape meets log(0), even where the true derivative is
+  # finite - which both (0, 0) and (1, 0) do here, through the x * y term.
   local_mocked_bindings(
     sem_likelihood = function(params, ...) {
-      -(params[1] - 1)^2 - (params[1] * params[2])^2
+      -(params[1] - 1) * (params[1] - 1) -
+        (params[1] * params[2]) * (params[1] * params[2])
     }
   )
 
@@ -360,7 +365,8 @@ test_that("a solution no standard errors can be computed from is re-optimized", 
 test_that("re-optimization gives up after max_reoptimizations without erroring", {
   local_mocked_bindings(
     sem_likelihood = function(params, ...) {
-      -(params[1] - 1)^2 - (params[1] * params[2])^2
+      -(params[1] - 1) * (params[1] - 1) -
+        (params[1] * params[2]) * (params[1] * params[2])
     }
   )
 
