@@ -158,7 +158,7 @@ optim_with_restarts <- function(par, lik_tape, control, max_restarts,
                       control = control)
 
   n_restarts <- 0
-  value_stalled <- FALSE
+  value_stalled <- max_restarts == 0
   while (n_restarts < max_restarts) {
     refit <- stats::optim(fit$par, fn, gr = gr, method = "BFGS",
                           control = control)
