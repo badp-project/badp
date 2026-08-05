@@ -99,6 +99,10 @@ sem_C_matrix <- function(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL) {
     return(C1)
   }
 
+  if (length(phi_1) != length(beta)) {
+    stop("phi_1 must be supplied with the same length as beta.")
+  }
+
   n_regressors <- length(phi_1)
   C2 <- matrix(0, n_periods, n_regressors)
   for (row_ind in 1:n_periods) {
