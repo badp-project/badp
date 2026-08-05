@@ -84,7 +84,7 @@ set.seed(20)
 
 # Features are scaled and demeaned,
 # then centralized around the mean within cross-sections (fixed time effects)
-data_prepared <- badp::economic_growth[, 1:5] %>%
+data_prepared <- badp::economic_growth %>%
   badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) %>%
