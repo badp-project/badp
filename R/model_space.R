@@ -58,8 +58,18 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_timestamps <- counts[[1]] - 1
   n_entities <- counts[[2]]
 
+  draw_init_values <- function(n) {
+    values <- init_value(n)
+    if (any(values == 0)) {
+      stop("init_value() generated a value equal to 0, but 0 is reserved to ",
+           "mark an excluded parameter below; init_value() must only return ",
+           "non-zero values.")
+    }
+    values
+  }
+
   fill_mask <- function(mask) {
-    mask[mask == 1] <- init_value(sum(mask == 1))
+    mask[mask == 1] <- draw_init_values(sum(mask == 1))
     mask
   }
   inclusion_mask <- rje::powerSetMat(n_regressors)
@@ -71,7 +81,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
     c(paste('beta', regressors, sep="_"), paste('phi_1', regressors, sep="_"))
 
   dep_var_matrix <-
-    t(matrix(init_value(2^n_regressors * (3 + n_timestamps)),
+    t(matrix(draw_init_values(2^n_regressors * (3 + n_timestamps)),
              nrow = 2^n_regressors, ncol = 3 + n_timestamps))
   rownames(dep_var_matrix) <- c(c('alpha', 'phi_0', 'err_var'),
                                 paste('dep_var', 1:n_timestamps, sep = '_'))
@@ -80,7 +90,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
   n_psis <- n_regressors * (n_timestamps - 1) * n_timestamps / 2
 
   psis_phis_matrix <-
-    matrix(init_value((n_phis + n_psis) * 2^n_regressors),
+    matrix(draw_init_values((n_phis + n_psis) * 2^n_regressors),
            nrow = n_phis + n_psis, ncol = 2^n_regressors)
 
   . <- NULL
