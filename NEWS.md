@@ -1,13 +1,15 @@
 # badp 0.6.0
 
-* **Breaking change**: `init_value` (in `optim_model_space()`,
-  `optim_model_space_params()` and `init_model_space_params()`) must now be a
-  generator function of one argument `n` returning `n` starting values.
-  Passing a single number, which was still accepted in 0.5.0, now fails with
-  `could not find function "init_value"`. A constant starting point is
-  obtained with `function(n) rep(0.5, n)`, which reproduces the previous
-  behaviour of `init_value = 0.5`. Generated values must be non-zero, because
-  zero is reserved to mark a parameter excluded from a given model.
+* `init_value` accepts either a generator function of one argument `n`
+  returning `n` starting values, or a single number used as the starting
+  value for every parameter; `init_value = 0.5` is equivalent to
+  `function(n) rep(0.5, n)`. Support for a single number was inadvertently
+  lost during development of this release and has been restored, so code
+  written against 0.4.0 and 0.5.0 continues to work. Passing `0`, a vector of
+  length greater than one, or anything that is neither a function nor a
+  single finite number now fails with an informative error instead of an
+  error about an unrelated internal call. Zero is rejected because it is
+  reserved to mark a parameter excluded from a given model.
 * `optim_model_space()` gained `max_init_attempts` and `max_reoptimizations`.
   A starting point that falls in a region where the likelihood is undefined
   is now redrawn from `init_value` (up to `max_init_attempts` times), and a
@@ -29,6 +31,9 @@
 * Fixed `init_value()`-drawn zeros being treated as excluded parameters.
 * `RTMB (>= 1.6)` is now required, for automatic-differentiation support in
   `chol()` and `determinant()`.
+* The minimum required R version was raised from 3.5 to 4.4, to match the
+  requirement of `Matrix`, on which `RTMB` depends through `TMB`. The
+  previous declaration could not be satisfied in practice.
 * Regenerated the bundled `small_model_space`, `migration_model_space` and
   `migration_model_space_nonnested` objects with the fixed automatic
   differentiation pipeline.
@@ -47,8 +52,7 @@
 * `init_value` (in `optim_model_space()` and related functions) now also
   accepts a generator function of one argument `n` returning `n` starting
   values (e.g. `function(n) runif(n, 0.1, 1)`), enabling randomized
-  multi-start experiments. Passing a single number behaves as before. (Note:
-  in 0.6.0 the generator form became the only accepted one; see above.)
+  multi-start experiments. Passing a single number behaves as before.
 * Per-model optimization is now restarted until the log-likelihood value
   stops improving (`max_restarts` and `restart_tol` arguments of
   `optim_model_space()`), and per-model convergence diagnostics (converged

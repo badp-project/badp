@@ -5,6 +5,7 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^data-raw$
+^dev$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^\.github$
@@ -15,3 +16,12 @@
 ^pkgdown$
 ^\.claude$
 ^\.positai$
+^devbox\.json$
+^devbox\.lock$
+^justfile$
+\.DS_Store$
+^\.Rhistory$
+^\.Rprofile$
+^vignettes/bdsm_vignette.*$
+^vignettes/badp_vignette_jss.*$
+^vignettes/.*\.synctex\.gz$

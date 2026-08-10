@@ -35,7 +35,6 @@ BugReports: https://github.com/badp-project/badp/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 8.0.0
 Suggests:
     pkgdown,
     rmarkdown,
@@ -61,5 +60,6 @@ Imports:
     tidyselect
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.5)
+    R (>= 4.4)
 Language: en-US
+Config/roxygen2/version: 8.1.0

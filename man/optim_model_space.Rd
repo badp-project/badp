@@ -34,9 +34,10 @@ starting values for the numerical optimization (e.g.
 \code{function(n) runif(n, 0.1, 1)}). It is called separately for every
 model, so every model gets its own starting point; with a random generator
 this turns the estimation into a randomized multi-start experiment. A
-constant starting point is obtained with \code{function(n) rep(0.5, n)}.
-Generated values must be non-zero, because zeros encode excluded
-parameters.}
+single number is also accepted and is used as the starting value for every
+parameter, so that \code{init_value = 0.5} is equivalent to
+\code{function(n) rep(0.5, n)}. Starting values must be non-zero, because
+zeros encode excluded parameters.}
 
 \item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
 deviations using the nested-model approach via
