@@ -1,3 +1,38 @@
+# badp 0.6.0
+
+* **Breaking change**: `init_value` (in `optim_model_space()`,
+  `optim_model_space_params()` and `init_model_space_params()`) must now be a
+  generator function of one argument `n` returning `n` starting values.
+  Passing a single number, which was still accepted in 0.5.0, now fails with
+  `could not find function "init_value"`. A constant starting point is
+  obtained with `function(n) rep(0.5, n)`, which reproduces the previous
+  behaviour of `init_value = 0.5`. Generated values must be non-zero, because
+  zero is reserved to mark a parameter excluded from a given model.
+* `optim_model_space()` gained `max_init_attempts` and `max_reoptimizations`.
+  A starting point that falls in a region where the likelihood is undefined
+  is now redrawn from `init_value` (up to `max_init_attempts` times), and a
+  model whose observed information matrix is not positive definite is
+  re-optimized from a fresh starting point (up to `max_reoptimizations`
+  times) instead of being reported as a failure.
+* The `convergence` element of `badp_model_space` objects gained an
+  `n_init_draws` row, recording how many starting points were drawn before
+  one at which the likelihood is defined was found.
+* Automatic differentiation errors encountered during optimization no longer
+  abort the procedure; the line search corrects the step size instead, which
+  is the intended behaviour.
+* `optim()`'s own convergence flag is now honored when `max_restarts = 0`.
+* Non-finite observed-information matrices are rejected in
+  `usable_solution()` rather than propagating `NaN` standard errors.
+* Fixed `sem_sigma_matrix()` to use multiplication instead of `^2`, avoiding
+  an automatic-differentiation artifact at zero.
+* Fixed `sem_C_matrix()` to validate the length of `phi_1` against `beta`.
+* Fixed `init_value()`-drawn zeros being treated as excluded parameters.
+* `RTMB (>= 1.6)` is now required, for automatic-differentiation support in
+  `chol()` and `determinant()`.
+* Regenerated the bundled `small_model_space`, `migration_model_space` and
+  `migration_model_space_nonnested` objects with the fixed automatic
+  differentiation pipeline.
+
 # badp 0.5.0
 
 * Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
@@ -12,7 +47,8 @@
 * `init_value` (in `optim_model_space()` and related functions) now also
   accepts a generator function of one argument `n` returning `n` starting
   values (e.g. `function(n) runif(n, 0.1, 1)`), enabling randomized
-  multi-start experiments. Passing a single number behaves as before.
+  multi-start experiments. Passing a single number behaves as before. (Note:
+  in 0.6.0 the generator form became the only accepted one; see above.)
 * Per-model optimization is now restarted until the log-likelihood value
   stops improving (`max_restarts` and `restart_tol` arguments of
   `optim_model_space()`), and per-model convergence diagnostics (converged
