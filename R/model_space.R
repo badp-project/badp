@@ -1,3 +1,31 @@
+# Normalize the init_value argument to a generator function.
+#
+# init_value is documented as a function of one argument n returning n
+# starting values, but a single number is also accepted as a convenience and
+# is turned into the equivalent constant generator. Zero is rejected here,
+# rather than deeper inside draw_init_values(), because 0 is reserved to mark
+# a parameter excluded from a given model.
+as_init_generator <- function(init_value) {
+  if (is.function(init_value)) {
+    return(init_value)
+  }
+
+  if (is.numeric(init_value) && length(init_value) == 1L &&
+      is.finite(init_value)) {
+    if (init_value == 0) {
+      stop("`init_value` cannot be 0, because 0 is reserved to mark a ",
+           "parameter excluded from a given model; use a non-zero starting ",
+           "value.", call. = FALSE)
+    }
+    value <- init_value
+    return(function(n) rep(value, n))
+  }
+
+  stop("`init_value` must be a function of one argument `n` returning `n` ",
+       "starting values (e.g. `function(n) runif(n, 0.1, 1)`), or a single ",
+       "non-zero number.", call. = FALSE)
+}
+
 #' Initialize model space matrix
 #'
 #' This function builds a representation of the model space, by creating a
@@ -22,8 +50,9 @@
 #' starting values (e.g. \code{function(n) runif(n, 0.1, 1)}). It generates the
 #' starting point for every parameter of every model and thus enables, e.g.,
 #' grid or randomized multi-start experiments. A constant starting point is
-#' obtained with \code{function(n) rep(0.5, n)}. Generated values must be
-#' non-zero, because zeros encode excluded parameters.
+#' obtained with \code{function(n) rep(0.5, n)}, or equivalently by passing
+#' the single number \code{0.5}. Starting values must be non-zero, because
+#' zeros encode excluded parameters.
 #'
 #' @return matrix of model parameters
 #'
@@ -46,6 +75,8 @@
 #' @keywords internal
 init_model_space_params <- function(df, timestamp_col, entity_col,
                                     dep_var_col, init_value) {
+  init_value <- as_init_generator(init_value)
+
   regressors <- df %>%
     regressor_names(timestamp_col = {{ timestamp_col }},
                     entity_col = {{ entity_col }},
@@ -359,9 +390,9 @@ optim_from_usable_start <- function(params_no_na, data, exact_value,
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
 #' @param init_value The generator function the starting point in \code{params}
-#' was drawn from. It is used to redraw the starting point if the likelihood
-#' turns out to be undefined at the drawn point. See
-#' \link[badp]{optim_model_space}.
+#' was drawn from, or a single number standing for the corresponding constant
+#' generator. It is used to redraw the starting point if the likelihood turns
+#' out to be undefined at the drawn point. See \link[badp]{optim_model_space}.
 #' @param max_init_attempts Maximum number of starting points drawn from
 #' \code{init_value} for this model. See \link[badp]{optim_model_space}.
 #' @param control a list of control parameters for the optimization which are
@@ -398,6 +429,8 @@ nested_optimization_wrapper <- function(
     restart_tol,
     max_reoptimizations
     ) {
+  init_value <- as_init_generator(init_value)
+
   regressors_subset <- regressor_names_from_params_vector(params)
 
   model_specific_matrices <- df %>%
@@ -437,9 +470,9 @@ nested_optimization_wrapper <- function(
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
 #' @param init_value The generator function the starting point in \code{params}
-#' was drawn from. It is used to redraw the starting point if the likelihood
-#' turns out to be undefined at the drawn point. See
-#' \link[badp]{optim_model_space}.
+#' was drawn from, or a single number standing for the corresponding constant
+#' generator. It is used to redraw the starting point if the likelihood turns
+#' out to be undefined at the drawn point. See \link[badp]{optim_model_space}.
 #' @param max_init_attempts Maximum number of starting points drawn from
 #' \code{init_value} for this model. See \link[badp]{optim_model_space}.
 #' @param control a list of control parameters for the optimization which are
@@ -486,6 +519,8 @@ non_nested_optimization_wrapper <- function(
     restart_tol,
     max_reoptimizations
   ) {
+  init_value <- as_init_generator(init_value)
+
   # derive the set of all matrices needed, based on reduced df
   regressors_subset <- regressor_names_from_params_vector(params)
   # reduced data-frame: it will not work if regressors_subset empty
@@ -553,9 +588,10 @@ non_nested_optimization_wrapper <- function(
 #' \code{function(n) runif(n, 0.1, 1)}). It is called separately for every
 #' model, so every model gets its own starting point; with a random generator
 #' this turns the estimation into a randomized multi-start experiment. A
-#' constant starting point is obtained with \code{function(n) rep(0.5, n)}.
-#' Generated values must be non-zero, because zeros encode excluded
-#' parameters.
+#' single number is also accepted and is used as the starting value for every
+#' parameter, so that \code{init_value = 0.5} is equivalent to
+#' \code{function(n) rep(0.5, n)}. Starting values must be non-zero, because
+#' zeros encode excluded parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
@@ -637,6 +673,8 @@ optim_model_space_params <- function(
   max_reoptimizations = 5,
   max_init_attempts = 100
   ) {
+
+  init_value <- as_init_generator(init_value)
 
   all_regressors <- df %>%
     dplyr::select(
@@ -1052,9 +1090,10 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' \code{function(n) runif(n, 0.1, 1)}). It is called separately for every
 #' model, so every model gets its own starting point; with a random generator
 #' this turns the estimation into a randomized multi-start experiment. A
-#' constant starting point is obtained with \code{function(n) rep(0.5, n)}.
-#' Generated values must be non-zero, because zeros encode excluded
-#' parameters.
+#' single number is also accepted and is used as the starting value for every
+#' parameter, so that \code{init_value = 0.5} is equivalent to
+#' \code{function(n) rep(0.5, n)}. Starting values must be non-zero, because
+#' zeros encode excluded parameters.
 #' @param exact_value Whether the exact value of the likelihood should be
 #' computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 #' \link[badp]{sem_likelihood} for details.
@@ -1176,6 +1215,8 @@ optim_model_space <-
     max_reoptimizations = 5,
     max_init_attempts = 100
   ) {
+    init_value <- as_init_generator(init_value)
+
     params <- optim_model_space_params(
       df                = df,
       timestamp_col     = {{timestamp_col}},

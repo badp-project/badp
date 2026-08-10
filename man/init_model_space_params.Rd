@@ -20,8 +20,9 @@ natural numbers can be used as timestamps}
 starting values (e.g. \code{function(n) runif(n, 0.1, 1)}). It generates the
 starting point for every parameter of every model and thus enables, e.g.,
 grid or randomized multi-start experiments. A constant starting point is
-obtained with \code{function(n) rep(0.5, n)}. Generated values must be
-non-zero, because zeros encode excluded parameters.}
+obtained with \code{function(n) rep(0.5, n)}, or equivalently by passing
+the single number \code{0.5}. Starting values must be non-zero, because
+zeros encode excluded parameters.}
 }
 \value{
 matrix of model parameters

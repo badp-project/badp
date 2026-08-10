@@ -67,15 +67,18 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
 })
 
 non_zero_stats_mask_generator <- function(n_lin_features) {
-  ones <- rep(1, n_lin_features)
   lin_features_mask <- t(rje::powerSetMat(n_lin_features))
+  # One entry per model, i.e. one per column of lin_features_mask, so that
+  # rbind() below does not have to recycle these rows.
+  n_models <- ncol(lin_features_mask)
+  ones <- rep(1, n_models)
   mask_where_nonzero <- rbind(
     ones, ones, ones,
     lin_features_mask,
     ones,
     lin_features_mask
   )
-  zeros <- rep(0, n_lin_features)
+  zeros <- rep(0, n_models)
   mask_where_greater_than_zero <- rbind(
     zeros, zeros, zeros,
     lin_features_mask,
@@ -239,6 +242,55 @@ test_that("init_model_space_params draws starting values from init_value", {
   random_params_again <- init_model_space_params(
     df, year, country, gdp, init_value = function(n) runif(n, 0.1, 1))
   expect_equal(random_params, random_params_again)
+})
+
+
+test_that("init_value accepts a single number as a constant generator", {
+  df <- badp::economic_growth[, 1:5]
+
+  from_generator <- init_model_space_params(
+    df, year, country, gdp, init_value = function(n) rep(0.5, n))
+  from_scalar <- init_model_space_params(
+    df, year, country, gdp, init_value = 0.5)
+
+  expect_equal(from_scalar, from_generator)
+
+  # an integer is fine too
+  expect_equal(
+    init_model_space_params(df, year, country, gdp, init_value = 2L),
+    init_model_space_params(df, year, country, gdp,
+                            init_value = function(n) rep(2L, n))
+  )
+})
+
+
+test_that("init_value rejects zero and other invalid inputs", {
+  df <- badp::economic_growth[, 1:5]
+
+  # 0 is reserved to mark an excluded parameter
+  expect_error(
+    init_model_space_params(df, year, country, gdp, init_value = 0),
+    "cannot be 0"
+  )
+  expect_error(
+    init_model_space_params(df, year, country, gdp,
+                            init_value = function(n) rep(0, n)),
+    "reserved"
+  )
+
+  # neither a function nor a single finite number
+  expect_error(
+    init_model_space_params(df, year, country, gdp, init_value = c(0.5, 0.7)),
+    "must be a function"
+  )
+  expect_error(
+    init_model_space_params(df, year, country, gdp, init_value = "0.5"),
+    "must be a function"
+  )
+  expect_error(
+    init_model_space_params(df, year, country, gdp, init_value = NA_real_),
+    "must be a function"
+  )
 })
 
 

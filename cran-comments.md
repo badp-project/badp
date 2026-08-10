@@ -1,3 +1,45 @@
+# 0.6.0
+
+## Update
+
+This is an update of the CRAN version 0.4.0.1. Version 0.5.0 was developed but
+never submitted, so this release also carries its changes. The full list is in
+NEWS.md; the points most relevant to the check results are:
+
+* The SEM likelihood, previously implemented in C++ via `Rcpp` and
+  `RcppArmadillo`, is now implemented in R and differentiated with automatic
+  differentiation provided by `RTMB`. The optimization uses exact gradients
+  instead of finite differences, and standard errors are computed from the
+  exact Hessian. Values of the likelihood at given parameters are unchanged;
+  optimized parameters and standard errors may differ slightly and are more
+  accurate.
+* Consequently the package no longer contains compiled code: the `src`
+  directory has been removed, and the `Rcpp`, `RcppArmadillo`, `rootSolve`
+  and `optimbase` dependencies have been dropped in favour of
+  `RTMB (>= 1.6)`. This also resolves the installed package size NOTE
+  reported on r-oldrel-macos-x86_64 for 0.4.0.
+* S3 classes and methods were added for the objects returned by `bma()` and
+  `optim_model_space()` (`print()`, `summary()`, `coef()`, `plot()`).
+* The minimum required R version was raised from 3.5 to 4.4. `RTMB` depends
+  on `TMB`, which imports `Matrix`, and `Matrix` requires R (>= 4.4); the
+  previous declaration could not be satisfied in practice.
+* The bundled example datasets were regenerated with the current code.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* checking for future file timestamps ... NOTE
+  unable to verify current time
+
+  This NOTE reflects the check machine being unable to reach the external
+  time service used to detect future-dated files. It is unrelated to the
+  package.
+
+## Downstream dependencies
+
+There are no downstream dependencies on CRAN.
+
 # 0.4.0.1
 
 ## Patch release

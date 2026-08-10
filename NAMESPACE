@@ -42,12 +42,16 @@ export(sem_regressors_matrix)
 export(sem_sigma_matrix)
 import(rje)
 import(stats)
-importFrom(RTMB,ADoverload)
-importFrom(RTMB,MakeTape)
-importFrom(RTMB,diag)
-importFrom(RTMB,solve)
-importFrom(dplyr,all_of)
-importFrom(dplyr,select)
+importFrom(RTMB,
+  ADoverload,
+  MakeTape,
+  diag,
+  solve
+)
+importFrom(dplyr,
+  all_of,
+  select
+)
 importFrom(magrittr,"%>%")
 importFrom(parallel,parApply)
 importFrom(pbapply,pbapply)
