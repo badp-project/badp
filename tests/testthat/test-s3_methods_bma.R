@@ -6,8 +6,8 @@ test_that("badp_bma class is properly assigned", {
 test_that("numeric indexing still works after adding S3 class (backward compatibility)", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test all 17 components are accessible by numeric index
-  expect_equal(length(bma_results), 17)
+  # Test all 19 components are accessible by numeric index
+  expect_equal(length(bma_results), 19)
   expect_true(is.matrix(bma_results[[1]]))  # uniform_table
   expect_true(is.matrix(bma_results[[2]]))  # random_table
   expect_equal(length(bma_results[[3]]), bma_results[[4]] + 1)  # reg_names length = R + 1

@@ -1,5 +1,79 @@
 # badp 0.6.0
 
+* `optim_model_space()` now warns when a model has at least as many
+  parameters as there are entities. The robust ("sandwich") standard errors
+  are built from `J = sum_i s_i s_i'`, the outer product of the `N`
+  entity-level score vectors, so `J` has rank at most `N` and is singular in
+  that case. The `PSDR` and `PSDRcon` columns of `bma()` are then not
+  identified: some linear combinations of the parameters are assigned zero
+  estimated variance and the remaining entries depend appreciably on how the
+  derivatives are obtained. This is the too-few-clusters problem of
+  cluster-robust inference, with entities in the role of clusters, and it is
+  a property of the design rather than of the estimation. The likelihood,
+  the posterior means, the posterior inclusion probabilities and the
+  Hessian-based standard errors `PSD` and `PSDcon` are unaffected.
+
+  This applies to the bundled `full_model_space`, in which all 512 models
+  have between 88 and 106 parameters against 73 entities, and hence to the
+  robust standard deviations reported for the economic growth data
+  throughout the literature that this package reproduces. Posterior means
+  and inclusion probabilities for that dataset continue to match the
+  published values to 0.002 and 0.4 percentage points respectively.
+* `bma(weighting = "curvature")` warns for the same reason, since the
+  adjusted learning rate `dim(theta) / tr(H^-1 J)` uses the same `J`. An
+  estimate above one is a symptom of the deficiency rather than a meaningful
+  value.
+* `bma()` gained a `weighting` argument selecting the approximation to the
+  marginal likelihood used to weight the models. Writing
+  `A_j = loglik_j - (k_j/2)*log(N*T)`, four of the five options are the same
+  construction with different learning rates `eta`, `log w_j = eta * A_j`:
+    * `"mb2016"` (default, `eta = 1/N`) is unchanged behaviour, the
+      approximation computed by the implementation accompanying Moral-Benito
+      (2016), and the option that reproduces the posterior inclusion
+      probabilities and posterior moments published there;
+    * `"mb2012"` (`eta = 1`) is the Schwarz criterion exactly as stated in
+      equations (24)-(30) of Moral-Benito (2012);
+    * `"nt"` (`eta = 1/(N*T)`) averages over entity-periods rather than
+      entities, the scaling that would be internally consistent with the
+      `log(N*T)` penalty;
+    * `"curvature"` estimates `eta` from the data by the magnitude
+      ("omnibus") adjustment used for misspecified and composite likelihoods
+      (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012), rather than
+      fixing it a priori. The rate is `dim(theta) / tr(H^-1 J)`, which equals
+      one exactly when the information matrix equality holds.
+* The model space statistics gained two rows, holding `tr(H^-1 J)` and the
+  dimension of the parameter vector for each model. Both matrices are already
+  formed by the automatic differentiation used to compute the standard errors,
+  so the curvature adjustment above is evaluated exactly rather than
+  approximated. The new rows are appended after the existing ones, so code
+  indexing the likelihood, weight or standard-error rows is unaffected. Model
+  spaces fitted with earlier versions do not carry them; `bma()` then falls
+  back to an approximation based on the ratio of robust to Hessian-based
+  standard errors and emits a message.
+
+  The fifth option, `"uip"`, instead alters the penalty, using
+  `exp(loglik - (k/2)*log(N))` with the entity as the unit of information, as
+  implied by the unit information prior of Kass and Wasserman (1995) given
+  that the likelihood factorises over entities.
+
+  Any `eta != 1` gives a tempered (power) posterior over models, which lies
+  outside the approximation that motivates the criterion. A rate held fixed
+  as the sample grows only rescales the log weights, so the posterior still
+  concentrates, more slowly for `eta < 1`. A rate that shrinks with the
+  sample is different in kind: under `eta = 1/N` the log weights converge to
+  constants and the posterior never concentrates. Conversely `eta = 1`
+  concentrates sharply and can place nearly all posterior mass on a single
+  model. The choice can therefore change posterior inclusion
+  probabilities materially, and users are encouraged to check the sensitivity
+  of their conclusions. Switching between the options requires no
+  re-estimation, as all are recovered from the same fitted model space.
+* The selected weighting and the realised learning rate are recorded in the
+  new `weighting` and `eta` elements (slots 18 and 19) of `badp_bma` objects.
+  Existing slots 1-17 are unchanged, so numeric indexing of earlier elements
+  continues to work.
+* Model weights are now formed on the log scale and shifted before
+  exponentiation, which prevents overflow when log Bayes factors are large.
+
 * `init_value` accepts either a generator function of one argument `n`
   returning `n` starting values, or a single number used as the starting
   value for every parameter; `init_value = 0.5` is equivalent to

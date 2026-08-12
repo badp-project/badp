@@ -14,6 +14,10 @@ time_effect_migration <- feature_standardization(df = standardized_migration, gr
 library(parallel)
 cores <- detectCores()
 cl <- makeCluster(cores)
+# The workers must load the development version of the package, not whatever
+# is installed; otherwise the model space is computed by the installed code
+# and silently differs from the one the master session would produce.
+clusterEvalQ(cl, devtools::load_all())
 setDefaultCluster(cl)
 
 migration_model_space <- optim_model_space(

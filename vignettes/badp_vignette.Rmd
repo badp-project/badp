@@ -678,7 +678,72 @@ to which the BMA statistics should be rounded in the results.
 bma_results <- bma(full_model_space, round = 3)
 ```
 
-The `bma` function returns a list containing 16 elements.
+The `weighting` parameter selects the approximation to the marginal likelihood
+$L(\text{data}|M_j)$ used to weight the models. Writing
+
+$$A_j = \hat{\ell}_j - \frac{k_j}{2}\log(NT),$$
+
+where $\hat{\ell}_j$ is the maximized log-likelihood of model $M_j$, $k_j$ its
+number of linear parameters, $N$ the number of entities and $T$ the number of
+periods, four of the five available options are the same construction with
+different learning rates $\eta$, namely
+$L(\text{data}|M_j) \propto \exp(\eta A_j)$:
+
+- `"mb2016"` (the default), $\eta = 1/N$. This is the approximation computed by
+  the implementation accompanying @Moral+2016, and the option that
+  reproduces the results published there.
+- `"mb2012"`, $\eta = 1$, i.e. $\exp\{-\text{BIC}_j/2\}$ with the $NT$
+  entity-period observations treated as the sample, as stated in equations
+  (24)-(30) of @Moral+2012.
+- `"nt"`, $\eta = 1/(NT)$, averaging over entity-periods rather than entities.
+  This is the rate that would be internally consistent with the $\log(NT)$
+  penalty, and it tempers $T$ times more strongly than `"mb2016"`.
+- `"curvature"`, with $\eta$ estimated from the data rather than fixed a
+  priori, by the magnitude adjustment developed for misspecified and composite
+  likelihoods [@Chandler+2007; @Ribatet+2012].
+  When a likelihood overstates the information in the data, the observed
+  information and the outer product of the entity-level scores disagree, and
+  rescaling the log-likelihood restores the nominal calibration of the
+  likelihood ratio. The realized value is returned in the `eta` element.
+  This option requires models with fewer parameters than there are entities:
+  the rate is $\dim(\theta)/\operatorname{tr}(H^{-1}J)$ with
+  $J = \sum_{i=1}^{N} s_i s_i'$, which has rank at most $N$. `bma` warns when
+  the condition fails, and an estimate above one is then a symptom of the
+  deficiency rather than a meaningful value. It fails for the economic growth
+  model space used here, whose models carry between 88 and 106 parameters
+  against 73 countries.
+
+The fifth option, `"uip"`, instead alters the penalty rather than the rate,
+setting $L(\text{data}|M_j) \propto \exp\{\hat{\ell}_j - \frac{k_j}{2}\log(N)\}$
+and so taking the entity rather than the entity-period as the unit of
+information. The unit information prior underlying the approximation
+[@Kass+1995b] is defined through the Fisher information for a
+single observation, and the likelihood factorizes over entities, so the entity
+is the natural unit.
+
+The choice matters. Any $\eta \neq 1$ yields a tempered posterior over the model
+space, proportional to $L(\text{data}|M_j)^{\eta}$, which lies outside the BIC
+approximation that motivates the criterion. A rate held fixed as the sample
+grows rescales all log weights by a common factor, so the posterior still
+concentrates on the best model in the space, only more slowly for $\eta < 1$
+and faster for $\eta > 1$. A rate that shrinks with the sample is different in
+kind: under $\eta = 1/N$ the log weight of a model at Kullback-Leibler distance
+$c_j$ per entity satisfies $\eta A_j = A_j/N \rightarrow -c_j$, so the weights
+converge to the fixed positive constants $\exp(-c_j)$ and the posterior does
+not concentrate however large $N$ becomes. Conversely $\eta = 1$ concentrates the posterior
+sharply, and on likelihoods of this kind it can place nearly all of the
+posterior mass on a single model, in which case model averaging reduces to
+model selection. We retain `"mb2016"` as the default so that results remain
+comparable with the published literature, and recommend that users examine the
+sensitivity of their conclusions to this choice. Switching between the options
+requires no re-estimation, because all of them are recovered from the same
+fitted model space:
+
+```{r, eval = FALSE}
+bma_results_mb2012 <- bma(full_model_space, round = 3, weighting = "mb2012")
+```
+
+The `bma` function returns a list containing 19 elements.
 However, most of these elements are only required for other functions.
 The main objects of interest are the two tables with the BMA statistics.
 The results obtained with binomial model prior are first on the list.

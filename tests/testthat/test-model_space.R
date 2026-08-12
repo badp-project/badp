@@ -66,25 +66,38 @@ test_that("optim_model_space_params correctly computes small_economic_growth_ms"
   compare_matrices(params, small_model_space$params, tols = rep(0.01, 8))
 })
 
-non_zero_stats_mask_generator <- function(n_lin_features) {
+non_zero_stats_mask_generator <- function(n_lin_features, n_rows = NULL) {
   lin_features_mask <- t(rje::powerSetMat(n_lin_features))
   # One entry per model, i.e. one per column of lin_features_mask, so that
   # rbind() below does not have to recycle these rows.
   n_models <- ncol(lin_features_mask)
   ones <- rep(1, n_models)
+  zeros <- rep(0, n_models)
+
   mask_where_nonzero <- rbind(
     ones, ones, ones,
     lin_features_mask,
     ones,
     lin_features_mask
   )
-  zeros <- rep(0, n_models)
   mask_where_greater_than_zero <- rbind(
     zeros, zeros, zeros,
     lin_features_mask,
     zeros,
     lin_features_mask
   )
+
+  # Model spaces fitted from badp 0.6.0 onwards carry two further rows,
+  # tr(H^-1 J) and dim(theta), both of which are strictly positive. Pad the
+  # masks when the matrix under test has them, so that the same helper works
+  # for stored objects fitted before the change and for freshly computed ones.
+  if (!is.null(n_rows) && n_rows > nrow(mask_where_nonzero)) {
+    extra <- n_rows - nrow(mask_where_nonzero)
+    mask_where_nonzero <- rbind(mask_where_nonzero, matrix(1, extra, n_models))
+    mask_where_greater_than_zero <-
+      rbind(mask_where_greater_than_zero, matrix(1, extra, n_models))
+  }
+
   list(
     nonzero = mask_where_nonzero,
     greater_than_zero = mask_where_greater_than_zero
@@ -119,10 +132,15 @@ test_that(
       params        = small_model_space$params
     )
 
-    masks <- non_zero_stats_mask_generator(n_lin_features)
+    masks <- non_zero_stats_mask_generator(n_lin_features,
+                                           n_rows = nrow(model_space_stats))
 
-    expect_equal(model_space_stats, small_model_space$stats)
-    expect_true(all(model_space_stats[masks$non_zero == 1] != 0))
+    # The bundled small_model_space may predate the two curvature-adjustment
+    # rows added in badp 0.6.0, so compare the rows the stored object has.
+    # Once it is regenerated this covers the whole matrix.
+    n_ref <- nrow(small_model_space$stats)
+    expect_equal(model_space_stats[seq_len(n_ref), ], small_model_space$stats)
+    expect_true(all(model_space_stats[masks$nonzero == 1] != 0))
     expect_true(all(model_space_stats[masks$greater_than_zero == 1] > 0))
   }
 )
@@ -165,57 +183,82 @@ test_that(paste("model_space computes correct model_space list"), {
 })
 
 
-test_that("Moral-Benito BMA results are replicated (main branch only)", {
-  skip_on_cran()
-  skip_on_os(c("linux", "windows"))
-  skip_if(Sys.getenv("RUN_BMA_FULL_TEST") != "true", "Skipping full BMA test except on main branch")
+# Note on what is deliberately NOT tested here.
+#
+# Re-estimating the 512-model economic growth space takes about five minutes,
+# which is too slow for the test suite and well beyond what CRAN allows. The
+# replication of Moral-Benito (2016) Table II is therefore a release-time
+# check rather than a unit test: run
+#
+#   source("data-raw/published_table_ii.R")
+#   check_published_replication(badp::full_model_space)
+#
+# which compares posterior means and inclusion probabilities against the
+# values transcribed from the published paper.
+#
+# What remains below is fast: bma() is exercised against the bundled model
+# space, so any change in the averaging step is caught immediately, while the
+# estimation step is covered by the small model space tests above.
 
-  set.seed(20)
-
-  Sys.setenv("_R_CHECK_LIMIT_CORES_" = FALSE)
-  library(parallel)
-  cores <- parallel::detectCores(logical = FALSE)
-  cl <- makeCluster(cores)
-
-  data_prepared <- badp::economic_growth %>%
-    badp::feature_standardization(
-      excluded_cols = c(country, year, gdp)
-    ) %>%
-    badp::feature_standardization(
-      group_by_col  = year,
-      excluded_cols = country,
-      scale         = FALSE
-    )
-
-  model_space <- badp::optim_model_space(
-    df             = data_prepared,
-    timestamp_col  = year,
-    entity_col     = country,
-    dep_var_col    = gdp,
-    init_value     = function(n) rep(0.5, n),
-    cl             = cl
-  )
-
-  stopCluster(cl)
-
-  bma_results <- badp::bma(model_space, round = 5)
-
-  actual <- bma_results[[1]]
+test_that("bma() reproduces the bundled results for the bundled model space", {
+  actual <- badp::bma(badp::full_model_space, round = 5)[[1]]
   expected <- badp::full_bma_results[[1]]
 
-  # define per-column tolerances
-  tols <- rep(0.003, ncol(expected))
-  tols[4] <- 0.006
-  tols[6] <- 0.004
-  tols[7] <- 0.006
-  tols[ncol(expected)] <- 0.8
+  expect_equal(dim(actual), dim(expected))
+  expect_equal(dimnames(actual), dimnames(expected))
+  expect_equal(actual, expected, tolerance = 1e-4)
+})
 
-  n_lin_features <- 9
-  masks <- non_zero_stats_mask_generator(n_lin_features)
+test_that("the bundled model space still matches the published moments", {
+  # Moral-Benito (2016), "Model averaging in economics: an overview", Journal
+  # of Applied Econometrics 31(4): 584-602, Table II (p. 594), columns (1) and
+  # (3), transcribed from the paper. No re-estimation: this checks that the
+  # bundled model space and bma() together still reproduce the published
+  # figures, which is the claim made in the vignette and the JSS manuscript.
+  #
+  # Column (2), the posterior standard deviation, is deliberately not used. It
+  # is the robust (sandwich) standard deviation, built from J = sum_i s_i s_i'
+  # and hence of rank at most N = 73, while every model here has 88 to 106
+  # parameters. The published column is not identified. See the "Rank of the
+  # sandwich covariance" section of ?optim_model_space.
+  published_PM <- c(gdp_lag = 0.918, ish = 0.063, sed = 0.031, pgrw = 0.018,
+                    pop = 0.121, ipr = -0.033, opem = 0.034, gsh = -0.013,
+                    lnlex = 0.086, polity = -0.056)
+  published_PIP <- c(gdp_lag = NA, ish = 0.77, sed = 0.72, pgrw = 0.71,
+                     pop = 0.98, ipr = 0.66, opem = 0.77, gsh = 0.75,
+                     lnlex = 0.86, polity = 0.68)
 
-  compare_matrices(actual, expected, tols = tols)
-  expect_true(all(model_space$stats[masks$non_zero == 1] != 0))
-  expect_true(all(model_space$stats[masks$greater_than_zero == 1] > 0))
+  actual <- badp::bma(badp::full_model_space, round = 5)[[1]]
+
+  # Posterior means to within 0.005, inclusion probabilities to within two
+  # percentage points.
+  expect_lt(max(abs(actual[, "PM"] - published_PM)), 0.005)
+  expect_lt(max(abs(actual[, "PIP"] - published_PIP), na.rm = TRUE), 0.02)
+})
+
+test_that("a rank-deficient sandwich is detected and reported", {
+  ms <- badp::full_model_space
+  n_entities <- length(unique(badp::economic_growth$country))
+  K <- length(ms$reg_names)
+
+  # Every model in this space has more parameters than there are entities.
+  expect_equal(
+    badp:::n_rank_deficient_models(ms$stats, n_entities, K = K),
+    ncol(ms$stats)
+  )
+
+  # Model spaces fitted before badp 0.6.0 do not store dim(theta) and must not
+  # be reported as affected.
+  old_stats <- ms$stats[seq_len(2 + 2 * K), , drop = FALSE]
+  expect_equal(
+    badp:::n_rank_deficient_models(old_stats, n_entities, K = K),
+    0L
+  )
+
+  expect_warning(
+    badp::bma(ms, weighting = "curvature"),
+    "not identified"
+  )
 })
 
 

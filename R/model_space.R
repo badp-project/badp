@@ -775,10 +775,15 @@ split_convergence_diagnostics <- function(raw, n_param_rows) {
 #' @returns
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
-#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
-#' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation.
+#' parameters in the provided model space). The second row is the marginal
+#' likelihood approximation used to weight the models, namely
+#' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+#' Then there are rows with standard deviations for each parameter, followed by
+#' rows with robust standard deviations. The last two rows hold
+#' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
+#' the outer product of the entity-level scores, and the dimension of the
+#' parameter vector; their ratio gives the curvature-adjusted learning rate
+#' offered by \link[badp]{bma}.
 #' @export
 #' @keywords internal
 nested_std_dev_from_params <- function(
@@ -850,12 +855,22 @@ nested_std_dev_from_params <- function(
   stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
   stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
 
+  # Ingredients of the magnitude ("omnibus") adjustment for misspecified
+  # likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012):
+  # the trace of H^{-1} J, where H is the observed information and
+  # J = G'G the outer product of the entity-level scores, together with the
+  # dimension of theta. The adjusted learning rate is dim / trace, and it
+  # equals one exactly when H = J, i.e. when the information matrix equality
+  # holds. Computed here because H and J are available only at this point.
+  trace_hinv_j <- sum(diag(solve(hess) %*% Imat))
+  n_theta <- nrow(hess)
+
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   bic <- exp(loglikelihood)
 
-  c(likelihood, bic, stdh, stdr)
+  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta)
 }
 
 
@@ -875,10 +890,15 @@ nested_std_dev_from_params <- function(
 #' @returns
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
-#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
-#' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation.
+#' parameters in the provided model space). The second row is the marginal
+#' likelihood approximation used to weight the models, namely
+#' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+#' Then there are rows with standard deviations for each parameter, followed by
+#' rows with robust standard deviations. The last two rows hold
+#' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
+#' the outer product of the entity-level scores, and the dimension of the
+#' parameter vector; their ratio gives the curvature-adjusted learning rate
+#' offered by \link[badp]{bma}.
 #' @export
 #'
 #' @keywords internal
@@ -954,12 +974,22 @@ non_nested_std_dev_from_params <- function(
   stdr[!is.na(linear_params)] <- sqrt(diag(solve(hess) %*% Imat %*% solve(hess)))[inds]
   stdh[!is.na(linear_params)] <- sqrt(diag(solve(hess)))[inds]
 
+  # Ingredients of the magnitude ("omnibus") adjustment for misspecified
+  # likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012):
+  # the trace of H^{-1} J, where H is the observed information and
+  # J = G'G the outer product of the entity-level scores, together with the
+  # dimension of theta. The adjusted learning rate is dim / trace, and it
+  # equals one exactly when H = J, i.e. when the information matrix equality
+  # holds. Computed here because H and J are available only at this point.
+  trace_hinv_j <- sum(diag(solve(hess) %*% Imat))
+  n_theta <- nrow(hess)
+
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   bic <- exp(loglikelihood)
 
-  c(likelihood, bic, stdh, stdr)
+  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta)
 
 }
 
@@ -993,10 +1023,15 @@ non_nested_std_dev_from_params <- function(
 #' @return
 #' Matrix with columns describing likelihood and standard deviations for each
 #' model. The first row is the likelihood for the model (computed using the
-#' parameters in the provided model space). The second row is almost 1/2 * BIC_k
-#' as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
-#' are rows with standard deviations for each parameter. After that we have rows
-#' with robust standard deviation.
+#' parameters in the provided model space). The second row is the marginal
+#' likelihood approximation used to weight the models, namely
+#' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+#' Then there are rows with standard deviations for each parameter, followed by
+#' rows with robust standard deviations. The last two rows hold
+#' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
+#' the outer product of the entity-level scores, and the dimension of the
+#' parameter vector; their ratio gives the curvature-adjusted learning rate
+#' offered by \link[badp]{bma}.
 #'
 #' @importFrom pbapply pbapply
 #' @export
@@ -1169,6 +1204,19 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' (nearly collinear) likelihood ridge; the likelihood value is trustworthy
 #' but the standard errors of the affected coordinates are not.
 #'
+#' @section Rank of the sandwich covariance:
+#' The robust standard errors stored in the statistics, and the columns
+#' \code{PSDR} and \code{PSDRcon} that \link[badp]{bma} derives from them, come
+#' from the sandwich \eqn{H^{-1} J H^{-1}} with
+#' \eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the \eqn{N} entity-level score
+#' vectors. \eqn{J} is of rank at most \eqn{N} and is singular for any model
+#' with at least as many parameters as there are entities, in which case the
+#' robust standard errors are not identified. A warning is issued when this
+#' applies to any model in the space. It is a property of the design, not of
+#' the estimation: the number of independent units, not the number of
+#' observations, limits the rank. The likelihood, the parameter estimates and
+#' the Hessian-based standard errors are unaffected.
+#'
 #' @section Methods:
 #' Objects of class \code{badp_model_space} have the following methods available:
 #' \itemize{
@@ -1260,6 +1308,11 @@ optim_model_space <-
       cl            = cl
     )
 
+    warn_if_rank_deficient(
+      stats      = stats,
+      n_entities = dplyr::n_distinct(dplyr::pull(df, {{ entity_col }}))
+    )
+
     reg_names <- extract_names(df)
     observations_num <- nrow((na.omit(df[,4])))
 
@@ -1270,3 +1323,79 @@ optim_model_space <-
       class = "badp_model_space"
     )
   }
+
+
+#' Number of models whose sandwich covariance is rank deficient
+#'
+#' The robust ("sandwich") covariance \eqn{H^{-1} J H^{-1}} is built from
+#' \eqn{J = \sum_i s_i s_i'}, the outer product of the \eqn{N} entity-level
+#' score vectors. \eqn{J} is therefore of rank at most \eqn{N}, and is
+#' singular whenever the model has at least as many parameters as there are
+#' entities. The diagonal of the sandwich is then not a consistent variance
+#' estimate: some linear combinations of the parameters are assigned zero
+#' estimated variance, and the remaining entries are numerically unstable,
+#' in the sense that they depend appreciably on how the derivatives are
+#' obtained. This is the familiar too-few-clusters problem of cluster-robust
+#' inference, with entities playing the role of clusters.
+#'
+#' The same deficiency affects the curvature-adjusted learning rate
+#' \eqn{\dim(\theta) / \mathrm{tr}(H^{-1} J)} offered by
+#' \link[badp]{bma}, which relies on the same \eqn{J}.
+#'
+#' @param stats Statistics matrix of a model space, whose last row holds the
+#' dimension of the parameter vector for each model.
+#' @param n_entities Number of entities.
+#' @param K Number of regressors including the lagged dependent variable. When
+#' supplied, the dimension of the parameter vector is read from row
+#' \code{4 + 2 * K}, and model spaces fitted before badp 0.6.0, which do not
+#' store it, are recognised and reported as unaffected. When \code{NULL} the
+#' last row is used.
+#'
+#' @returns Integer, the number of models for which \code{dim(theta)} is at
+#' least \code{n_entities}. Zero if the model space does not record
+#' \code{dim(theta)}.
+#'
+#' @keywords internal
+n_rank_deficient_models <- function(stats, n_entities, K = NULL) {
+  if (is.null(stats) || nrow(stats) == 0) {
+    return(0L)
+  }
+
+  row <- if (is.null(K)) {
+    nrow(stats)
+  } else if (nrow(stats) >= 4 + 2 * K) {
+    4 + 2 * K
+  } else {
+    # Fitted before badp 0.6.0, which did not store dim(theta).
+    return(0L)
+  }
+
+  n_theta <- stats[row, ]
+  sum(is.finite(n_theta) & n_theta >= n_entities)
+}
+
+
+#' Warn if the sandwich covariance is rank deficient
+#'
+#' @inheritParams n_rank_deficient_models
+#' @returns Invisibly, the number of affected models.
+#' @keywords internal
+warn_if_rank_deficient <- function(stats, n_entities) {
+  n_bad <- n_rank_deficient_models(stats, n_entities)
+
+  if (n_bad > 0) {
+    warning(sprintf(
+      paste("%d of %d models have at least as many parameters as there are",
+            "entities (N = %d), so the outer product of the entity-level",
+            "scores is singular. The robust standard deviations (PSDR,",
+            "PSDRcon) reported by bma() are not identified for these models,",
+            "and neither is weighting = \"curvature\". The likelihood, the",
+            "posterior means and the posterior inclusion probabilities are",
+            "unaffected; the Hessian-based standard deviations (PSD, PSDcon)",
+            "remain available."),
+      n_bad, ncol(stats), n_entities
+    ), call. = FALSE)
+  }
+
+  invisible(n_bad)
+}
