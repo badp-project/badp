@@ -9,7 +9,7 @@
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^\.github$
-^Dockerfile
+^Dockerfile$
 ^output$
 ^_pkgdown\.yml$
 ^docs$
@@ -22,6 +22,8 @@
 \.DS_Store$
 ^\.Rhistory$
 ^\.Rprofile$
+^\.gitignore$
+^\.Rproj\.user$
 ^vignettes/bdsm_vignette.*$
 ^vignettes/badp_vignette_jss.*$
 ^vignettes/.*\.synctex\.gz$

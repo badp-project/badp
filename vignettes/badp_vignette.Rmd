@@ -284,15 +284,26 @@ $$\mathbb{E}(\beta_k|\text{data})=\sum_{j=1}^{2^K}\widehat{\beta_k}_{j} \cdot \m
 
 where $\widehat{\beta_k}_{j}$ is the value of the coefficient $\beta_k$ in model $j$.
 It tells us what is the mean (or expected) value for the parameter taking into account all considered models.
-Note that if $\beta_k$ is not present in the given model $j$ we can assign any value to $\widehat{\beta_k}_{j}$,
-because the probability $\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ will be zero anyway.
+Note that in equation (33) the value assigned to $\widehat{\beta_k}_{j}$ for models in which $\beta_k$ is not
+present is immaterial, because the probability $\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ is zero for
+those models anyway. In the posterior variance below this is no longer the case, and the coefficient of an
+excluded regressor must be set to zero.
 
 The posterior variance of the parameter $\beta_k$ is equal to:
 
-$$Var(\beta_k|\text{data}) = \sum_{j=1}^{2^K}Var(\beta_{k,j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) + \sum_{j=1}^{2^K}\left[\widehat{\beta}_{k,j}-\mathbb{E}(\beta_k|\text{data})\right]^{2} \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) \tag{34}$$
+$$Var(\beta_k|\text{data}) = \sum_{j=1}^{2^K}Var(\beta_{k,j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) + \sum_{j=1}^{2^K}\left[\widehat{\beta}_{k,j}-\mathbb{E}(\beta_k|\text{data})\right]^{2} \cdot \mathbb{P}(M_{j}|\text{data}) \tag{34}$$
 
 where $Var(\beta_{k,j}|\text{data},M_{j})$ denotes the conditional variance of the coefficient $\beta_k$ in model $M_{j}$
-(in other words assuming that the model $M_j$ is the true model).
+(in other words assuming that the model $M_j$ is the true model), and where $\widehat{\beta}_{k,j} \equiv 0$ whenever
+$\beta_k$ is not included in model $M_{j}$.
+The first sum is the expected within-model variance and the second is the between-model variance of the coefficient
+estimates. Note the difference between the weights in the two sums. Models that exclude $\beta_k$ contribute nothing
+to the first sum, because the coefficient is known to be zero in those models and its conditional variance vanishes.
+They do, however, contribute $[0-\mathbb{E}(\beta_k|\text{data})]^{2}\,\mathbb{P}(M_{j}|\text{data})$ to the second
+sum: exclusion is treated as the point mass $\beta_k = 0$, and the distance between that point mass and the posterior
+mean is a genuine source of posterior uncertainty. Weighting the second sum by
+$\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ instead would omit these terms and understate the posterior
+variance, the more so the lower the posterior inclusion probability of the regressor.
 Posterior standard deviation (PSD) of $\beta_k$ is then defined as the square root of the variance:
 
 $$SD(\beta_k | \text{data}) = \sqrt{ Var(\beta_k | \text{data}) } \tag{35}$$
