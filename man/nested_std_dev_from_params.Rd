@@ -38,10 +38,15 @@ to a model. Each row specifies model parameters. Compare with
 \value{
 Matrix with columns describing likelihood and standard deviations for each
 model. The first row is the likelihood for the model (computed using the
-parameters in the provided model space). The second row is almost 1/2 * BIC_k
-as in Raftery's Bayesian Model Selection in Social Research eq. 19. Then there
-are rows with standard deviations for each parameter. After that we have rows
-with robust standard deviation.
+parameters in the provided model space). The second row is the marginal
+likelihood approximation used to weight the models, namely
+\code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+Then there are rows with standard deviations for each parameter, followed by
+rows with robust standard deviations. The last two rows hold
+\code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
+the outer product of the entity-level scores, and the dimension of the
+parameter vector; their ratio gives the curvature-adjusted learning rate
+offered by \link[badp]{bma}.
 }
 \description{
 Helper function - wraps single execution of the log-likelihood & deviation

@@ -126,6 +126,21 @@ This function calculates model space, values of the maximized likelihood functio
 standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
 it provides a vector with the names of the variables for bma function and the number of observations.
 }
+\section{Rank of the sandwich covariance}{
+
+The robust standard errors stored in the statistics, and the columns
+\code{PSDR} and \code{PSDRcon} that \link[badp]{bma} derives from them, come
+from the sandwich \eqn{H^{-1} J H^{-1}} with
+\eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the \eqn{N} entity-level score
+vectors. \eqn{J} is of rank at most \eqn{N} and is singular for any model
+with at least as many parameters as there are entities, in which case the
+robust standard errors are not identified. A warning is issued when this
+applies to any model in the space. It is a property of the design, not of
+the estimation: the number of independent units, not the number of
+observations, limits the rank. The likelihood, the parameter estimates and
+the Hessian-based standard errors are unaffected.
+}
+
 \section{Methods}{
 
 Objects of class \code{badp_model_space} have the following methods available:

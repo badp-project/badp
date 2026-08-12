@@ -4,7 +4,14 @@
 \alias{bma}
 \title{Calculation of the bma object}
 \usage{
-bma(model_space, round = 4, EMS = NULL, dilution = 0, omega = 0.5)
+bma(
+  model_space,
+  round = 4,
+  EMS = NULL,
+  dilution = 0,
+  omega = 0.5,
+  weighting = c("mb2016", "mb2012", "nt", "curvature", "uip")
+)
 }
 \arguments{
 \item{model_space}{An object of class \code{badp_model_space}, typically returned by \code{\link{optim_model_space}}.}
@@ -16,6 +23,33 @@ bma(model_space, round = 4, EMS = NULL, dilution = 0, omega = 0.5)
 \item{dilution}{Integer. Use 0 for no dilution prior (default), or 1 to apply a dilution prior (George 2010).}
 
 \item{omega}{Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.}
+
+\item{weighting}{Character string selecting the approximation to the
+marginal likelihood used to weight the models. One of: \cr
+\code{"mb2016"} (default) - the approximation computed by the
+implementation accompanying Moral-Benito (2016), namely
+\eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/N\}}, where \eqn{\ell_j} is the
+maximised log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
+parameters, \eqn{N} the number of entities and \eqn{T} the number of
+periods. This is the Schwarz approximation raised to the power \eqn{1/N} and
+is the option that reproduces the results published in Moral-Benito (2016);
+\cr
+\code{"mb2012"} - the Schwarz criterion as stated in equations (24)-(30) of
+Moral-Benito (2012), \eqn{\exp\{\ell_j - (k_j/2)\log(NT)\}}, treating the
+\eqn{NT} entity-period observations as the sample; \cr
+\code{"nt"} - as \code{"mb2016"} but averaging over entity-periods rather
+than entities, \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/(NT)\}}. This is the
+scaling that would be internally consistent with the \eqn{\log(NT)} penalty,
+and it tempers \eqn{T} times more strongly than \code{"mb2016"}; \cr
+\code{"curvature"} - a learning rate estimated from the data by the
+magnitude ("omnibus") adjustment used for misspecified and composite
+likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012),
+rather than fixed a priori. See Details; \cr
+\code{"uip"} - the Schwarz criterion with the entity as the unit of
+information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
+prior underlying the approximation (Kass and Wasserman 1995) is defined
+through the Fisher information for a single observation, and the likelihood
+factorises over entities, so the entity is the natural unit.}
 }
 \value{
 An object of class \code{badp_bma}, which is a list containing:
@@ -44,6 +78,71 @@ An object of class \code{badp_bma}, which is a list containing:
 This function calculates BMA statistics based on the provided model space.
 Other objects for further analysis are also returned.
 }
+\details{
+Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, four of the five options are
+the same construction with different learning rates \eqn{\eta}:
+\eqn{\log w_j = \eta A_j}, with \eqn{\eta = 1} for \code{"mb2012"},
+\eqn{1/N} for \code{"mb2016"}, \eqn{1/(NT)} for \code{"nt"} and an estimated
+\eqn{\hat\eta} for \code{"curvature"}. Only \code{"uip"} alters the penalty
+instead of the rate.
+
+Any \eqn{\eta \neq 1} produces a tempered (power) posterior over models,
+proportional to \eqn{f(y|M_j)^\eta}. This lies outside the Schwarz-Laplace
+argument that motivates the approximation, and it does not concentrate as
+\eqn{N} grows: for a model at Kullback-Leibler distance \eqn{c_j} per entity,
+\eqn{A_j/N \to -c_j}, so the model weights converge to fixed positive
+constants and no model is ever selected. The complexity penalty also vanishes
+relative to the rate, so overfitted models are not eventually rejected.
+Conversely \eqn{\eta = 1} concentrates the posterior sharply, which on
+likelihoods of this kind can place essentially all mass on a single model.
+
+The \code{"curvature"} rate addresses this by estimating \eqn{\eta} rather
+than assuming it. When a likelihood overstates the information in the data,
+the observed information \eqn{H} and the outer product of the per-entity
+scores \eqn{J} disagree, and rescaling the log-likelihood by
+\eqn{\eta = \dim(\theta) / \mathrm{tr}(H^{-1}J)} restores nominal
+calibration. The rate equals one exactly when \eqn{H = J}, that is when the
+information matrix equality holds and the likelihood is correctly specified.
+Both matrices are available from the automatic differentiation used to fit
+the model space, so \eqn{\mathrm{tr}(H^{-1}J)} and \eqn{\dim(\theta)} are
+computed per model and stored; \eqn{\eta} is the median of their ratio
+across the model space, and the realised value is returned in the
+\code{eta} element.
+
+Model spaces fitted before these quantities were stored do not carry them.
+In that case \eqn{\eta} is approximated under the assumption \eqn{J = cH},
+for which \eqn{\mathrm{tr}(H^{-1}J) = c\dim(\theta)}, taking \eqn{c} to be
+the mean squared ratio of robust to Hessian-based standard errors; a message
+is emitted and re-estimating the model space gives the exact adjustment.
+
+The default is retained for compatibility with the published literature;
+users are encouraged to check the sensitivity of their conclusions to this
+choice. Switching between the options requires no re-estimation, since all
+are recovered from the same fitted model space.
+}
+\section{Identification of the robust standard deviations}{
+
+The columns \code{PSDR} and \code{PSDRcon}, and the
+\code{weighting = "curvature"} learning rate, are derived from the
+sandwich covariance \eqn{H^{-1} J H^{-1}}, where
+\eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
+score vectors. \eqn{J} has rank at most \eqn{N}, so it is singular for any
+model with at least as many parameters as there are entities. When that
+happens the diagonal of the sandwich is not a consistent variance estimate:
+some linear combinations of the parameters are assigned zero estimated
+variance, and the remaining entries depend appreciably on how the
+derivatives are obtained. This is the too-few-clusters problem of
+cluster-robust inference, with entities in the role of clusters, and it is a
+property of the design rather than of the implementation.
+
+\code{optim_model_space} warns when this occurs. The likelihood, the
+posterior means (\code{PM}, \code{PMcon}) and the posterior inclusion
+probabilities (\code{PIP}) do not involve \eqn{J} and are unaffected, as are
+the Hessian-based standard deviations \code{PSD} and \code{PSDcon}. Robust
+standard deviations should be reported only when \eqn{\dim(\theta) < N},
+and comfortably so.
+}
+
 \section{Methods}{
 
 Objects of class \code{badp_bma} have the following methods available:
