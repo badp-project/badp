@@ -1,31 +1,43 @@
 # badp 0.6.0
 
-* `optim_model_space()` now warns when a model has at least as many
-  parameters as there are entities. The robust ("sandwich") standard errors
-  are built from `J = sum_i s_i s_i'`, the outer product of the `N`
-  entity-level score vectors, so `J` has rank at most `N` and is singular in
-  that case. The `PSDR` and `PSDRcon` columns of `bma()` are then not
-  identified: some linear combinations of the parameters are assigned zero
-  estimated variance and the remaining entries depend appreciably on how the
-  derivatives are obtained. This is the too-few-clusters problem of
-  cluster-robust inference, with entities in the role of clusters, and it is
-  a property of the design rather than of the estimation. The likelihood,
-  the posterior means, the posterior inclusion probabilities and the
-  Hessian-based standard errors `PSD` and `PSDcon` are unaffected.
+* The model space statistics gained a row holding the numerical rank of
+  `J = sum_i s_i s_i'`, the outer product of the entity-level scores from
+  which the robust ("sandwich") standard errors are built. Because the
+  per-entity scores share a component identical across entities, and because
+  they sum to zero at the maximum, `J` is unchanged by centring them and
+  depends only on the variation of the scores across entities. Parameters
+  entering the log-likelihood solely through terms common to every entity
+  contribute nothing, so `J` is rank deficient however many entities are
+  observed. In the bundled model spaces the scores span between 8% and 29%
+  of the parameter directions.
 
-  This applies to the bundled `full_model_space`, in which all 512 models
-  have between 88 and 106 parameters against 73 entities, and hence to the
-  robust standard deviations reported for the economic growth data
-  throughout the literature that this package reproduces. Posterior means
-  and inclusion probabilities for that dataset continue to match the
-  published values to 0.002 and 0.4 percentage points respectively.
-* `bma(weighting = "curvature")` warns for the same reason, since the
-  adjusted learning rate `dim(theta) / tr(H^-1 J)` uses the same `J`. An
-  estimate above one is a symptom of the deficiency rather than a meaningful
-  value.
+  The robust standard deviations that `bma()` reports are unaffected in the
+  sense that they remain well defined: `J` vanishes outside the spanned
+  block, so the sandwich restricted to that block equals the profile
+  sandwich obtained by profiling the remaining parameters out. What the
+  construction discards is the score covariance involving those remaining
+  directions, which is set to zero rather than estimated. The likelihood,
+  the posterior means, the posterior inclusion probabilities and the
+  Hessian-based standard errors `PSD` and `PSDcon` do not involve `J`.
+
+  `summary()` of a model space now reports the fraction of parameter
+  directions spanned.
+* `bma()` gained an `eta` argument taking the learning rate directly, which
+  overrides `weighting`. `eta = 1` reproduces `"mb2012"` and `eta = 1/N`
+  reproduces `"mb2016"`, so the sensitivity of any conclusion to the rate can
+  be examined without re-estimation.
+* The `"curvature"` weighting, which estimated the learning rate by the
+  magnitude ("omnibus") adjustment for misspecified likelihoods, has been
+  withdrawn before release. The adjustment assumes `J` estimates the
+  variance of the score, and `J` is rank deficient for this likelihood, so
+  the rate would be calibrated on the small part of the parameter space the
+  entity-level scores span, with no way to assess what the remainder
+  contributes. Use `eta` to set a rate explicitly instead. The ingredients,
+  `tr(H^-1 J)`, `dim(theta)` and `rank(J)`, remain stored with every fitted
+  model space, so the rate can still be computed and inspected directly.
 * `bma()` gained a `weighting` argument selecting the approximation to the
   marginal likelihood used to weight the models. Writing
-  `A_j = loglik_j - (k_j/2)*log(N*T)`, four of the five options are the same
+  `A_j = loglik_j - (k_j/2)*log(N*T)`, three of the four options are the same
   construction with different learning rates `eta`, `log w_j = eta * A_j`:
     * `"mb2016"` (default, `eta = 1/N`) is unchanged behaviour, the
       approximation computed by the implementation accompanying Moral-Benito
@@ -35,23 +47,9 @@
       equations (24)-(30) of Moral-Benito (2012);
     * `"nt"` (`eta = 1/(N*T)`) averages over entity-periods rather than
       entities, the scaling that would be internally consistent with the
-      `log(N*T)` penalty;
-    * `"curvature"` estimates `eta` from the data by the magnitude
-      ("omnibus") adjustment used for misspecified and composite likelihoods
-      (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012), rather than
-      fixing it a priori. The rate is `dim(theta) / tr(H^-1 J)`, which equals
-      one exactly when the information matrix equality holds.
-* The model space statistics gained two rows, holding `tr(H^-1 J)` and the
-  dimension of the parameter vector for each model. Both matrices are already
-  formed by the automatic differentiation used to compute the standard errors,
-  so the curvature adjustment above is evaluated exactly rather than
-  approximated. The new rows are appended after the existing ones, so code
-  indexing the likelihood, weight or standard-error rows is unaffected. Model
-  spaces fitted with earlier versions do not carry them; `bma()` then falls
-  back to an approximation based on the ratio of robust to Hessian-based
-  standard errors and emits a message.
+      `log(N*T)` penalty.
 
-  The fifth option, `"uip"`, instead alters the penalty, using
+  The fourth option, `"uip"`, instead alters the penalty, using
   `exp(loglik - (k/2)*log(N))` with the entity as the unit of information, as
   implied by the unit information prior of Kass and Wasserman (1995) given
   that the likelihood factorises over entities.
@@ -108,19 +106,24 @@
 * The minimum required R version was raised from 3.5 to 4.4, to match the
   requirement of `Matrix`, on which `RTMB` depends through `TMB`. The
   previous declaration could not be satisfied in practice.
-* Regenerated the bundled `small_model_space`, `migration_model_space` and
-  `migration_model_space_nonnested` objects with the fixed automatic
-  differentiation pipeline.
+* Regenerated every bundled model space (`small_model_space`,
+  `full_model_space`, `model_space_nonnested`, `migration_model_space` and
+  `migration_model_space_nonnested`) and `full_bma_results` with the fixed
+  automatic differentiation pipeline. `model_space_nonnested` had no
+  generating script; `data-raw/model_space_nonnested.R` now provides one.
 
 # badp 0.5.0
 
 * Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
   R implementation differentiated via `RTMB` (automatic differentiation).
-  Optimization now uses exact gradients instead of finite differences, and
-  standard errors are computed from the exact Hessian and per-entity score
-  vectors instead of finite-difference approximations. Optimized parameters
-  and standard errors may therefore differ slightly (and are more accurate);
-  likelihood values at given parameters are unchanged. The finite-difference
+  Optimization now uses gradients obtained by automatic differentiation
+  instead of finite differences, and standard errors are computed from the
+  Hessian and per-entity score vectors of the same tape instead of
+  finite-difference approximations. Optimized parameters and standard errors
+  therefore differ from those of earlier versions; likelihood values at given
+  parameters are unchanged. The difference is small for the parameter
+  estimates but can be substantial for the robust standard errors, which
+  depend on the derivatives twice over. The finite-difference
   `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
   and `optimbase` dependencies were dropped in favour of `RTMB`.
 * `init_value` (in `optim_model_space()` and related functions) now also

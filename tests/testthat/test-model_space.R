@@ -135,9 +135,9 @@ test_that(
     masks <- non_zero_stats_mask_generator(n_lin_features,
                                            n_rows = nrow(model_space_stats))
 
-    # The bundled small_model_space may predate the two curvature-adjustment
-    # rows added in badp 0.6.0, so compare the rows the stored object has.
-    # Once it is regenerated this covers the whole matrix.
+    # The bundled small_model_space may predate the diagnostic rows added in
+    # badp 0.6.0, so compare the rows the stored object has. Once it is
+    # regenerated this covers the whole matrix.
     n_ref <- nrow(small_model_space$stats)
     expect_equal(model_space_stats[seq_len(n_ref), ], small_model_space$stats)
     expect_true(all(model_space_stats[masks$nonzero == 1] != 0))
@@ -238,27 +238,67 @@ test_that("the bundled model space still matches the published moments", {
 
 test_that("a rank-deficient sandwich is detected and reported", {
   ms <- badp::full_model_space
-  n_entities <- length(unique(badp::economic_growth$country))
   K <- length(ms$reg_names)
 
-  # Every model in this space has more parameters than there are entities.
+  # J is built from the variation of the entity-level scores, so parameters
+  # entering the likelihood only through terms common to all entities
+  # contribute nothing and every model is rank deficient.
   expect_equal(
-    badp:::n_rank_deficient_models(ms$stats, n_entities, K = K),
+    badp:::n_rank_deficient_models(ms$stats, K = K),
     ncol(ms$stats)
   )
 
-  # Model spaces fitted before badp 0.6.0 do not store dim(theta) and must not
-  # be reported as affected.
-  old_stats <- ms$stats[seq_len(2 + 2 * K), , drop = FALSE]
+  n_theta <- ms$stats[4 + 2 * K, ]
+  rank_j <- ms$stats[5 + 2 * K, ]
+  expect_true(all(rank_j < n_theta))
+  expect_true(all(rank_j > 0))
+
+  # Model spaces fitted before the rank was stored must not be reported as
+  # affected.
+  old_stats <- ms$stats[seq_len(4 + 2 * K), , drop = FALSE]
+  expect_equal(badp:::n_rank_deficient_models(old_stats, K = K), 0L)
+
+  # summary() reports it rather than warning, since it always applies.
+  expect_output(print(summary(ms)), "Score directions spanned")
+})
+
+test_that("score_rank ignores components common to all entities", {
+  set.seed(1)
+  # Three coordinates varying across entities, two constant.
+  varying <- matrix(rnorm(50 * 3), nrow = 50)
+  constant <- matrix(rep(c(2, -1), each = 50), nrow = 50)
+  G <- cbind(varying, constant)
+
+  expect_equal(badp:::score_rank(G), 3L)
+  expect_equal(badp:::score_rank(varying), 3L)
+})
+
+test_that("eta overrides weighting and is validated", {
+  ms <- badp::migration_model_space
+
+  expect_error(badp::bma(ms, eta = 0), "positive")
+  expect_error(badp::bma(ms, eta = -1), "positive")
+  expect_error(badp::bma(ms, eta = c(1, 2)), "single")
+
+  # eta = 1 must reproduce the mb2012 weighting exactly.
+  by_eta <- badp::bma(ms, eta = 1, round = 5)
+  by_name <- badp::bma(ms, weighting = "mb2012", round = 5)
+  expect_equal(by_eta[[1]], by_name[[1]])
+  expect_equal(by_eta$eta, 1)
+  expect_identical(by_eta$weighting, "user")
+
+  # eta = 1/N must reproduce mb2016.
+  n_entities <- length(unique(ms$df[[2]]))
   expect_equal(
-    badp:::n_rank_deficient_models(old_stats, n_entities, K = K),
-    0L
+    badp::bma(ms, eta = 1 / n_entities, round = 5)[[1]],
+    badp::bma(ms, weighting = "mb2016", round = 5)[[1]]
   )
 
-  expect_warning(
-    badp::bma(ms, weighting = "curvature"),
-    "not identified"
-  )
+  # supplying both is reported
+  expect_warning(badp::bma(ms, weighting = "mb2012", eta = 1), "overrides")
+
+  # curvature is no longer offered
+  expect_error(badp::bma(ms, weighting = "curvature"), "should be one of")
 })
 
 

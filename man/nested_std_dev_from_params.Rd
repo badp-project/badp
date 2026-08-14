@@ -42,11 +42,14 @@ parameters in the provided model space). The second row is the marginal
 likelihood approximation used to weight the models, namely
 \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
 Then there are rows with standard deviations for each parameter, followed by
-rows with robust standard deviations. The last two rows hold
+rows with robust standard deviations. The last three rows hold
 \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
-the outer product of the entity-level scores, and the dimension of the
-parameter vector; their ratio gives the curvature-adjusted learning rate
-offered by \link[badp]{bma}.
+the outer product of the entity-level scores, the dimension of the
+parameter vector, and the numerical rank of \code{J}. These are the
+ingredients of the magnitude adjustment for misspecified likelihoods,
+whose rate is \code{rank(J) / tr(H^-1 J)}; see \code{\link{score_rank}} for
+why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
+weighting option is built on it.
 }
 \description{
 Helper function - wraps single execution of the log-likelihood & deviation

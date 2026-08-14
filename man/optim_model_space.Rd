@@ -131,14 +131,17 @@ it provides a vector with the names of the variables for bma function and the nu
 The robust standard errors stored in the statistics, and the columns
 \code{PSDR} and \code{PSDRcon} that \link[badp]{bma} derives from them, come
 from the sandwich \eqn{H^{-1} J H^{-1}} with
-\eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the \eqn{N} entity-level score
-vectors. \eqn{J} is of rank at most \eqn{N} and is singular for any model
-with at least as many parameters as there are entities, in which case the
-robust standard errors are not identified. A warning is issued when this
-applies to any model in the space. It is a property of the design, not of
-the estimation: the number of independent units, not the number of
-observations, limits the rank. The likelihood, the parameter estimates and
-the Hessian-based standard errors are unaffected.
+\eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the entity-level score
+vectors. \eqn{J} depends only on the variation of those scores across
+entities, so parameters entering the log-likelihood solely through terms
+common to every entity contribute nothing and \eqn{J} is rank deficient
+regardless of \eqn{N}; see \code{\link{score_rank}}. The fraction of
+parameter directions the scores span is reported by
+\code{\link{summary.badp_model_space}}. The standard errors that are
+reported remain well defined, as the sandwich restricted to the spanned
+block is the profile sandwich on that block, but the score covariance
+involving the remaining directions is discarded. The likelihood, the
+parameter estimates and the Hessian-based standard errors are unaffected.
 }
 
 \section{Methods}{

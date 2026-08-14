@@ -4,40 +4,39 @@
 \alias{n_rank_deficient_models}
 \title{Number of models whose sandwich covariance is rank deficient}
 \usage{
-n_rank_deficient_models(stats, n_entities, K = NULL)
+n_rank_deficient_models(stats, n_entities = NULL, K = NULL)
 }
 \arguments{
-\item{stats}{Statistics matrix of a model space, whose last row holds the
-dimension of the parameter vector for each model.}
+\item{stats}{Statistics matrix of a model space, whose last rows hold the
+dimension of the parameter vector and the rank of \eqn{J} for each model.}
 
-\item{n_entities}{Number of entities.}
+\item{n_entities}{Number of entities. Unused, retained for compatibility.}
 
 \item{K}{Number of regressors including the lagged dependent variable. When
-supplied, the dimension of the parameter vector is read from row
-\code{4 + 2 * K}, and model spaces fitted before badp 0.6.0, which do not
-store it, are recognised and reported as unaffected. When \code{NULL} the
-last row is used.}
+supplied, \code{dim(theta)} is read from row \code{4 + 2 * K} and
+\code{rank(J)} from row \code{5 + 2 * K}; model spaces fitted before these
+were stored are recognised and reported as unaffected.}
 }
 \value{
-Integer, the number of models for which \code{dim(theta)} is at
-least \code{n_entities}. Zero if the model space does not record
-\code{dim(theta)}.
+Integer, the number of models for which \code{rank(J)} is less than
+\code{dim(theta)}. Zero if the model space does not record the rank.
 }
 \description{
 The robust ("sandwich") covariance \eqn{H^{-1} J H^{-1}} is built from
-\eqn{J = \sum_i s_i s_i'}, the outer product of the \eqn{N} entity-level
-score vectors. \eqn{J} is therefore of rank at most \eqn{N}, and is
-singular whenever the model has at least as many parameters as there are
-entities. The diagonal of the sandwich is then not a consistent variance
-estimate: some linear combinations of the parameters are assigned zero
-estimated variance, and the remaining entries are numerically unstable,
-in the sense that they depend appreciably on how the derivatives are
-obtained. This is the familiar too-few-clusters problem of cluster-robust
-inference, with entities playing the role of clusters.
+\eqn{J = \sum_i s_i s_i'}, the outer product of the entity-level score
+vectors. Because the per-entity scores share a component identical across
+entities, and because they sum to zero at the maximum, \eqn{J} depends only
+on the variation of those scores across entities. Parameters entering the
+log-likelihood solely through terms common to every entity contribute
+nothing, so \eqn{J} is typically of rank far below \eqn{\dim(\theta)} and
+below \eqn{N}, however many entities are observed.
 }
 \details{
-The same deficiency affects the curvature-adjusted learning rate
-\eqn{\dim(\theta) / \mathrm{tr}(H^{-1} J)} offered by
-\link[badp]{bma}, which relies on the same \eqn{J}.
+Where \eqn{J} is singular the robust standard errors of the affected
+directions are not identified. Those actually reported by \link[badp]{bma},
+for the lagged dependent variable and the regressors, are recovered as the
+profile sandwich on the non-degenerate block, which is well defined; the
+construction nonetheless discards the score covariance involving the
+remaining directions.
 }
 \keyword{internal}
