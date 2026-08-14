@@ -60,7 +60,6 @@ test_that("the weighting argument selects the marginal-likelihood approximation"
   res_mb2012  <- bma(ms, round = 6, weighting = "mb2012")
   res_uip     <- bma(ms, round = 6, weighting = "uip")
   res_nt      <- bma(ms, round = 6, weighting = "nt")
-  res_curv    <- bma(ms, round = 6, weighting = "curvature")
 
   # the default is the reference implementation
   expect_identical(res_default$weighting, "mb2016")
@@ -71,7 +70,7 @@ test_that("the weighting argument selects the marginal-likelihood approximation"
   expect_identical(res_uip$weighting, "uip")
 
   # posterior model probabilities remain a probability distribution throughout
-  for (res in list(res_mb2016, res_mb2012, res_uip, res_nt, res_curv)) {
+  for (res in list(res_mb2016, res_mb2012, res_uip, res_nt)) {
     R <- res$R
     for (col in c(R + 1, R + 2)) {
       pmp <- res$PMPs[, col]
@@ -96,7 +95,6 @@ test_that("the weighting argument selects the marginal-likelihood approximation"
   expect_equal(res_mb2012$eta, 1)
   expect_lt(res_nt$eta, res_mb2016$eta)     # 1/(NT) < 1/N
   expect_true(is.na(res_uip$eta))           # uip changes the penalty, not the rate
-  expect_true(is.finite(res_curv$eta) && res_curv$eta > 0)
 
   # stronger tempering must give a less concentrated posterior
   conc_nt <- sum(res_nt$PMPs[, R + 1]^2)

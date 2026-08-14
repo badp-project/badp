@@ -10,7 +10,8 @@ bma(
   EMS = NULL,
   dilution = 0,
   omega = 0.5,
-  weighting = c("mb2016", "mb2012", "nt", "curvature", "uip")
+  weighting = c("mb2016", "mb2012", "nt", "uip"),
+  eta = NULL
 )
 }
 \arguments{
@@ -41,15 +42,19 @@ Moral-Benito (2012), \eqn{\exp\{\ell_j - (k_j/2)\log(NT)\}}, treating the
 than entities, \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/(NT)\}}. This is the
 scaling that would be internally consistent with the \eqn{\log(NT)} penalty,
 and it tempers \eqn{T} times more strongly than \code{"mb2016"}; \cr
-\code{"curvature"} - a learning rate estimated from the data by the
-magnitude ("omnibus") adjustment used for misspecified and composite
-likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012),
-rather than fixed a priori. See Details; \cr
 \code{"uip"} - the Schwarz criterion with the entity as the unit of
 information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
 prior underlying the approximation (Kass and Wasserman 1995) is defined
 through the Fisher information for a single observation, and the likelihood
 factorises over entities, so the entity is the natural unit.}
+
+\item{eta}{Optional single positive number giving the learning rate
+directly, as in \eqn{f(y|M_j) \propto \exp(\eta A_j)} with
+\eqn{A_j = \ell_j - (k_j/2)\log(NT)}. Supplying it overrides
+\code{weighting}, which is the intended way to examine how sensitive
+conclusions are to the rate. \code{eta = 1} reproduces \code{"mb2012"} and
+\code{eta = 1/N} reproduces \code{"mb2016"}. Default \code{NULL}, meaning
+the rate implied by \code{weighting}.}
 }
 \value{
 An object of class \code{badp_bma}, which is a list containing:
@@ -79,68 +84,81 @@ This function calculates BMA statistics based on the provided model space.
 Other objects for further analysis are also returned.
 }
 \details{
-Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, four of the five options are
+Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, three of the four options are
 the same construction with different learning rates \eqn{\eta}:
 \eqn{\log w_j = \eta A_j}, with \eqn{\eta = 1} for \code{"mb2012"},
-\eqn{1/N} for \code{"mb2016"}, \eqn{1/(NT)} for \code{"nt"} and an estimated
-\eqn{\hat\eta} for \code{"curvature"}. Only \code{"uip"} alters the penalty
-instead of the rate.
+\eqn{1/N} for \code{"mb2016"} and \eqn{1/(NT)} for \code{"nt"}. Only
+\code{"uip"} alters the penalty instead of the rate. The \code{eta}
+argument supplies any other rate.
 
 Any \eqn{\eta \neq 1} produces a tempered (power) posterior over models,
-proportional to \eqn{f(y|M_j)^\eta}. This lies outside the Schwarz-Laplace
-argument that motivates the approximation, and it does not concentrate as
-\eqn{N} grows: for a model at Kullback-Leibler distance \eqn{c_j} per entity,
-\eqn{A_j/N \to -c_j}, so the model weights converge to fixed positive
-constants and no model is ever selected. The complexity penalty also vanishes
-relative to the rate, so overfitted models are not eventually rejected.
-Conversely \eqn{\eta = 1} concentrates the posterior sharply, which on
-likelihoods of this kind can place essentially all mass on a single model.
+proportional to \eqn{f(y|M_j)^\eta}, which lies outside the approximation
+that motivates the criterion. What follows from that depends on how the rate
+is set. A rate held fixed as the sample grows rescales every log weight by
+the same factor, so differences between models still diverge with \eqn{N}
+and the posterior continues to concentrate, more slowly when
+\eqn{\eta < 1} and faster when \eqn{\eta > 1}.
 
-The \code{"curvature"} rate addresses this by estimating \eqn{\eta} rather
-than assuming it. When a likelihood overstates the information in the data,
-the observed information \eqn{H} and the outer product of the per-entity
-scores \eqn{J} disagree, and rescaling the log-likelihood by
-\eqn{\eta = \dim(\theta) / \mathrm{tr}(H^{-1}J)} restores nominal
-calibration. The rate equals one exactly when \eqn{H = J}, that is when the
-information matrix equality holds and the likelihood is correctly specified.
-Both matrices are available from the automatic differentiation used to fit
-the model space, so \eqn{\mathrm{tr}(H^{-1}J)} and \eqn{\dim(\theta)} are
-computed per model and stored; \eqn{\eta} is the median of their ratio
-across the model space, and the realised value is returned in the
-\code{eta} element.
+A rate that shrinks with the sample behaves differently. Under
+\eqn{\eta = 1/N}, a model at Kullback-Leibler distance \eqn{c_j} per entity
+has \eqn{\eta A_j = A_j/N \to -c_j}, so the weights converge to the fixed
+positive constants \eqn{\exp(-c_j)} and the posterior never concentrates,
+however large \eqn{N} becomes. The complexity penalty
+\eqn{(k_j/2)\log(NT)/N} vanishes in the same limit, so overfitted models are
+not eventually rejected. Conversely \eqn{\eta = 1} concentrates the
+posterior sharply, which on likelihoods of this kind can place essentially
+all mass on a single model.
 
-Model spaces fitted before these quantities were stored do not carry them.
-In that case \eqn{\eta} is approximated under the assumption \eqn{J = cH},
-for which \eqn{\mathrm{tr}(H^{-1}J) = c\dim(\theta)}, taking \eqn{c} to be
-the mean squared ratio of robust to Hessian-based standard errors; a message
-is emitted and re-estimating the model space gives the exact adjustment.
+No option estimates \eqn{\eta} from the data. The magnitude ("omnibus")
+adjustment for misspecified and composite likelihoods (Chandler and Bate
+2007; Ribatet, Cooley and Davison 2012) would set
+\eqn{\eta = \mathrm{rank}(J)/\mathrm{tr}(H^{-1}J)}, matching the mean of the
+adjusted log-likelihood ratio to its limiting distribution. It is not
+offered here because \eqn{J} is substantially rank deficient for this
+likelihood: parameters entering it only through terms common to every
+entity contribute nothing, and in the model spaces bundled with the package
+the entity-level scores span between 8\\% and 29\\% of the parameter
+directions (see \code{\link{score_rank}}). The adjustment would then be
+calibrated on a small part of the parameter space, with no way to assess
+what the remainder contributes. The ingredients are nonetheless stored with
+every fitted model space, so the rate can be computed and inspected
+directly if wanted.
 
 The default is retained for compatibility with the published literature;
 users are encouraged to check the sensitivity of their conclusions to this
-choice. Switching between the options requires no re-estimation, since all
-are recovered from the same fitted model space.
+choice, which is what \code{eta} is for. Switching between the options
+requires no re-estimation, since all are recovered from the same fitted
+model space.
 }
 \section{Identification of the robust standard deviations}{
 
-The columns \code{PSDR} and \code{PSDRcon}, and the
-\code{weighting = "curvature"} learning rate, are derived from the
+The columns \code{PSDR} and \code{PSDRcon} are derived from the
 sandwich covariance \eqn{H^{-1} J H^{-1}}, where
 \eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
-score vectors. \eqn{J} has rank at most \eqn{N}, so it is singular for any
-model with at least as many parameters as there are entities. When that
-happens the diagonal of the sandwich is not a consistent variance estimate:
-some linear combinations of the parameters are assigned zero estimated
-variance, and the remaining entries depend appreciably on how the
-derivatives are obtained. This is the too-few-clusters problem of
-cluster-robust inference, with entities in the role of clusters, and it is a
-property of the design rather than of the implementation.
+score vectors. The per-entity scores share a component that is identical
+across entities, and at the maximum they sum to zero, so \eqn{J} is
+unchanged by centring them: only the variation of the scores across
+entities contributes. Parameters entering the log-likelihood solely through
+terms common to every entity have no such variation, and \eqn{J} is
+consequently rank deficient however many entities are observed. See
+\code{\link{score_rank}}.
 
-\code{optim_model_space} warns when this occurs. The likelihood, the
-posterior means (\code{PM}, \code{PMcon}) and the posterior inclusion
-probabilities (\code{PIP}) do not involve \eqn{J} and are unaffected, as are
-the Hessian-based standard deviations \code{PSD} and \code{PSDcon}. Robust
-standard deviations should be reported only when \eqn{\dim(\theta) < N},
-and comfortably so.
+The directions \eqn{J} does span include the lagged dependent variable and
+the regressors, so the reported \code{PSDR} and \code{PSDRcon} are well
+defined: because \eqn{J} vanishes outside that block, the sandwich
+restricted to it equals the profile sandwich obtained by profiling the
+remaining parameters out. What the construction does discard is the score
+covariance involving those remaining directions, which is set to zero
+rather than estimated.
+
+The deficiency is the normal state of this likelihood rather than a symptom
+of a poor fit, so it is not warned about; \code{summary()} of a model space
+reports the fraction of parameter directions the scores span. The
+likelihood, the posterior means (\code{PM}, \code{PMcon}) and the posterior
+inclusion probabilities (\code{PIP}) do not involve \eqn{J} and are
+unaffected, as are the Hessian-based standard deviations \code{PSD} and
+\code{PSDcon}, which rest on correct specification rather than on \eqn{J}
+and are the more defensible choice for this likelihood.
 }
 
 \section{Methods}{

@@ -94,6 +94,17 @@ summary.badp_model_space <- function(object, ...) {
     NULL
   }
 
+  # Fraction of parameter directions spanned by the outer product of the
+  # entity-level scores, in the worst model. Below one means the robust
+  # standard errors rest on a rank-deficient J; see ?score_rank.
+  K <- length(reg)
+  score_span <- if (!is.null(object$stats) &&
+                    nrow(object$stats) >= 5L + 2L * K) {
+    min(object$stats[5L + 2L * K, ] / object$stats[4L + 2L * K, ])
+  } else {
+    NULL
+  }
+
   result <- list(
     num_models       = num_models,
     num_regressors   = R,
@@ -105,7 +116,8 @@ summary.badp_model_space <- function(object, ...) {
     regressor_names  = reg[-1L],
     data_dim         = data_dim,
     likelihoods      = likelihoods,
-    num_nonconverged = num_nonconverged
+    num_nonconverged = num_nonconverged,
+    score_span       = score_span
   )
   class(result) <- "summary.badp_model_space"
   result
@@ -160,6 +172,14 @@ print.summary.badp_model_space <- function(x, ...) {
     } else {
       cat("  All models converged.\n")
     }
+    cat("\n")
+  }
+
+  if (!is.null(x$score_span) && is.finite(x$score_span)) {
+    cat("Robust standard errors:\n")
+    cat(sprintf("  Score directions spanned: %.0f%% of parameters%s\n",
+                100 * x$score_span,
+                if (x$score_span < 1) "  (see ?score_rank)" else ""))
     cat("\n")
   }
 

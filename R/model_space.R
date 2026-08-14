@@ -779,11 +779,14 @@ split_convergence_diagnostics <- function(raw, n_param_rows) {
 #' likelihood approximation used to weight the models, namely
 #' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
 #' Then there are rows with standard deviations for each parameter, followed by
-#' rows with robust standard deviations. The last two rows hold
+#' rows with robust standard deviations. The last three rows hold
 #' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
-#' the outer product of the entity-level scores, and the dimension of the
-#' parameter vector; their ratio gives the curvature-adjusted learning rate
-#' offered by \link[badp]{bma}.
+#' the outer product of the entity-level scores, the dimension of the
+#' parameter vector, and the numerical rank of \code{J}. These are the
+#' ingredients of the magnitude adjustment for misspecified likelihoods,
+#' whose rate is \code{rank(J) / tr(H^-1 J)}; see \code{\link{score_rank}} for
+#' why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
+#' weighting option is built on it.
 #' @export
 #' @keywords internal
 nested_std_dev_from_params <- function(
@@ -859,18 +862,27 @@ nested_std_dev_from_params <- function(
   # likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012):
   # the trace of H^{-1} J, where H is the observed information and
   # J = G'G the outer product of the entity-level scores, together with the
-  # dimension of theta. The adjusted learning rate is dim / trace, and it
-  # equals one exactly when H = J, i.e. when the information matrix equality
-  # holds. Computed here because H and J are available only at this point.
+  # dimension of theta and the numerical rank of J. Computed here because H
+  # and J are available only at this point.
+  #
+  # The rank matters. J is unchanged by centring the rows of G, because the
+  # per-entity scores share a component that is identical across entities
+  # (the terms of the log-likelihood that do not depend on a single entity's
+  # data), and at the maximum the scores sum to zero. Any parameter entering
+  # the likelihood only through those common terms therefore contributes
+  # nothing to J, and J is rank deficient however many entities there are.
+  # Since only rank(J) eigenvalues of H^{-1} J are non-zero, the adjusted
+  # learning rate is rank(J) / trace, not dim(theta) / trace.
   trace_hinv_j <- sum(diag(solve(hess) %*% Imat))
   n_theta <- nrow(hess)
+  rank_j <- score_rank(Gmat)
 
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   bic <- exp(loglikelihood)
 
-  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta)
+  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta, rank_j)
 }
 
 
@@ -894,11 +906,14 @@ nested_std_dev_from_params <- function(
 #' likelihood approximation used to weight the models, namely
 #' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
 #' Then there are rows with standard deviations for each parameter, followed by
-#' rows with robust standard deviations. The last two rows hold
+#' rows with robust standard deviations. The last three rows hold
 #' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
-#' the outer product of the entity-level scores, and the dimension of the
-#' parameter vector; their ratio gives the curvature-adjusted learning rate
-#' offered by \link[badp]{bma}.
+#' the outer product of the entity-level scores, the dimension of the
+#' parameter vector, and the numerical rank of \code{J}. These are the
+#' ingredients of the magnitude adjustment for misspecified likelihoods,
+#' whose rate is \code{rank(J) / tr(H^-1 J)}; see \code{\link{score_rank}} for
+#' why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
+#' weighting option is built on it.
 #' @export
 #'
 #' @keywords internal
@@ -978,18 +993,27 @@ non_nested_std_dev_from_params <- function(
   # likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012):
   # the trace of H^{-1} J, where H is the observed information and
   # J = G'G the outer product of the entity-level scores, together with the
-  # dimension of theta. The adjusted learning rate is dim / trace, and it
-  # equals one exactly when H = J, i.e. when the information matrix equality
-  # holds. Computed here because H and J are available only at this point.
+  # dimension of theta and the numerical rank of J. Computed here because H
+  # and J are available only at this point.
+  #
+  # The rank matters. J is unchanged by centring the rows of G, because the
+  # per-entity scores share a component that is identical across entities
+  # (the terms of the log-likelihood that do not depend on a single entity's
+  # data), and at the maximum the scores sum to zero. Any parameter entering
+  # the likelihood only through those common terms therefore contributes
+  # nothing to J, and J is rank deficient however many entities there are.
+  # Since only rank(J) eigenvalues of H^{-1} J are non-zero, the adjusted
+  # learning rate is rank(J) / trace, not dim(theta) / trace.
   trace_hinv_j <- sum(diag(solve(hess) %*% Imat))
   n_theta <- nrow(hess)
+  rank_j <- score_rank(Gmat)
 
   loglikelihood <-
     (likelihood - (n_lin_features/2)*(log(n_entities*n_periods)))/n_entities
 
   bic <- exp(loglikelihood)
 
-  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta)
+  c(likelihood, bic, stdh, stdr, trace_hinv_j, n_theta, rank_j)
 
 }
 
@@ -1027,11 +1051,14 @@ non_nested_std_dev_from_params <- function(
 #' likelihood approximation used to weight the models, namely
 #' \code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
 #' Then there are rows with standard deviations for each parameter, followed by
-#' rows with robust standard deviations. The last two rows hold
+#' rows with robust standard deviations. The last three rows hold
 #' \code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
-#' the outer product of the entity-level scores, and the dimension of the
-#' parameter vector; their ratio gives the curvature-adjusted learning rate
-#' offered by \link[badp]{bma}.
+#' the outer product of the entity-level scores, the dimension of the
+#' parameter vector, and the numerical rank of \code{J}. These are the
+#' ingredients of the magnitude adjustment for misspecified likelihoods,
+#' whose rate is \code{rank(J) / tr(H^-1 J)}; see \code{\link{score_rank}} for
+#' why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
+#' weighting option is built on it.
 #'
 #' @importFrom pbapply pbapply
 #' @export
@@ -1208,14 +1235,17 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' The robust standard errors stored in the statistics, and the columns
 #' \code{PSDR} and \code{PSDRcon} that \link[badp]{bma} derives from them, come
 #' from the sandwich \eqn{H^{-1} J H^{-1}} with
-#' \eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the \eqn{N} entity-level score
-#' vectors. \eqn{J} is of rank at most \eqn{N} and is singular for any model
-#' with at least as many parameters as there are entities, in which case the
-#' robust standard errors are not identified. A warning is issued when this
-#' applies to any model in the space. It is a property of the design, not of
-#' the estimation: the number of independent units, not the number of
-#' observations, limits the rank. The likelihood, the parameter estimates and
-#' the Hessian-based standard errors are unaffected.
+#' \eqn{J = \sum_{i=1}^{N} s_i s_i'} formed from the entity-level score
+#' vectors. \eqn{J} depends only on the variation of those scores across
+#' entities, so parameters entering the log-likelihood solely through terms
+#' common to every entity contribute nothing and \eqn{J} is rank deficient
+#' regardless of \eqn{N}; see \code{\link{score_rank}}. The fraction of
+#' parameter directions the scores span is reported by
+#' \code{\link{summary.badp_model_space}}. The standard errors that are
+#' reported remain well defined, as the sandwich restricted to the spanned
+#' block is the profile sandwich on that block, but the score covariance
+#' involving the remaining directions is discarded. The likelihood, the
+#' parameter estimates and the Hessian-based standard errors are unaffected.
 #'
 #' @section Methods:
 #' Objects of class \code{badp_model_space} have the following methods available:
@@ -1308,13 +1338,12 @@ optim_model_space <-
       cl            = cl
     )
 
-    warn_if_rank_deficient(
-      stats      = stats,
-      n_entities = dplyr::n_distinct(dplyr::pull(df, {{ entity_col }}))
-    )
-
     reg_names <- extract_names(df)
     observations_num <- nrow((na.omit(df[,4])))
+
+    # No warning is issued for a rank-deficient J. It is the normal state of
+    # this likelihood rather than a symptom of a bad fit, so warning on every
+    # call would be noise; summary() reports the spanned fraction instead.
 
     structure(
       list(params = params, stats = stats, reg_names = reg_names,
@@ -1325,77 +1354,84 @@ optim_model_space <-
   }
 
 
+#' Numerical rank of the entity-level score matrix
+#'
+#' The sandwich covariance uses \eqn{J = G'G}, where the rows of \eqn{G} are
+#' the entity-level score vectors. At the maximum the rows of \eqn{G} sum to
+#' zero, so \eqn{J} is unchanged by centring them and its rank is the rank of
+#' the centred matrix: only the \emph{variation across entities} of the scores
+#' contributes. Parameters that enter the log-likelihood solely through terms
+#' common to every entity have no such variation and contribute nothing,
+#' whatever the number of entities.
+#'
+#' @param Gmat Matrix of entity-level scores, one row per entity.
+#'
+#' @returns Integer, the numerical rank.
+#'
+#' @keywords internal
+score_rank <- function(Gmat) {
+  centred <- sweep(Gmat, 2, colMeans(Gmat))
+  singular_values <- svd(centred, nu = 0, nv = 0)$d
+
+  if (length(singular_values) == 0 || max(singular_values) == 0) {
+    return(0L)
+  }
+
+  tolerance <- max(dim(centred)) * max(singular_values) *
+    .Machine$double.eps
+  sum(singular_values > tolerance)
+}
+
+
 #' Number of models whose sandwich covariance is rank deficient
 #'
 #' The robust ("sandwich") covariance \eqn{H^{-1} J H^{-1}} is built from
-#' \eqn{J = \sum_i s_i s_i'}, the outer product of the \eqn{N} entity-level
-#' score vectors. \eqn{J} is therefore of rank at most \eqn{N}, and is
-#' singular whenever the model has at least as many parameters as there are
-#' entities. The diagonal of the sandwich is then not a consistent variance
-#' estimate: some linear combinations of the parameters are assigned zero
-#' estimated variance, and the remaining entries are numerically unstable,
-#' in the sense that they depend appreciably on how the derivatives are
-#' obtained. This is the familiar too-few-clusters problem of cluster-robust
-#' inference, with entities playing the role of clusters.
+#' \eqn{J = \sum_i s_i s_i'}, the outer product of the entity-level score
+#' vectors. Because the per-entity scores share a component identical across
+#' entities, and because they sum to zero at the maximum, \eqn{J} depends only
+#' on the variation of those scores across entities. Parameters entering the
+#' log-likelihood solely through terms common to every entity contribute
+#' nothing, so \eqn{J} is typically of rank far below \eqn{\dim(\theta)} and
+#' below \eqn{N}, however many entities are observed.
 #'
-#' The same deficiency affects the curvature-adjusted learning rate
-#' \eqn{\dim(\theta) / \mathrm{tr}(H^{-1} J)} offered by
-#' \link[badp]{bma}, which relies on the same \eqn{J}.
+#' Where \eqn{J} is singular the robust standard errors of the affected
+#' directions are not identified. Those actually reported by \link[badp]{bma},
+#' for the lagged dependent variable and the regressors, are recovered as the
+#' profile sandwich on the non-degenerate block, which is well defined; the
+#' construction nonetheless discards the score covariance involving the
+#' remaining directions.
 #'
-#' @param stats Statistics matrix of a model space, whose last row holds the
-#' dimension of the parameter vector for each model.
-#' @param n_entities Number of entities.
+#' @param stats Statistics matrix of a model space, whose last rows hold the
+#' dimension of the parameter vector and the rank of \eqn{J} for each model.
+#' @param n_entities Number of entities. Unused, retained for compatibility.
 #' @param K Number of regressors including the lagged dependent variable. When
-#' supplied, the dimension of the parameter vector is read from row
-#' \code{4 + 2 * K}, and model spaces fitted before badp 0.6.0, which do not
-#' store it, are recognised and reported as unaffected. When \code{NULL} the
-#' last row is used.
+#' supplied, \code{dim(theta)} is read from row \code{4 + 2 * K} and
+#' \code{rank(J)} from row \code{5 + 2 * K}; model spaces fitted before these
+#' were stored are recognised and reported as unaffected.
 #'
-#' @returns Integer, the number of models for which \code{dim(theta)} is at
-#' least \code{n_entities}. Zero if the model space does not record
-#' \code{dim(theta)}.
+#' @returns Integer, the number of models for which \code{rank(J)} is less than
+#' \code{dim(theta)}. Zero if the model space does not record the rank.
 #'
 #' @keywords internal
-n_rank_deficient_models <- function(stats, n_entities, K = NULL) {
+n_rank_deficient_models <- function(stats, n_entities = NULL, K = NULL) {
   if (is.null(stats) || nrow(stats) == 0) {
     return(0L)
   }
 
-  row <- if (is.null(K)) {
-    nrow(stats)
-  } else if (nrow(stats) >= 4 + 2 * K) {
-    4 + 2 * K
+  rows <- if (is.null(K)) {
+    if (nrow(stats) < 2) return(0L)
+    c(nrow(stats) - 1, nrow(stats))
+  } else if (nrow(stats) >= 5 + 2 * K) {
+    c(4 + 2 * K, 5 + 2 * K)
   } else {
-    # Fitted before badp 0.6.0, which did not store dim(theta).
+    # Fitted before the rank of J was stored.
     return(0L)
   }
 
-  n_theta <- stats[row, ]
-  sum(is.finite(n_theta) & n_theta >= n_entities)
+  n_theta <- stats[rows[1], ]
+  rank_j <- stats[rows[2], ]
+
+  sum(is.finite(n_theta) & is.finite(rank_j) & rank_j < n_theta)
 }
 
 
-#' Warn if the sandwich covariance is rank deficient
-#'
-#' @inheritParams n_rank_deficient_models
-#' @returns Invisibly, the number of affected models.
-#' @keywords internal
-warn_if_rank_deficient <- function(stats, n_entities) {
-  n_bad <- n_rank_deficient_models(stats, n_entities)
-
-  if (n_bad > 0) {
-    warning(sprintf(
-      paste("%d of %d models have at least as many parameters as there are",
-            "entities (N = %d), so the outer product of the entity-level",
-            "scores is singular. The robust standard deviations (PSDR,",
-            "PSDRcon) reported by bma() are not identified for these models,",
-            "and neither is weighting = \"curvature\". The likelihood, the",
-            "posterior means and the posterior inclusion probabilities are",
-            "unaffected; the Hessian-based standard deviations (PSD, PSDcon)",
-            "remain available."),
-      n_bad, ncol(stats), n_entities
-    ), call. = FALSE)
-  }
-
-  invisible(n_bad)
-}

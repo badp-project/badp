@@ -33,7 +33,7 @@ The manuscript includes a hands-on tutorial
 accessible to users unfamiliar with this approach.
 In addition to calculating the model space and providing key BMA statistics,
 the package offers flexible options for specifying model priors,
-or including a dilution prior that accounts for multicollinearity.
+including a dilution prior that accounts for multicollinearity.
 It also provides graphical tools
 for visualizing prior and posterior model probabilities,
 as well as functions for plotting histograms
@@ -55,12 +55,12 @@ Bayesian model averaging (BMA) emerged as a preferred method during a period whe
 As a result, BMA became a widely used technique for assessing the robustness of regressors in economics [for a detailed review of BMA applications in economics, see @Moral+2015; @Steel+2020] (e.g., @Liu+2009; @Ductor+2016; @Figini+2017; @Beck+2022; @DAndrea+2022; @Horvath+2024), as well as in other fields (e.g., @Sloughter+2013; @Baran+2015; @Aller+2021; @Guliyev+2024; @Payne+2024; @Beck+2025).
 Moreover, the growing interest in BMA was fueled by the availability of R packages such as `BMA` [@Raftery+2005], `BAS` [@clyde2011bayesian], and `BMS` [@Feldkircher+2015], along with the `gretl` BMA package developed by @Blazejowski+2015.
 
-The primary issue with the Bayesian model averaging in the aforementioned studies was its reliance on the assumption of exogenous regressors.
+The primary issue with Bayesian model averaging in the aforementioned studies was its reliance on the assumption of exogenous regressors.
 In many contexts, particularly in economics, this premise is unsuitable.
 Instead, the assumption of endogenous variables within a simultaneous equations framework is more fitting.
 Consequently, a new line of research relaxed the assumption of exogenous regressors [@Lenkoski+2014; @Leon+2015; @Mirestean+2016; @Moral+2016; @Chen+2018].
 However, these methods have not found their way into mainstream research.
-The code to implement them is only available upon request from the authors and is provided exclusively for `MATLAB` and `GAUSS`.
+The code to implement them is, to the best of our knowledge, available only upon request from the authors and is provided exclusively for `MATLAB` and `GAUSS`.
 
 The `badp` package was developed to address this gap.
 It offers tools for performing Bayesian model averaging on dynamic panels with weakly exogenous regressors.
@@ -90,9 +90,9 @@ This section outlines the model setup, describes the approach to Bayesian model 
 
 @Moral+2016 considers the following model specification:
 
-$$y_{it}=\alpha y_{it-1}+\beta x_{it}+\eta_{i}+\zeta_{t}+v_{it} \tag{1}$$
+$$y_{it}=\alpha y_{it-1}+x'_{it}\beta+\eta_{i}+\zeta_{t}+v_{it} \tag{1}$$
 
-where $y_{it}$ is the dependent variable, $i$ $(=1,...,N)$ indexes entity (ex. country), $t$ $(=1,...,T)$ indexes time, $x_{it}$ is a matrix of growth determinants, $\beta$ is a parameter vector, $\eta_{i}$ is an entity specific fixed effect, $\zeta_{t}$ is a period-specific shock and $v_{it}$ is a shock to the dependent variable.
+where $y_{it}$ is the dependent variable, $i$ $(=1,...,N)$ indexes entity (ex. country), $t$ $(=1,...,T)$ indexes time, $x_{it}$ is a $k \times 1$ vector of growth determinants, $\beta$ is the corresponding parameter vector, $\eta_{i}$ is an entity-specific fixed effect, $\zeta_{t}$ is a period-specific shock and $v_{it}$ is a shock to the dependent variable.
 To address the issue of reverse causality the model is built on the assumption of weak exogeneity, that can be formalized as
 
 $$\mathbb{E}(v_{i,t}|y^{t-1}_{t},x^{t}_{i},\eta_{i})=0 \tag{2}$$
@@ -104,7 +104,7 @@ On the assumption of weakly exogenous regressors, @Moral+2013 augmented equation
 $$x_{it}=\gamma_{t0}y_{i0}+...+\gamma_{tt-1}y_{it-1}+\Lambda_{t1}x_{i1}+...+\Lambda_{tt-1}x_{it-1}+c_{t}\eta_{i}+\vartheta_{it} \tag{3}$$
 
 where $t=2,\dots ,T;$ $c_{t}$ is the $k\times 1$ vector of parameters.
-For $h<t$, $\gamma_{th}$ is a $k\times 1$ vector $(y_{th}^{1},\dots,y_{th}^{k})'$  $h=0,\dots,T-1$; $\Lambda_{th}$ is a $k\times k$ matrix of parameters, and $\vartheta_{it}$ is a $k\times 1$ of prediction errors. The initial observations are defined with
+For $h<t$, $\gamma_{th}$ is a $k\times 1$ vector $(y_{th}^{1},\dots,y_{th}^{k})'$  $h=0,\dots,T-1$; $\Lambda_{th}$ is a $k\times k$ matrix of parameters, and $\vartheta_{it}$ is a $k\times 1$ vector of prediction errors. The initial observations are defined with
 
 $$y_{i0}=c_{0}\eta_{i}+\upsilon_{it} \tag{4}$$
 
@@ -137,7 +137,7 @@ $$D=\begin{bmatrix}
  \end{bmatrix}. \tag{8}$$
 
 The model setup in equations (1) and (3)-(5) requires that in addition to the parameters of interest $\alpha$ and $\beta$, the parameters $\gamma_{ij}$ and $\Lambda_{km}$ need to be estimated.
-To make the optimization of likelihood computationally feasible, @Moral+2013 developed Simultaneous Equations Model (SEM) setup where the parameters of non-central interest are incorporated in the variance-covariance matrix.
+To make the optimization of likelihood computationally feasible, @Moral+2013 developed Simultaneous Equations Model (SEM) setup where the nuisance parameters are incorporated in the variance-covariance matrix.
 In the SEM setup, the model is defined by $1 + (T - 1)k + T$ equations:
 
 $$\begin{cases}
@@ -164,9 +164,10 @@ and matrices $B$ and $C$ contain coefficients $\alpha$, $\beta$, $\phi_0$, $\phi
 Since these matrices are not connected to the error, we simply note that they are defined in such a way that the equation (10) is equivalent to the SEM setup.
 The main difference of the SEM setup is that equations for $x_{it}$ now depend only on $y_{i0}$ and $x_{i1}$ and not on $y_{is}$ and $x_{is}$ for other periods $s$.
 
-Following @Moral+2013, we can then define the likelihood function as:
+Following @Moral+2013, and writing $\ell(\theta) = \log L(\theta)$ for the
+log-likelihood throughout, we can then define the log-likelihood function as:
 
-$$L \propto - \frac{N}{2} \log \det \Omega(\theta) - \frac{1}{2} tr \{ \Omega(\theta)^{-1} (R - Z \Pi(\theta))' (R - Z \Pi(\theta)) \} \tag{14}$$
+$$\ell(\theta) \propto - \frac{N}{2} \log \det \Omega(\theta) - \frac{1}{2} tr \{ \Omega(\theta)^{-1} (R - Z \Pi(\theta))' (R - Z \Pi(\theta)) \} \tag{14}$$
 
 where $R$ and $Z$ are matrices containing vectors $R_i$ and $z_i$ respectively and:
 
@@ -176,10 +177,10 @@ $$U^*_i(\theta) = B^{-1} U_i \tag{16}$$
 
 $$\Omega(\theta) = Var(U^*_i) = B^{-1} \cdot Var(U_i) \cdot  B'^{-1} = B^{-1} \Sigma B'^{-1} \tag{17}$$
 
-It is possible to find analytical solution for MLE for some of the parameters.
-Then the formula for the likelihood function can be simplified to:
+It is possible to obtain analytical solutions for the MLEs of some parameters.
+Then the formula for the log-likelihood function can be simplified to:
 
-$$L(\theta) \propto - \frac{N}{2} \log \det \Sigma_{11} - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \frac{N}{2} \log \det (\frac{H}{N}) \tag{18}$$
+$$\ell(\theta) \propto - \frac{N}{2} \log \det \Sigma_{11} - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \frac{N}{2} \log \det (\frac{H}{N}) \tag{18}$$
 
 where $U_1$ is a matrix of errors connected only to dependent variables, $\Sigma_{11}$ is a part of the $\Sigma$ matrix:
 
@@ -489,6 +490,13 @@ full_model_space <- optim_model_space(
 )
 ```
 
+A random generator such as `function(n) runif(n, 0.1, 1)` may be supplied to
+`init_value` instead, which turns the estimation into a randomized multi-start
+experiment. The estimation is then stochastic, and reproducing a model space
+requires fixing the random number stream: `set.seed()` suffices in the current
+session, but the per-model optimization runs on the workers when a cluster is
+supplied, so use `clusterSetRNGStream()` in that case.
+
 The function returns a list with five named arguments
 which are explained in the subsections below.
 A progress bar is displayed to easily track the ongoing computation.
@@ -549,12 +557,12 @@ both derived from the Hessian of the maximized log-likelihood function.
 The first type consists of the regular standard errors,
 calculated using the inverse of the observed information matrix:
 
-$$I(\hat{\theta}) = -\frac{\partial^2 l(\hat{\theta})}{\partial \theta \partial \theta'} \tag{45}$$
+$$I(\hat{\theta}) = -\frac{\partial^2 \ell(\hat{\theta})}{\partial \theta \partial \theta'} \tag{45}$$
 
 where $\hat{\theta}$ are the estimated MLE parameters,
 $I(\hat{\theta})$ is the information matrix
-and $l(\hat{\theta}) = \log L(\hat{\theta})$
-is the natural logarithm of the likelihood function.
+and $\ell(\hat{\theta}) = \log L(\hat{\theta})$
+is the log-likelihood.
 The variance covariance matrix is given by:
 
 $$Var(\hat{\theta}) = I(\hat{\theta})^{-1}, \tag{46}$$
@@ -572,7 +580,7 @@ we first have to rewrite the equation (18) in a form
 which will display the contribution of each entity on the likelihood value.
 First note that:
 
-$$L(\theta) \propto - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \sum_{i=1}^{N} \frac{1}{2} \log \det \Sigma_{11} - \frac{1}{2} \log \det (\frac{H}{N}) \tag{48}$$
+$$\ell(\theta) \propto - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \sum_{i=1}^{N} \frac{1}{2} \left( \log \det \Sigma_{11} + \log \det (\frac{H}{N}) \right) \tag{48}$$
 
 Now,
 because of the cyclic property of the trace we can rewrite the first term as:
@@ -586,25 +594,53 @@ corresponding to the data relating to the single entity $i$.
 Hence, the entire likelihood function can be rewritten
 as a sum of contributions from each entity:
 
-$$L(\theta) \propto \sum_{i=1}^{N} -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i') \tag{50}$$
+$$\ell(\theta) \propto \sum_{i=1}^{N} -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i') \tag{50}$$
 
 From there we can see that the contribution of a single entity $i$ is:
 
-$$l_i(\theta) \propto -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i'). \tag{51}$$
+$$\ell_i(\theta) \propto -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i'). \tag{51}$$
 
-Now if we consider a multivariate function $\mathbf{l}(\theta)$
+Now if we consider a multivariate function $\boldsymbol{\ell}(\theta)$
 of all such contributions (with single contributions as its coordinates),
 we can find its gradient at the MLE:
-$G(\hat{\theta}) = \frac{\mathbf{l}(\hat{\theta})}{\partial \theta}$.
+$G(\hat{\theta}) = \frac{\partial \boldsymbol{\ell}(\hat{\theta})}{\partial \theta}$.
 Then the robust variance is:
 
 $$Var_{R}(\hat{\theta}) = I(\hat{\theta})^{-1} \cdot G'(\hat{\theta}) G(\hat{\theta}) \cdot I(\hat{\theta})^{-1} \tag{52}$$
 
 and the robust standard errors are given by:
 
-$$\text{SE}_{R}(\hat{\theta}) = \sqrt{\text{diag}(\hat{V}_{R}(\hat{\theta}))}. \tag{53}$$
+$$\text{SE}_{R}(\hat{\theta}) = \sqrt{\text{diag}(Var_{R}(\hat{\theta}))}. \tag{53}$$
 
 where the square root is again applied to each coordinate separately.
+
+The structure of equation (51) has a consequence worth noting. Splitting it as
+$\ell_i(\theta) = c(\theta) + b_i(\theta)$, with
+$c = -\frac{1}{2}(\log \det \Sigma_{11} + \log \det (H/N))$ the same for every
+entity and $b_i = -\frac{1}{2} u_i \Sigma_{11}^{-1} u_i'$ specific to entity
+$i$, the scores are $s_i = c' + b_i'$. They sum to zero at the maximum, so
+$\sum_i b_i' = -N c'$ and
+
+$$G'(\hat{\theta}) G(\hat{\theta}) = \sum_{i=1}^{N} s_i s_i'
+= \sum_{i=1}^{N} (b_i' - \bar{b}')(b_i' - \bar{b}')' \tag{54}$$
+
+The common component cancels: the matrix depends only on how the scores vary
+across entities. Any parameter entering the likelihood only through
+$c(\theta)$ therefore contributes nothing, and
+$G'(\hat{\theta}) G(\hat{\theta})$ is rank deficient however many entities are
+observed. In the model spaces bundled with the package the scores span between
+8% and 29% of the parameter directions; `summary()` reports the proportion for
+a fitted model space.
+
+Because the matrix vanishes outside the directions it spans, the sandwich
+restricted to that block equals the profile variance obtained by profiling the
+remaining parameters out, so the reported robust standard errors, those of
+$\alpha$ and the $\beta$ parameters, are well defined. What the construction
+discards is the score covariance involving the unspanned directions, which is
+set to zero rather than estimated. The standard errors based on
+$I(\hat{\theta})$ alone do not involve
+$G'(\hat{\theta}) G(\hat{\theta})$ and are unaffected; they rest instead on
+the likelihood being correctly specified.
 
 
 ### Parallelization
@@ -627,16 +663,17 @@ model_space <- optim_model_space(
 However, for larger datasets,
 it is better to take advantage of parallel computing.
 Then the numerical optimization used to find MLEs
-can be computed on separate threads for each model.
+can be carried out in separate parallel processes, one model at a time per worker.
 To do this, first load the `parallel` package and set up a cluster.
 
 ```{r eval=FALSE}
 library(parallel)
-# Here we try to use all available cores on the system.
-# You might want to lower the number of cores depending on your needs.
-cores <- detectCores()
+# Leave one core free so the session remains responsive.
+cores <- max(1, detectCores() - 1)
 cl <- makeCluster(cores)
-setDefaultCluster(cl)
+# Only needed when init_value draws at random; set.seed() does not reach
+# the workers, where the per-model optimization runs.
+clusterSetRNGStream(cl, 20240812)
 ```
 
 Then the user just needs to provide this cluster to the function:
@@ -650,13 +687,15 @@ model_space <- optim_model_space(
   init_value    = function(n) rep(0.5, n),
   cl            = cl
 )
+
+stopCluster(cl)
 ```
 
 
 ### Precomputed model spaces
 
 Even with parallelization, `optim_model_space` call may be time-consuming.
-Hence, for users who want to quickly start practicing using the `badp`,
+Hence, for users who wish to explore `badp` without recomputing the model space,
 we provide already computed model space objects included with the package:
 
 - `full_model_space` is the model space built with the entire data
@@ -685,7 +724,7 @@ $$A_j = \hat{\ell}_j - \frac{k_j}{2}\log(NT),$$
 
 where $\hat{\ell}_j$ is the maximized log-likelihood of model $M_j$, $k_j$ its
 number of linear parameters, $N$ the number of entities and $T$ the number of
-periods, four of the five available options are the same construction with
+periods, three of the four available options are the same construction with
 different learning rates $\eta$, namely
 $L(\text{data}|M_j) \propto \exp(\eta A_j)$:
 
@@ -698,22 +737,8 @@ $L(\text{data}|M_j) \propto \exp(\eta A_j)$:
 - `"nt"`, $\eta = 1/(NT)$, averaging over entity-periods rather than entities.
   This is the rate that would be internally consistent with the $\log(NT)$
   penalty, and it tempers $T$ times more strongly than `"mb2016"`.
-- `"curvature"`, with $\eta$ estimated from the data rather than fixed a
-  priori, by the magnitude adjustment developed for misspecified and composite
-  likelihoods [@Chandler+2007; @Ribatet+2012].
-  When a likelihood overstates the information in the data, the observed
-  information and the outer product of the entity-level scores disagree, and
-  rescaling the log-likelihood restores the nominal calibration of the
-  likelihood ratio. The realized value is returned in the `eta` element.
-  This option requires models with fewer parameters than there are entities:
-  the rate is $\dim(\theta)/\operatorname{tr}(H^{-1}J)$ with
-  $J = \sum_{i=1}^{N} s_i s_i'$, which has rank at most $N$. `bma` warns when
-  the condition fails, and an estimate above one is then a symptom of the
-  deficiency rather than a meaningful value. It fails for the economic growth
-  model space used here, whose models carry between 88 and 106 parameters
-  against 73 countries.
 
-The fifth option, `"uip"`, instead alters the penalty rather than the rate,
+The fourth option, `"uip"`, instead alters the penalty rather than the rate,
 setting $L(\text{data}|M_j) \propto \exp\{\hat{\ell}_j - \frac{k_j}{2}\log(N)\}$
 and so taking the entity rather than the entity-period as the unit of
 information. The unit information prior underlying the approximation
@@ -743,6 +768,27 @@ fitted model space:
 bma_results_mb2012 <- bma(full_model_space, round = 3, weighting = "mb2012")
 ```
 
+Any other rate can be supplied through the `eta` argument, which overrides
+`weighting`. This is the intended way to check how much a conclusion depends
+on the rate:
+
+```{r, eval = FALSE}
+bma_results_eta <- bma(full_model_space, round = 3, eta = 0.1)
+```
+
+The package deliberately offers no option that estimates $\eta$ from the data.
+The magnitude adjustment developed for misspecified and composite likelihoods
+[@Chandler+2007; @Ribatet+2012] would set
+$\eta = \operatorname{rank}(J)/\operatorname{tr}(H^{-1}J)$, where
+$J = \sum_{i=1}^{N} s_i s_i'$ is the outer product of the entity-level scores.
+For this likelihood $J$ is substantially rank deficient, because parameters
+entering it only through terms common to every entity contribute nothing; in
+the bundled model spaces the scores span between 8% and 29% of the parameter
+directions, which `summary()` reports. The adjustment would then be calibrated
+on a small part of the parameter space with no way to assess what the rest
+contributes. The ingredients are stored with every fitted model space, so the
+rate can be computed and inspected directly by anyone who wants it.
+
 The `bma` function returns a list containing 19 elements.
 However, most of these elements are only required for other functions.
 The main objects of interest are the two tables with the BMA statistics.
@@ -764,7 +810,7 @@ A value of $\%(+)$ equal to $0\%$ or $100\%$ indicates coefficient sign stabilit
 
 The PIP for all the regressors shows that none of them can be considered very strong according to the classification by @Raftery+1995.
 This also applies to the population variable (`pop`), which has a PIP of 0.990 due solely to approximation.
-These results are corroborated by the ratios of PM to PSD and PSDR.
+The ratios of PM to PSD and PSDR give a broadly similar ordering.
 In particular, for the absolute value of the PM to PSDR ratio, only the population variable exceeds 1.3, while investment (`ish`) and the democracy index (`polity`) are above 1.
 This finding led @Moral+2016 to emphasize the fragility of economic growth determinants.
 The only variable that can be considered robust across all metrics is the lagged GDP (`gdp_lag`).
@@ -789,7 +835,7 @@ Importantly, these numbers reflect only the number of regressors in a model and 
 bma_results[[16]]
 ```
 
-The results show that, after observing the data, the researcher should expect around seven and eight and a half regressors in the model under the binomial and binomial-beta model priors, respectively.
+The results show that, after observing the data, the posterior expected number of included regressors is around seven under the binomial model prior and eight and a half under the binomial-beta model prior.
 These numbers may seem high; however, they are driven by relatively substantial PIPs.
 This illustrates the importance of focusing on both posterior inclusion probabilities and the ratios of posterior mean to posterior standard deviation when assessing the robustness of the regressors.
 
@@ -892,7 +938,7 @@ how the results change when switching between these two variance estimators.
 
 Within the BMA framework, it is possible to establish the nature of the relationship between pairs of examined regressors using the jointness measures.
 This can be accomplished using the `jointness` function.
-The latest jointness measure, introduced by @Hofmarcher+2018, has been shown to outperform older alternatives developed by @Ley+2007 and @Doppelhofer+2009 [see Section [Model priors and jointness](#model-priors-and-jointness) for the interpretations of jointness measures].
+The latest jointness measure, introduced by @Hofmarcher+2018, has been shown to address shortcomings of the earlier measures of @Ley+2007 and @Doppelhofer+2009 [see Section [Model priors and jointness](#model-priors-and-jointness) for the interpretations of jointness measures].
 Therefore, the @Hofmarcher+2018 measure is the default option in the `jointness` function.
 
 ```{r}
@@ -910,7 +956,7 @@ To obtain the results for the @Ley+2007 measure, the user should run:
 jointness(bma_results, measure = "LS")
 ```
 
-The values corroborate the results obtained using the @Hofmarcher+2018 measure.
+The values are consistent with those obtained using the @Hofmarcher+2018 measure.
 All the regressors exhibit complementary relationships, which are visibly stronger under the binomial-beta model prior.
 
 However, the @Doppelhofer+2009 measure yields a slightly different outcome:
@@ -1162,7 +1208,7 @@ Hence, we see that @Moral+2016's claim about the fragility of growth regressors 
 ## Concluding remarks
 
 This manuscript introduces the `badp` package, which enables Bayesian model averaging for dynamic panels with weakly exogenous regressors — a methodology developed by @Moral+2012, @Moral+2013, @Moral+2016.
-This package allows researchers to simultaneously address model uncertainty and reverse causality and is the only R package offering these capabilities.
+This package allows researchers to simultaneously address model uncertainty and reverse causality and is, to the best of our knowledge, the first R package implementing this approach.
 It provides flexible options for specifying model priors, including dilution prior that accounts for multicollinearity.
 The package also includes graphical tools for visualizing prior and posterior model probabilities across model space and model sizes, as well as functions for plotting histograms and kernel densities of the estimated coefficients.
 Additionally, it allows researchers to compute jointness measures introduced by @Doppelhofer+2009, @Ley+2007, @Hofmarcher+2018 to assess whether pairs of regressors act as substitutes or complements.
@@ -1173,7 +1219,7 @@ Users unfamiliar with this approach can easily learn to apply it through the han
 The package's functionalities are illustrated using the original dataset from @Moral+2016 in the context of analyzing the determinants of economic growth.
 The results of the examination illustrate that fragility of growth determinants is a persistent feature of the data, confirming @Moral+2016 claims.
 The various empirical exercises underscore two important aspects of any BMA analysis.
-First, the results should always be validated through extensive changes in prior specifications.
+First, prior sensitivity should be routinely examined.
 Second, the robustness of the regressors must be evaluated using both
 posterior inclusion probabilities and the ratios of the posterior mean to the posterior standard deviation,
 as these measures can often lead to differing conclusions.

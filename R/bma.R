@@ -29,10 +29,6 @@
 #             internally consistent with the log(N*T) penalty, and it tempers T
 #             times more strongly than "mb2016".
 #
-#   "curvature"  log w_j = eta_hat * A_j
-#             A learning rate estimated from the data rather than fixed a
-#             priori. See estimate_curvature_rate() below.
-#
 #   "uip"     log w_j = A_j + (k_j/2) * log(T)
 #                     = loglik_j - (k_j/2) * log(N)
 #             The Schwarz criterion with the entity as the unit of information.
@@ -41,12 +37,17 @@
 #             the likelihood factorises over entities, the entity is the natural
 #             unit, giving a penalty in log(N) rather than log(N*T).
 #
-# Note that "mb2012", "mb2016", "nt" and "curvature" are the same construction
-# with different learning rates eta: 1, 1/N, 1/(N*T) and eta_hat respectively.
-# Only "uip" changes the penalty rather than the rate. Any eta != 1 yields a
-# tempered (power) posterior over models, f(y|M_j)^eta, which is outside the
-# Schwarz/Laplace theory that motivates the approximation and which does not
-# concentrate as N grows.
+#   "user"    log w_j = eta * A_j
+#             A rate supplied directly through the eta argument of bma(), for
+#             examining how sensitive conclusions are to the choice.
+#
+# Note that "mb2012", "mb2016", "nt" and "user" are the same construction with
+# different learning rates eta: 1, 1/N, 1/(N*T) and a supplied value. Only
+# "uip" changes the penalty rather than the rate. A rate held fixed as the
+# sample grows only rescales the log weights and the posterior still
+# concentrates; a rate shrinking with the sample, as in "mb2016" and "nt",
+# gives weights converging to constants and a posterior that never
+# concentrates.
 #
 # The result is returned on the log scale and shifted so that its maximum is
 # zero. Posterior model probabilities are normalised, so the shift cancels; it
@@ -54,89 +55,23 @@
 weighting_log_weights <- function(scaled_log_weight, weighting, n_params,
                                   n_entities, n_periods, eta = NULL) {
   weighting <- match.arg(
-    weighting, c("mb2016", "mb2012", "nt", "curvature", "uip")
+    weighting, c("mb2016", "mb2012", "nt", "uip", "user")
   )
 
   a <- n_entities * scaled_log_weight        # A_j
 
   log_w <- switch(
     weighting,
-    mb2016    = a / n_entities,
-    mb2012    = a,
-    nt        = a / (n_entities * n_periods),
-    curvature = eta * a,
-    uip       = a + (n_params / 2) * log(n_periods)
+    mb2016 = a / n_entities,
+    mb2012 = a,
+    nt     = a / (n_entities * n_periods),
+    uip    = a + (n_params / 2) * log(n_periods),
+    user   = eta * a
   )
 
   exp(log_w - max(log_w))
 }
 
-
-# Learning rate estimated by the magnitude ("omnibus") adjustment used for
-# composite and otherwise misspecified likelihoods (Chandler and Bate 2007;
-# Ribatet, Cooley and Davison 2012). When a likelihood overstates the
-# information in the data, the observed information H and the outer product of
-# the per-entity scores J disagree, and the likelihood ratio no longer has its
-# nominal distribution. The adjustment rescales the log-likelihood by
-#
-#     eta = p / tr(H^{-1} J),
-#
-# which restores the nominal calibration. Under the simplifying assumption
-# J = c * H the trace is c * p, so eta = 1/c, and c is the factor by which the
-# sandwich variance inflates the Hessian-based variance. badp stores the two
-# sets of standard errors but not H and J themselves, so c is estimated
-# coordinate-wise as the mean of (robust SE / Hessian SE)^2 within a model, and
-# summarised across models by the median for robustness.
-#
-# This is an approximation in two respects: J = c * H need not hold, and only
-# the diagonals of the two variance matrices are available. It is offered as a
-# data-driven point of comparison to the fixed rates, not as a substitute for
-# computing tr(H^{-1} J) directly, which would require storing H and J when the
-# model space is estimated.
-estimate_curvature_rate <- function(std, stdR, like_table = NULL, K = NULL) {
-  # Exact route. Model spaces fitted from badp 0.6.0 onwards carry
-  # tr(H^{-1} J) and dim(theta) in the last two rows of the statistics, so the
-  # adjustment can be evaluated as written. The rate is summarised across
-  # models by the median.
-  if (!is.null(like_table) && !is.null(K) && nrow(like_table) >= 4 + 2 * K) {
-    trace_hinv_j <- like_table[3 + 2 * K, ]
-    n_theta <- like_table[4 + 2 * K, ]
-    ok <- is.finite(trace_hinv_j) & is.finite(n_theta) & trace_hinv_j > 0
-    if (any(ok)) {
-      return(stats::median(n_theta[ok] / trace_hinv_j[ok]))
-    }
-  }
-
-  # Fallback for model spaces fitted before those quantities were stored.
-  # Only the diagonals of H^{-1} and H^{-1} J H^{-1} are available, so the
-  # trace is approximated under the assumption J = c * H, for which
-  # tr(H^{-1} J) = c * dim(theta) and c is the variance inflation implied by
-  # the two sets of standard errors.
-  message("This model space predates badp 0.6.0 and does not store ",
-          "tr(H^{-1}J); the curvature-adjusted learning rate is being ",
-          "approximated from the ratio of robust to Hessian-based standard ",
-          "errors. Re-estimate the model space for the exact adjustment.")
-
-  std <- as.matrix(std)
-  stdR <- as.matrix(stdR)
-
-  inflation <- vapply(seq_len(ncol(std)), function(j) {
-    ok <- is.finite(std[, j]) & is.finite(stdR[, j]) & std[, j] > 0
-    if (!any(ok)) return(NA_real_)
-    mean((stdR[ok, j] / std[ok, j])^2)
-  }, numeric(1))
-
-  c_hat <- stats::median(inflation, na.rm = TRUE)
-
-  if (!is.finite(c_hat) || c_hat <= 0) {
-    warning("could not estimate a curvature-adjusted learning rate; ",
-            "falling back to eta = 1 (the unadjusted Schwarz criterion).",
-            call. = FALSE)
-    return(1)
-  }
-
-  1 / c_hat
-}
 
 
 #' Calculation of the bma object
@@ -166,23 +101,26 @@ estimate_curvature_rate <- function(std, stdR, like_table = NULL, K = NULL) {
 #' than entities, \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/(NT)\}}. This is the
 #' scaling that would be internally consistent with the \eqn{\log(NT)} penalty,
 #' and it tempers \eqn{T} times more strongly than \code{"mb2016"}; \cr
-#' \code{"curvature"} - a learning rate estimated from the data by the
-#' magnitude ("omnibus") adjustment used for misspecified and composite
-#' likelihoods (Chandler and Bate 2007; Ribatet, Cooley and Davison 2012),
-#' rather than fixed a priori. See Details; \cr
 #' \code{"uip"} - the Schwarz criterion with the entity as the unit of
 #' information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
 #' prior underlying the approximation (Kass and Wasserman 1995) is defined
 #' through the Fisher information for a single observation, and the likelihood
 #' factorises over entities, so the entity is the natural unit.
+#' @param eta Optional single positive number giving the learning rate
+#' directly, as in \eqn{f(y|M_j) \propto \exp(\eta A_j)} with
+#' \eqn{A_j = \ell_j - (k_j/2)\log(NT)}. Supplying it overrides
+#' \code{weighting}, which is the intended way to examine how sensitive
+#' conclusions are to the rate. \code{eta = 1} reproduces \code{"mb2012"} and
+#' \code{eta = 1/N} reproduces \code{"mb2016"}. Default \code{NULL}, meaning
+#' the rate implied by \code{weighting}.
 #'
 #' @details
-#' Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, four of the five options are
+#' Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, three of the four options are
 #' the same construction with different learning rates \eqn{\eta}:
 #' \eqn{\log w_j = \eta A_j}, with \eqn{\eta = 1} for \code{"mb2012"},
-#' \eqn{1/N} for \code{"mb2016"}, \eqn{1/(NT)} for \code{"nt"} and an estimated
-#' \eqn{\hat\eta} for \code{"curvature"}. Only \code{"uip"} alters the penalty
-#' instead of the rate.
+#' \eqn{1/N} for \code{"mb2016"} and \eqn{1/(NT)} for \code{"nt"}. Only
+#' \code{"uip"} alters the penalty instead of the rate. The \code{eta}
+#' argument supplies any other rate.
 #'
 #' Any \eqn{\eta \neq 1} produces a tempered (power) posterior over models,
 #' proportional to \eqn{f(y|M_j)^\eta}, which lies outside the approximation
@@ -202,50 +140,55 @@ estimate_curvature_rate <- function(std, stdR, like_table = NULL, K = NULL) {
 #' posterior sharply, which on likelihoods of this kind can place essentially
 #' all mass on a single model.
 #'
-#' The \code{"curvature"} rate addresses this by estimating \eqn{\eta} rather
-#' than assuming it. When a likelihood overstates the information in the data,
-#' the observed information \eqn{H} and the outer product of the per-entity
-#' scores \eqn{J} disagree, and rescaling the log-likelihood by
-#' \eqn{\eta = \dim(\theta) / \mathrm{tr}(H^{-1}J)} restores nominal
-#' calibration. The rate equals one exactly when \eqn{H = J}, that is when the
-#' information matrix equality holds and the likelihood is correctly specified.
-#' Both matrices are available from the automatic differentiation used to fit
-#' the model space, so \eqn{\mathrm{tr}(H^{-1}J)} and \eqn{\dim(\theta)} are
-#' computed per model and stored; \eqn{\eta} is the median of their ratio
-#' across the model space, and the realised value is returned in the
-#' \code{eta} element.
-#'
-#' Model spaces fitted before these quantities were stored do not carry them.
-#' In that case \eqn{\eta} is approximated under the assumption \eqn{J = cH},
-#' for which \eqn{\mathrm{tr}(H^{-1}J) = c\dim(\theta)}, taking \eqn{c} to be
-#' the mean squared ratio of robust to Hessian-based standard errors; a message
-#' is emitted and re-estimating the model space gives the exact adjustment.
+#' No option estimates \eqn{\eta} from the data. The magnitude ("omnibus")
+#' adjustment for misspecified and composite likelihoods (Chandler and Bate
+#' 2007; Ribatet, Cooley and Davison 2012) would set
+#' \eqn{\eta = \mathrm{rank}(J)/\mathrm{tr}(H^{-1}J)}, matching the mean of the
+#' adjusted log-likelihood ratio to its limiting distribution. It is not
+#' offered here because \eqn{J} is substantially rank deficient for this
+#' likelihood: parameters entering it only through terms common to every
+#' entity contribute nothing, and in the model spaces bundled with the package
+#' the entity-level scores span between 8\% and 29\% of the parameter
+#' directions (see \code{\link{score_rank}}). The adjustment would then be
+#' calibrated on a small part of the parameter space, with no way to assess
+#' what the remainder contributes. The ingredients are nonetheless stored with
+#' every fitted model space, so the rate can be computed and inspected
+#' directly if wanted.
 #'
 #' The default is retained for compatibility with the published literature;
 #' users are encouraged to check the sensitivity of their conclusions to this
-#' choice. Switching between the options requires no re-estimation, since all
-#' are recovered from the same fitted model space.
+#' choice, which is what \code{eta} is for. Switching between the options
+#' requires no re-estimation, since all are recovered from the same fitted
+#' model space.
 #'
 #' @section Identification of the robust standard deviations:
-#' The columns \code{PSDR} and \code{PSDRcon}, and the
-#' \code{weighting = "curvature"} learning rate, are derived from the
+#' The columns \code{PSDR} and \code{PSDRcon} are derived from the
 #' sandwich covariance \eqn{H^{-1} J H^{-1}}, where
 #' \eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
-#' score vectors. \eqn{J} has rank at most \eqn{N}, so it is singular for any
-#' model with at least as many parameters as there are entities. When that
-#' happens the diagonal of the sandwich is not a consistent variance estimate:
-#' some linear combinations of the parameters are assigned zero estimated
-#' variance, and the remaining entries depend appreciably on how the
-#' derivatives are obtained. This is the too-few-clusters problem of
-#' cluster-robust inference, with entities in the role of clusters, and it is a
-#' property of the design rather than of the implementation.
+#' score vectors. The per-entity scores share a component that is identical
+#' across entities, and at the maximum they sum to zero, so \eqn{J} is
+#' unchanged by centring them: only the variation of the scores across
+#' entities contributes. Parameters entering the log-likelihood solely through
+#' terms common to every entity have no such variation, and \eqn{J} is
+#' consequently rank deficient however many entities are observed. See
+#' \code{\link{score_rank}}.
 #'
-#' \code{optim_model_space} warns when this occurs. The likelihood, the
-#' posterior means (\code{PM}, \code{PMcon}) and the posterior inclusion
-#' probabilities (\code{PIP}) do not involve \eqn{J} and are unaffected, as are
-#' the Hessian-based standard deviations \code{PSD} and \code{PSDcon}. Robust
-#' standard deviations should be reported only when \eqn{\dim(\theta) < N},
-#' and comfortably so.
+#' The directions \eqn{J} does span include the lagged dependent variable and
+#' the regressors, so the reported \code{PSDR} and \code{PSDRcon} are well
+#' defined: because \eqn{J} vanishes outside that block, the sandwich
+#' restricted to it equals the profile sandwich obtained by profiling the
+#' remaining parameters out. What the construction does discard is the score
+#' covariance involving those remaining directions, which is set to zero
+#' rather than estimated.
+#'
+#' The deficiency is the normal state of this likelihood rather than a symptom
+#' of a poor fit, so it is not warned about; \code{summary()} of a model space
+#' reports the fraction of parameter directions the scores span. The
+#' likelihood, the posterior means (\code{PM}, \code{PMcon}) and the posterior
+#' inclusion probabilities (\code{PIP}) do not involve \eqn{J} and are
+#' unaffected, as are the Hessian-based standard deviations \code{PSD} and
+#' \code{PSDcon}, which rest on correct specification rather than on \eqn{J}
+#' and are the more defensible choice for this likelihood.
 #'
 #' @return An object of class \code{badp_bma}, which is a list containing:
 #'
@@ -308,9 +251,27 @@ bma <- function(
   EMS = NULL,
   dilution = 0,
   omega = 0.5,
-  weighting = c("mb2016", "mb2012", "nt", "curvature", "uip")
+  weighting = c("mb2016", "mb2012", "nt", "uip"),
+  eta = NULL
 ) {
+  # Must be read before match.arg() assigns to the formal, which would make
+  # missing() report FALSE whether or not the caller supplied it.
+  weighting_supplied <- !missing(weighting)
+
   weighting <- match.arg(weighting)
+  weighting_label <- weighting
+
+  if (!is.null(eta)) {
+    if (!is.numeric(eta) || length(eta) != 1 || !is.finite(eta) || eta <= 0) {
+      stop("`eta` must be a single positive finite number.", call. = FALSE)
+    }
+    if (weighting_supplied) {
+      warning("`eta` overrides `weighting`; the supplied weighting is ignored.",
+              call. = FALSE)
+    }
+    weighting <- "user"
+    weighting_label <- "user"
+  }
 
   if (!is.null(model_space$convergence)) {
     n_nonconverged <- sum(model_space$convergence["converged", ] == 0)
@@ -355,29 +316,6 @@ bma <- function(
   n_entities <- length(unique(model_space[[5]][[2]]))
   n_periods <- nrow(model_space[[5]]) / n_entities - 1
   n_params <- rowSums(reg_ID) + 1        # k_j: regressors in model j, plus alpha
-
-  # The sandwich covariance, and hence the curvature-adjusted learning rate,
-  # rests on J = sum_i s_i s_i', which has rank at most n_entities. Models
-  # with at least as many parameters as entities give a singular J; see
-  # warn_if_rank_deficient().
-  n_rank_deficient <- n_rank_deficient_models(like_table, n_entities, K = K)
-
-  if (weighting == "curvature" && n_rank_deficient > 0) {
-    warning(sprintf(
-      paste("weighting = \"curvature\" estimates the learning rate from",
-            "tr(H^-1 J), but %d of %d models have at least as many",
-            "parameters as there are entities (N = %d), so J is singular",
-            "and the estimated rate is not identified. Values above one,",
-            "which the adjustment cannot take when the estimate is",
-            "meaningful, are a symptom of this. Prefer a fixed learning",
-            "rate for this model space."),
-      n_rank_deficient, ncol(like_table), n_entities
-    ), call. = FALSE)
-  }
-
-  eta <- if (weighting == "curvature") {
-    estimate_curvature_rate(std, stdR, like_table = like_table, K = K)
-  } else NULL
 
   likes <- matrix(
     weighting_log_weights(
@@ -610,13 +548,13 @@ bma <- function(
   bma_list <- list(
     uniform_table, random_table, reg_names, R, num_of_models, forJointness,
     forBestModels, EMS, sizePriors, PMPs, modelPriors, dilution,
-    alphas, betas_nonzero, df_free, PMStable, omega, weighting,
+    alphas, betas_nonzero, df_free, PMStable, omega, weighting_label,
     switch(weighting,
-           mb2012    = 1,
-           mb2016    = 1 / n_entities,
-           nt        = 1 / (n_entities * n_periods),
-           curvature = eta,
-           uip       = NA_real_)
+           mb2012 = 1,
+           mb2016 = 1 / n_entities,
+           nt     = 1 / (n_entities * n_periods),
+           uip    = NA_real_,
+           user   = eta)
   )
   names(bma_list) <- c(
     "uniform_table", "random_table", "reg_names", "R",

@@ -14,11 +14,15 @@ Each column represents a different model.
 }
 \item{stats}{
 A numeric matrix of statistics computed by
-\code{\link{compute_model_space_stats}} based on \code{params}.
-Row 1 contains model likelihoods. Row 2 contains a quantity proportional
-to \code{0.5 * BIC} (cf. Raftery, Bayesian Model Selection in Social Research,
-Eq. 19). Rows 3--7 contain standard deviations, and rows 8--12 contain
-robust standard deviations.
+\code{\link{compute_model_space_stats}} based on \code{params}, with one
+column per model. Row 1 holds the maximized log-likelihood. Row 2 holds
+the marginal likelihood approximation used to weight the models,
+\code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+There follow \code{K} rows of standard deviations and \code{K} rows of
+robust standard deviations, where \code{K} is the number of regressors
+including the lagged dependent variable. The final three rows hold
+\code{tr(H^-1 J)}, the dimension of the parameter vector and the
+numerical rank of \code{J}; see \code{\link{score_rank}}.
 }
 \item{reg_names}{
 A character vector with the names of the regressors.
