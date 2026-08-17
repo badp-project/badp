@@ -1,5 +1,52 @@
 # badp 0.6.0
 
+* Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
+  R implementation differentiated via `RTMB` (automatic differentiation).
+  Optimization now uses gradients obtained by automatic differentiation
+  instead of finite differences, and standard errors are computed from the
+  Hessian and per-entity score vectors of the same tape instead of
+  finite-difference approximations. Optimized parameters and standard errors
+  therefore differ from those of earlier versions; likelihood values at given
+  parameters are unchanged. The difference is small for the parameter
+  estimates but can be substantial for the robust standard errors, which
+  depend on the derivatives twice over. The finite-difference
+  `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
+  and `optimbase` dependencies were dropped in favour of `RTMB`.
+* `init_value` (in `optim_model_space()` and related functions) now also
+  accepts a generator function of one argument `n` returning `n` starting
+  values (e.g. `function(n) runif(n, 0.1, 1)`), enabling randomized
+  multi-start experiments, or a single number used as the starting value for
+  every parameter, as before (`init_value = 0.5` is equivalent to
+  `function(n) rep(0.5, n)`), so code written against 0.4.0 and 0.5.0
+  continues to work. Passing `0`, a vector of length greater than one, or
+  anything that is neither a function nor a single finite number now fails
+  with an informative error, as does a generator that draws exactly `0` for
+  an included parameter; zero is rejected either way because it is reserved
+  to mark a parameter excluded from a given model.
+* Per-model optimization is more robust to the harder cases automatic
+  differentiation now makes tractable to explore:
+    * BFGS is restarted from its own solution until the log-likelihood value
+      stops improving by more than `restart_tol` (`max_restarts` and
+      `restart_tol` arguments of `optim_model_space()`); with
+      `max_restarts = 0`, `optim()`'s own convergence flag is used directly.
+    * A starting point at which the likelihood is undefined, and an
+      automatic-differentiation error encountered mid-optimization, no
+      longer abort the procedure: the offending point is treated as a
+      rejected step, letting the line search shrink it, or, if it was the
+      initial point, redrawn from `init_value` (up to `max_init_attempts`
+      times).
+    * A model whose observed information matrix is not positive definite,
+      or not finite, is re-optimized from a freshly drawn starting point (up
+      to `max_reoptimizations` times) instead of being reported as a
+      failure.
+    * Per-model convergence diagnostics - converged flag, `optim` code,
+      number of restarts, number of initial draws, and final gradient norm -
+      are stored in the new `convergence` element of `badp_model_space`
+      objects. Non-converged models trigger a warning in
+      `optim_model_space()` and `bma()` and are reported by
+      `summary()`/`print()`; they are deliberately not excluded from the
+      analysis.
+
 * The model space statistics gained a row holding the numerical rank of
   `J = sum_i s_i s_i'`, the outer product of the entity-level scores from
   which the robust ("sandwich") standard errors are built. Because the
@@ -72,35 +119,11 @@
 * Model weights are now formed on the log scale and shifted before
   exponentiation, which prevents overflow when log Bayes factors are large.
 
-* `init_value` accepts either a generator function of one argument `n`
-  returning `n` starting values, or a single number used as the starting
-  value for every parameter; `init_value = 0.5` is equivalent to
-  `function(n) rep(0.5, n)`. Support for a single number was inadvertently
-  lost during development of this release and has been restored, so code
-  written against 0.4.0 and 0.5.0 continues to work. Passing `0`, a vector of
-  length greater than one, or anything that is neither a function nor a
-  single finite number now fails with an informative error instead of an
-  error about an unrelated internal call. Zero is rejected because it is
-  reserved to mark a parameter excluded from a given model.
-* `optim_model_space()` gained `max_init_attempts` and `max_reoptimizations`.
-  A starting point that falls in a region where the likelihood is undefined
-  is now redrawn from `init_value` (up to `max_init_attempts` times), and a
-  model whose observed information matrix is not positive definite is
-  re-optimized from a fresh starting point (up to `max_reoptimizations`
-  times) instead of being reported as a failure.
-* The `convergence` element of `badp_model_space` objects gained an
-  `n_init_draws` row, recording how many starting points were drawn before
-  one at which the likelihood is defined was found.
-* Automatic differentiation errors encountered during optimization no longer
-  abort the procedure; the line search corrects the step size instead, which
-  is the intended behaviour.
-* `optim()`'s own convergence flag is now honored when `max_restarts = 0`.
-* Non-finite observed-information matrices are rejected in
-  `usable_solution()` rather than propagating `NaN` standard errors.
-* Fixed `sem_sigma_matrix()` to use multiplication instead of `^2`, avoiding
-  an automatic-differentiation artifact at zero.
-* Fixed `sem_C_matrix()` to validate the length of `phi_1` against `beta`.
-* Fixed `init_value()`-drawn zeros being treated as excluded parameters.
+* `sem_sigma_matrix()` builds variances with multiplication rather than
+  `^2`, avoiding a `NaN` second derivative that automatic differentiation
+  would otherwise produce when a variance parameter is exactly zero.
+* `sem_C_matrix()` validates that `phi_1` is supplied with the same length
+  as `beta`.
 * `RTMB (>= 1.6)` is now required, for automatic-differentiation support in
   `chol()` and `determinant()`.
 * The minimum required R version was raised from 3.5 to 4.4, to match the
@@ -114,30 +137,6 @@
 
 # badp 0.5.0
 
-* Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
-  R implementation differentiated via `RTMB` (automatic differentiation).
-  Optimization now uses gradients obtained by automatic differentiation
-  instead of finite differences, and standard errors are computed from the
-  Hessian and per-entity score vectors of the same tape instead of
-  finite-difference approximations. Optimized parameters and standard errors
-  therefore differ from those of earlier versions; likelihood values at given
-  parameters are unchanged. The difference is small for the parameter
-  estimates but can be substantial for the robust standard errors, which
-  depend on the derivatives twice over. The finite-difference
-  `hessian()` function was removed. The `Rcpp`, `RcppArmadillo`, `rootSolve`
-  and `optimbase` dependencies were dropped in favour of `RTMB`.
-* `init_value` (in `optim_model_space()` and related functions) now also
-  accepts a generator function of one argument `n` returning `n` starting
-  values (e.g. `function(n) runif(n, 0.1, 1)`), enabling randomized
-  multi-start experiments. Passing a single number behaves as before.
-* Per-model optimization is now restarted until the log-likelihood value
-  stops improving (`max_restarts` and `restart_tol` arguments of
-  `optim_model_space()`), and per-model convergence diagnostics (converged
-  flag, `optim` code, number of restarts, final gradient norm) are stored in
-  the new `convergence` element of `badp_model_space` objects. Non-converged
-  models trigger a warning in `optim_model_space()` and `bma()` and are
-  reported by `summary()`/`print()`; they are deliberately not excluded from
-  the analysis.
 * **Breaking change**: `best_models()` now takes a character `prior` argument
   in place of the integer `criterion` argument. Use `prior = "binomial"`
   (default) instead of `criterion = 1`, and `prior = "beta"` instead of
