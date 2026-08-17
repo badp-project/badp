@@ -49,11 +49,13 @@
 # gives weights converging to constants and a posterior that never
 # concentrates.
 #
-# The result is returned on the log scale and shifted so that its maximum is
-# zero. Posterior model probabilities are normalised, so the shift cancels; it
-# only prevents overflow, which matters because A_j can be in the hundreds.
-weighting_log_weights <- function(scaled_log_weight, weighting, n_params,
-                                  n_entities, n_periods, eta = NULL) {
+# The log weights are shifted so that their maximum is zero before being
+# exponentiated, so the returned weights are on the linear scale with a
+# maximum of 1. Posterior model probabilities are normalised, so the shift
+# cancels; it only prevents overflow, which matters because A_j can be in
+# the hundreds.
+weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
+                                    n_entities, n_periods, eta = NULL) {
   weighting <- match.arg(
     weighting, c("mb2016", "mb2012", "nt", "uip", "user")
   )
@@ -312,13 +314,13 @@ bma <- function(
   # stored as exp(A_j / N) with A_j = loglik_j - (k_j/2)*log(N*T), the form
   # used by Moral-Benito's implementation. Because that transformation is
   # invertible, all three weightings below can be recovered from a fitted
-  # model space without re-estimating anything. See weighting_log_weights().
+  # model space without re-estimating anything. See weighting_model_weights().
   n_entities <- length(unique(model_space[[5]][[2]]))
   n_periods <- nrow(model_space[[5]]) / n_entities - 1
   n_params <- rowSums(reg_ID) + 1        # k_j: regressors in model j, plus alpha
 
   likes <- matrix(
-    weighting_log_weights(
+    weighting_model_weights(
       scaled_log_weight = log(as.numeric(likes)),
       weighting         = weighting,
       n_params          = n_params,
