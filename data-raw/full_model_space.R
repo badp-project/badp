@@ -26,7 +26,8 @@ clusterEvalQ(cl, devtools::load_all())
 
 # Reproducibility for the random starting points below. set.seed() alone does
 # not reach PSOCK workers, which is where the per-model optimization runs.
-clusterSetRNGStream(cl, 20240812)
+# The seed is an arbitrary constant; its value has no significance.
+clusterSetRNGStream(cl, 12345)
 
 # A constant starting point makes the recovery mechanism inside
 # optim_model_space() inert: when a model ends at a solution whose observed
