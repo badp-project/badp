@@ -22,7 +22,7 @@ A data frame with 1012 rows and 8 columns
 }
 }
 \source{
-\url{https://doi.org/10.7910/DVN/GTOFJB}
+\doi{10.7910/DVN/GTOFJB}
 }
 \usage{
 migration_data
@@ -31,6 +31,6 @@ migration_data
 Data used in the manuscript Afonso, A., Alves, J., & Beck, K. (2025).
 Drivers of migration flows in the European Union: Earnings or unemployment?
 International Labour Review, 164(2), 1-23.
-https://doi.org/10.16995/ilr.18845
+\doi{10.16995/ilr.18845}
 }
 \keyword{datasets}
