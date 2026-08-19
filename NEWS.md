@@ -118,7 +118,8 @@
   continues to work.
 * Model weights are now formed on the log scale and shifted before
   exponentiation, which prevents overflow when log Bayes factors are large.
-
+* `coef_hist()` labels the y axis "Density" rather than "Frequency", matching
+  what the histograms actually show.
 * `sem_sigma_matrix()` builds variances with multiplication rather than
   `^2`, avoiding a `NaN` second derivative that automatic differentiation
   would otherwise produce when a variance parameter is exactly zero.

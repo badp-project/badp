@@ -7,7 +7,7 @@ badp: Bayesian Averaging for Dynamic Panels
 
 [![CRAN status
 badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
-[![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
 [![R-CMD-check](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml)
 
 ## Overview
@@ -27,6 +27,10 @@ The package features:
   variant.
 - Flexible **model priors** (binomial, binomial-beta, optional dilution
   prior).
+- A selectable **learning rate** for the model weights (`weighting` and
+  `eta` in `bma()`), so the sensitivity of a conclusion to the marginal
+  likelihood approximation can be checked without re-estimating the model
+  space.
 - Comprehensive **BMA statistics**, including posterior inclusion
   probabilities (PIPs), posterior means, and posterior standard
   deviations (regular or robust).
@@ -108,7 +112,10 @@ non-trivial: it is typically connected to degenerate behaviour of the
 likelihood function for some of the models, and understanding it for a
 particular dataset requires inspecting the data (e.g. correlations between
 regressors), the behaviour of the likelihood, and the per-model
-diagnostics stored in the `convergence` element of the result.
+diagnostics stored in the `convergence` element of the result. A good
+starting point is to check which models are affected and how much
+posterior model probability they carry - if it is negligible, the
+warnings can usually be treated as expected behaviour.
 
 For small to moderately sized datasets:
 
@@ -354,7 +361,7 @@ to open an issue or pull request on
 
 ## License
 
-This package is distributed under the GPL ($\geq 2$) license. See the
+This package is distributed under the MIT license. See the
 [LICENSE](LICENSE) file for details.
 
 ------------------------------------------------------------------------

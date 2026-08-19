@@ -1,4 +1,4 @@
-url: https://badp-project.github.io/bdsm/
+url: https://badp-project.github.io/badp/
 
 template:
   bootstrap: 5
@@ -101,6 +101,9 @@ reference:
       - full_model_space
       - full_bma_results
       - model_space_nonnested
+      - migration_data
+      - migration_model_space
+      - migration_model_space_nonnested
 
 footer:
   structure:
