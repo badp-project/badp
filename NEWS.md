@@ -1,3 +1,8 @@
+# badp 0.6.1
+
+* The license files now attribute the copyright to "badp authors" over the
+  range 2021-2026.
+
 # badp 0.6.0
 
 * Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
