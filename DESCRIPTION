@@ -17,7 +17,8 @@ Authors@R:
       ),
       person(given = "Mariusz",
            family = "Szczepanczyk",
-           role = "aut"
+           role = "aut",
+           email = "m@mariusz.sh"
       ),
       person(given = "Mateusz",
            family = "Wyszynski",
