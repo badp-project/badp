@@ -1,6 +1,6 @@
 Package: badp
 Title: Bayesian Averaging for Dynamic Panels
-Version: 0.6.0
+Version: 0.6.1
 Authors@R:
     c(person(given = "Krzysztof",
            family = "Beck",
@@ -17,7 +17,8 @@ Authors@R:
       ),
       person(given = "Mariusz",
            family = "Szczepanczyk",
-           role = "aut"
+           role = "aut",
+           email = "m@mariusz.sh"
       ),
       person(given = "Mateusz",
            family = "Wyszynski",
