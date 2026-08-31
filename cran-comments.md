@@ -1,3 +1,35 @@
+# 0.6.1
+
+## Update
+
+This is a patch update of the CRAN version 0.6.0. It contains no changes to
+code, documentation or data; the only changes are to package metadata:
+
+* The `LICENSE` and `LICENSE.md` files now attribute the copyright to
+  "badp authors" over the year range 2021-2026, rather than to a single
+  author and a single year.
+* An e-mail address was added for the author Mariusz Szczepanczyk in
+  `Authors@R`.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* checking HTML version of manual ... NOTE
+  Skipping checking HTML validation: 'tidy' doesn't look like recent enough
+  HTML Tidy
+
+  This NOTE reflects the version of HTML Tidy installed on the check machine
+  and is unrelated to the package.
+
+Checked locally with `R CMD check --as-cran` against R 4.5.1 on
+macOS (aarch64-apple-darwin20), and via the GitHub Actions R-CMD-check
+workflow on Linux, macOS, and Windows across release, oldrel, and devel.
+
+## Downstream dependencies
+
+There are no downstream dependencies on CRAN.
+
 # 0.6.0
 
 ## Update

@@ -24,6 +24,9 @@ Authors@R:
            family = "Wyszynski",
            role = "aut",
            email = "mat.wyszynski@gmail.com"
+      ),
+      person(given = "badp authors",
+           role = "cph"
       ))
 Description: Implements Bayesian model averaging for dynamic panels with weakly
     exogenous regressors as described in the paper by
