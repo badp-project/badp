@@ -60,7 +60,7 @@ print.badp_model_space <- function(x, ...) {
 #'     \code{object$stats}), or \code{NULL} if not available.
 #'   \item \code{num_nonconverged} - Number of models whose optimization did
 #'     not converge, or \code{NULL} if the model space carries no convergence
-#'     diagnostics (e.g. objects created before badp 0.5.0).
+#'     diagnostics (e.g. objects created before badp 0.6.0).
 #' }
 #'
 #' @seealso \code{\link{print.badp_model_space}},

@@ -1,9 +1,40 @@
+# 0.6.1
+
+## Update
+
+This is a patch update of the CRAN version 0.6.0. It contains no changes to
+code, documentation or data; the only changes are to package metadata:
+
+* The `LICENSE` and `LICENSE.md` files now attribute the copyright to
+  "badp authors" over the year range 2021-2026, rather than to a single
+  author and a single year.
+* An e-mail address was added for the author Mariusz Szczepanczyk in
+  `Authors@R`.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* checking HTML version of manual ... NOTE
+  Skipping checking HTML validation: 'tidy' doesn't look like recent enough
+  HTML Tidy
+
+  This NOTE reflects the version of HTML Tidy installed on the check machine
+  and is unrelated to the package.
+
+Checked locally with `R CMD check --as-cran` against R 4.5.1 on
+macOS (aarch64-apple-darwin20), and via the GitHub Actions R-CMD-check
+workflow on Linux, macOS, and Windows across release, oldrel, and devel.
+
+## Downstream dependencies
+
+There are no downstream dependencies on CRAN.
+
 # 0.6.0
 
 ## Update
 
-This is an update of the CRAN version 0.4.0.1. Version 0.5.0 was developed but
-never submitted, so this release also carries its changes. The full list is in
+This is an update of the CRAN version 0.5.0. The full list of changes is in
 NEWS.md; the points most relevant to the check results are:
 
 * The SEM likelihood, previously implemented in C++ via `Rcpp` and
@@ -16,14 +47,12 @@ NEWS.md; the points most relevant to the check results are:
 * Consequently the package no longer contains compiled code: the `src`
   directory has been removed, and the `Rcpp`, `RcppArmadillo`, `rootSolve`
   and `optimbase` dependencies have been dropped in favour of
-  `RTMB (>= 1.6)`. This also resolves the installed package size NOTE
-  reported on r-oldrel-macos-x86_64 for 0.4.0.
-* S3 classes and methods were added for the objects returned by `bma()` and
-  `optim_model_space()` (`print()`, `summary()`, `coef()`, `plot()`).
+  `RTMB (>= 1.6)`.
 * The minimum required R version was raised from 3.5 to 4.4. `RTMB` depends
   on `TMB`, which imports `Matrix`, and `Matrix` requires R (>= 4.4); the
   previous declaration could not be satisfied in practice.
-* The bundled example datasets were regenerated with the current code.
+* The bundled example model spaces and datasets were regenerated with the new
+  automatic-differentiation pipeline.
 
 ## R CMD check results
 
@@ -39,6 +68,38 @@ NEWS.md; the points most relevant to the check results are:
 ## Downstream dependencies
 
 There are no downstream dependencies on CRAN.
+
+# 0.5.0
+
+## Minor release
+
+This release adds S3 classes and methods for `bma()` and `optim_model_space()`
+output (for JSS compliance), tightens the public API, and ships new example
+datasets. See `NEWS.md` for the full list of changes. Notable user-visible
+changes:
+
+* `bma()` now returns an object of class `badp_bma` with `print()`, `summary()`, `coef()`, and `plot()` methods. `optim_model_space()` returns a
+  `badp_model_space` object with a `print()` method.
+* Breaking change: `best_models()` now takes a character `prior` argument
+  ("binomial" / "beta") in place of the integer `criterion` argument, aligning
+  it with `summary.badp_bma()`.
+* Breaking change: the `dil.Par` parameter has been renamed to `omega` for
+  consistency with the statistical literature.
+* New `migration_data` dataset and two example model space objects
+  (`migration_model_space`, `migration_model_space_nonnested`) from
+  Afonso, Alves, & Beck (2025).
+* Removed `ggpubr` dependency; plot arrangement now uses `patchwork`.
+* Documentation, internal naming, and spelling cleanups throughout.
+
+## R CMD check results
+
+0 errors | 0 warnings | 0 notes
+
+Checked locally with `R CMD check --as-cran` against R 4.5.1 on
+macOS (aarch64-apple-darwin20) and via the GitHub Actions
+R-CMD-check workflow on Linux, macOS, and Windows across release,
+oldrel, and devel.
+
 
 # 0.4.0.1
 

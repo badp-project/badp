@@ -1,3 +1,8 @@
+# badp 0.6.1
+
+* The license files now attribute the copyright to "badp authors" over the
+  range 2021-2026.
+
 # badp 0.6.0
 
 * Replaced the C++ (Rcpp/RcppArmadillo) SEM likelihood implementation with an
@@ -118,7 +123,8 @@
   continues to work.
 * Model weights are now formed on the log scale and shifted before
   exponentiation, which prevents overflow when log Bayes factors are large.
-
+* `coef_hist()` labels the y axis "Density" rather than "Frequency", matching
+  what the histograms actually show.
 * `sem_sigma_matrix()` builds variances with multiplication rather than
   `^2`, avoiding a `NaN` second derivative that automatic differentiation
   would otherwise produce when a variance parameter is exactly zero.

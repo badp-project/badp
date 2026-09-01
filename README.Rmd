@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 # badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
 
 [![CRAN status badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
-[![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
 [![R-CMD-check](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml)
 
 
@@ -37,6 +37,9 @@ The package features:
 - Tools to **estimate** the entire model space (via maximum likelihood)
 and calculate **Bayesian information criterion (BIC)** for each variant.
 - Flexible **model priors** (binomial, binomial-beta, optional dilution prior).
+- A selectable **learning rate** for the model weights (`weighting` and `eta`
+in `bma()`), so the sensitivity of a conclusion to the marginal likelihood
+approximation can be checked without re-estimating the model space.
 - Comprehensive **BMA statistics**, including posterior inclusion probabilities
 (PIPs), posterior means, and posterior standard deviations (regular or robust).
 - Functions to **visualize** prior and posterior model probabilities.
@@ -316,7 +319,7 @@ Feel free to open an issue or pull request on
 
 ## License
 
-This package is distributed under the GPL (\(\geq 2\)) license.
+This package is distributed under the MIT license.
 See the [LICENSE](LICENSE) file for details.
 
 ---
