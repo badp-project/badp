@@ -2,10 +2,10 @@
 % Please edit documentation in R/coef_hist.R
 \name{coef_hist}
 \alias{coef_hist}
-\title{Graphs of the distribution of the coefficients over the model space}
+\title{Histograms of the Coefficients over the Model Space}
 \usage{
 coef_hist(
-  bma_list,
+  x,
   weight = NULL,
   bin_method = c("FD", "SC", "vec"),
   bin_widths = NULL,
@@ -15,7 +15,7 @@ coef_hist(
 )
 }
 \arguments{
-\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{weight}{Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
 \enumerate{

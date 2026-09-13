@@ -17,6 +17,13 @@ Invisibly returns the input object \code{x}.
 \description{
 Print method for \code{summary.badp_bma} objects.
 }
+\examples{
+data(small_model_space)
+results <- bma(small_model_space)
+
+print(summary(results))
+
+}
 \seealso{
 \code{\link{summary.badp_bma}}
 }

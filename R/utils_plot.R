@@ -1,4 +1,4 @@
-#' Arrange two plots with a common legend and labels
+#' Arrange Two Plots with a Common Legend
 #'
 #' Stacks two ggplot objects vertically, prepends the given panel labels to
 #' their titles, and collects their legends into a single shared legend at the

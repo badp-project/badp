@@ -2,7 +2,7 @@
 % Please edit documentation in R/bma.R
 \name{bma}
 \alias{bma}
-\title{Calculation of the bma object}
+\title{Bayesian Model Averaging over a Model Space}
 \usage{
 bma(
   model_space,
@@ -30,7 +30,7 @@ marginal likelihood used to weight the models. One of: \cr
 \code{"mb2016"} (default) - the approximation computed by the
 implementation accompanying Moral-Benito (2016), namely
 \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/N\}}, where \eqn{\ell_j} is the
-maximised log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
+maximized log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
 parameters, \eqn{N} the number of entities and \eqn{T} the number of
 periods. This is the Schwarz approximation raised to the power \eqn{1/N} and
 is the option that reproduces the results published in Moral-Benito (2016);
@@ -46,7 +46,7 @@ and it tempers \eqn{T} times more strongly than \code{"mb2016"}; \cr
 information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
 prior underlying the approximation (Kass and Wasserman 1995) is defined
 through the Fisher information for a single observation, and the likelihood
-factorises over entities, so the entity is the natural unit.}
+factorizes over entities, so the entity is the natural unit.}
 
 \item{eta}{Optional single positive number giving the learning rate
 directly, as in \eqn{f(y|M_j) \propto \exp(\eta A_j)} with
@@ -66,17 +66,18 @@ An object of class \code{badp_bma}, which is a list containing:
 \item{R}{The total number of regressors.}
 \item{num_of_models}{The number of models present in the model space.}
 \item{jointness_data}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-\item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard deviations, and standardized regression coefficients (stdRs) for the best_models function.}
+\item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard errors and robust standard errors, used by the \code{best_models} function.}
 \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
-\item{size_priors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
+\item{size_priors}{A table of binomial and binomial-beta model priors distributed over model sizes, used by the \code{model_sizes} function.}
 \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
 \item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
 \item{alphas}{A matrix of coefficients for the lagged dependent variable across all models, used in the coef_hist function.}
 \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
-\item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
 \item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
+\item{weighting}{The approximation to the marginal likelihood used to weight the models.}
+\item{eta}{The learning rate the weighting implies, or \code{NA} for \code{"uip"}, which alters the penalty rather than the rate.}
 }
 }
 \description{
@@ -137,7 +138,7 @@ sandwich covariance \eqn{H^{-1} J H^{-1}}, where
 \eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
 score vectors. The per-entity scores share a component that is identical
 across entities, and at the maximum they sum to zero, so \eqn{J} is
-unchanged by centring them: only the variation of the scores across
+unchanged by centering them: only the variation of the scores across
 entities contributes. Parameters entering the log-likelihood solely through
 terms common to every entity have no such variation, and \eqn{J} is
 consequently rank deficient however many entities are observed. See
@@ -169,6 +170,17 @@ Objects of class \code{badp_bma} have the following methods available:
 \item \code{\link{summary.badp_bma}} - Detailed statistical summary
 \item \code{\link{coef.badp_bma}} - Extract coefficients
 \item \code{\link{plot.badp_bma}} - Visualize results
+}
+
+The quantities of interest are returned by accessor functions, so that no
+analysis needs to depend on the internal layout of the object:
+\itemize{
+\item \code{\link{bma_table}} - Statistics under either model prior
+\item \code{\link{pip}} - Posterior inclusion probabilities
+\item \code{\link{pmp}} - Posterior model probabilities
+\item \code{\link{model_size_table}} - Prior and posterior model sizes
+\item \code{\link{regressors}}, \code{\link{n_models}} - Size of the problem
+\item \code{\link{weighting}}, \code{\link{learning_rate}} - Marginal likelihood used
 }
 }
 

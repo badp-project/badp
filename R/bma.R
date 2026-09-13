@@ -34,7 +34,7 @@
 #             The Schwarz criterion with the entity as the unit of information.
 #             The unit information prior underlying the approximation is
 #             defined through the Fisher information for one observation; since
-#             the likelihood factorises over entities, the entity is the natural
+#             the likelihood factorizes over entities, the entity is the natural
 #             unit, giving a penalty in log(N) rather than log(N*T).
 #
 #   "user"    log w_j = eta * A_j
@@ -51,7 +51,7 @@
 #
 # The log weights are shifted so that their maximum is zero before being
 # exponentiated, so the returned weights are on the linear scale with a
-# maximum of 1. Posterior model probabilities are normalised, so the shift
+# maximum of 1. Posterior model probabilities are normalized, so the shift
 # cancels; it only prevents overflow, which matters because A_j can be in
 # the hundreds.
 weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
@@ -76,7 +76,7 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 
 
 
-#' Calculation of the bma object
+#' Bayesian Model Averaging over a Model Space
 #'
 #' This function calculates BMA statistics based on the provided model space.
 #' Other objects for further analysis are also returned.
@@ -91,7 +91,7 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #' \code{"mb2016"} (default) - the approximation computed by the
 #' implementation accompanying Moral-Benito (2016), namely
 #' \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/N\}}, where \eqn{\ell_j} is the
-#' maximised log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
+#' maximized log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
 #' parameters, \eqn{N} the number of entities and \eqn{T} the number of
 #' periods. This is the Schwarz approximation raised to the power \eqn{1/N} and
 #' is the option that reproduces the results published in Moral-Benito (2016);
@@ -107,7 +107,7 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #' information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
 #' prior underlying the approximation (Kass and Wasserman 1995) is defined
 #' through the Fisher information for a single observation, and the likelihood
-#' factorises over entities, so the entity is the natural unit.
+#' factorizes over entities, so the entity is the natural unit.
 #' @param eta Optional single positive number giving the learning rate
 #' directly, as in \eqn{f(y|M_j) \propto \exp(\eta A_j)} with
 #' \eqn{A_j = \ell_j - (k_j/2)\log(NT)}. Supplying it overrides
@@ -169,7 +169,7 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #' \eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
 #' score vectors. The per-entity scores share a component that is identical
 #' across entities, and at the maximum they sum to zero, so \eqn{J} is
-#' unchanged by centring them: only the variation of the scores across
+#' unchanged by centering them: only the variation of the scores across
 #' entities contributes. Parameters entering the log-likelihood solely through
 #' terms common to every entity have no such variation, and \eqn{J} is
 #' consequently rank deficient however many entities are observed. See
@@ -201,17 +201,18 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #'   \item{R}{The total number of regressors.}
 #'   \item{num_of_models}{The number of models present in the model space.}
 #'   \item{jointness_data}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-#'   \item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard deviations, and standardized regression coefficients (stdRs) for the best_models function.}
+#'   \item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard errors and robust standard errors, used by the \code{best_models} function.}
 #'   \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
-#'   \item{size_priors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
+#'   \item{size_priors}{A table of binomial and binomial-beta model priors distributed over model sizes, used by the \code{model_sizes} function.}
 #'   \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
 #'   \item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 #'   \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
 #'   \item{alphas}{A matrix of coefficients for the lagged dependent variable across all models, used in the coef_hist function.}
 #'   \item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
-#'   \item{df_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
 #'   \item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
 #'   \item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
+#'   \item{weighting}{The approximation to the marginal likelihood used to weight the models.}
+#'   \item{eta}{The learning rate the weighting implies, or \code{NA} for \code{"uip"}, which alters the penalty rather than the rate.}
 #' }
 #'
 #' @section Methods:
@@ -221,6 +222,17 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #'   \item \code{\link{summary.badp_bma}} - Detailed statistical summary
 #'   \item \code{\link{coef.badp_bma}} - Extract coefficients
 #'   \item \code{\link{plot.badp_bma}} - Visualize results
+#' }
+#'
+#' The quantities of interest are returned by accessor functions, so that no
+#' analysis needs to depend on the internal layout of the object:
+#' \itemize{
+#'   \item \code{\link{bma_table}} - Statistics under either model prior
+#'   \item \code{\link{pip}} - Posterior inclusion probabilities
+#'   \item \code{\link{pmp}} - Posterior model probabilities
+#'   \item \code{\link{model_size_table}} - Prior and posterior model sizes
+#'   \item \code{\link{regressors}}, \code{\link{n_models}} - Size of the problem
+#'   \item \code{\link{weighting}}, \code{\link{learning_rate}} - Marginal likelihood used
 #' }
 #'
 #' @export
@@ -287,17 +299,16 @@ bma <- function(
     }
   }
 
-  reg_names <- model_space[[3]]
+  reg_names <- model_space$reg_names
   # Regressors with lag
   K <- length(reg_names)
   # Regressors without lag
   R <- K - 1
 
   num_of_models <- 2^R
-  observations_num <- model_space[[4]]
 
-  model_space_params <- model_space[[1]]
-  like_table <- model_space[[2]]
+  model_space_params <- model_space$params
+  like_table <- model_space$stats
 
   likes <- matrix(like_table[2, ], nrow = 1, ncol = num_of_models)
   std <- like_table[3:(2 + K), ]
@@ -315,8 +326,8 @@ bma <- function(
   # used by Moral-Benito's implementation. Because that transformation is
   # invertible, all three weightings below can be recovered from a fitted
   # model space without re-estimating anything. See weighting_model_weights().
-  n_entities <- length(unique(model_space[[5]][[2]]))
-  n_periods <- nrow(model_space[[5]]) / n_entities - 1
+  n_entities <- length(unique(model_space$df[[2]]))
+  n_periods <- nrow(model_space$df) / n_entities - 1
   n_params <- rowSums(reg_ID) + 1        # k_j: regressors in model j, plus alpha
 
   likes <- matrix(
@@ -376,7 +387,7 @@ bma <- function(
 
   ###### CONDITION for dilution prior
   if (dilution == 1) {
-    df <- model_space[[5]]
+    df <- model_space$df
     for_dilut <- df[, -(1:3)]
     for_dilut <- na.omit(for_dilut)
     dilut <- matrix(0, nrow = num_of_models, ncol = 1)
@@ -482,11 +493,8 @@ bma <- function(
   PM_random_nonzero <- matrix(0, nrow = num_of_models / 2, ncol = R)
   Positive_betas <- matrix(0, nrow = R, ncol = 1)
   Positive_alpha <- 0
-  df_free <- matrix(0, nrow = num_of_models, ncol = 1) # Degrees of freedom
-  reg_sums <- matrix(rowSums(reg_ID), nrow = num_of_models, ncol = 1)
 
   for (i in 1:num_of_models) {
-    df_free[i, 1] <- observations_num - reg_sums[i, 1] - 1
     if (alphas[i, 1] > 0) {
       Positive_alpha <- 1 / num_of_models + Positive_alpha
     }
@@ -536,7 +544,7 @@ bma <- function(
 
   PIPs <- cbind(PIP_uniform, PIP_random) # Table with PIP under different model priors for Jointness function
   forJointness <- cbind(reg_ID, PMP_uniform, PMP_random) # Table with model IDs and PMPs for Jointness function
-  forBestModels <- cbind(reg_ID, BestModels_prep, PMP_uniform, PMP_random) # Table with model IDs, coefs, stds, stdRs, PMP_uniform, PMP_random for bestModels function
+  forBestModels <- cbind(reg_ID, BestModels_prep, PMP_uniform, PMP_random) # Model IDs, coefficients, standard errors, robust standard errors and both PMPs, for best_models()
   sizePriors <- cbind(uniform_sizes, random_sizes) # Table with uniform and random model priors spread over model sizes
   PMPs <- cbind(reg_ID, PMP_uniform, PMP_random)
   modelPriors <- cbind(uniform_models, random_models)
@@ -550,7 +558,7 @@ bma <- function(
   bma_list <- list(
     uniform_table, random_table, reg_names, R, num_of_models, forJointness,
     forBestModels, EMS, sizePriors, PMPs, modelPriors, dilution,
-    alphas, betas_nonzero, df_free, PMStable, omega, weighting_label,
+    alphas, betas_nonzero, PMStable, omega, weighting_label,
     switch(weighting,
            mb2012 = 1,
            mb2016 = 1 / n_entities,
@@ -562,7 +570,7 @@ bma <- function(
     "uniform_table", "random_table", "reg_names", "R",
     "num_of_models", "jointness_data", "best_models_data",
     "EMS", "size_priors", "PMPs", "model_priors", "dilution",
-    "alphas", "betas_nonzero", "df_free", "PMS_table", "omega",
+    "alphas", "betas_nonzero", "PMS_table", "omega",
     "weighting", "eta"
   )
   class(bma_list) <- "badp_bma"

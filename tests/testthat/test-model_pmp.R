@@ -15,7 +15,7 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
   model_graphs <- model_pmp(bma_results, top = 16)
 
   # Basic structure
-  expect_equal(class(model_graphs), "list")
+  expect_s3_class(model_graphs, "badp_plots")
   expect_equal(length(model_graphs), 3)
   expect_true(inherits(model_graphs[[1]], "ggplot"))
   expect_true(inherits(model_graphs[[2]], "ggplot"))
@@ -50,4 +50,24 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
   )
   expect_true(any(grepl("^a\\)", subplot_titles)))
   expect_true(any(grepl("^b\\)", subplot_titles)))
+})
+
+
+test_that("model_pmp draws bars when type = \"histogram\"", {
+
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  lines <- model_pmp(bma_results, top = 5, type = "line")
+  bars  <- model_pmp(bma_results, top = 5, type = "histogram")
+
+  expect_s3_class(bars, "badp_plots")
+  expect_equal(names(bars), names(lines))
+
+  # the bar form uses a different ggplot layer from the line form
+  layer_of <- function(p) class(p$layers[[1]]$geom)[1]
+  expect_equal(layer_of(lines$binomial), "GeomLine")
+  expect_equal(layer_of(bars$binomial),  "GeomCol")
+  expect_equal(layer_of(bars$beta),      "GeomCol")
+
+  expect_error(model_pmp(bma_results, top = 5, type = "nonsense"))
 })

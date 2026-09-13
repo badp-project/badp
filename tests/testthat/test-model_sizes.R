@@ -15,7 +15,7 @@ test_that(paste("model_sizes creates correct lists with graphs"), {
   size_graphs <- model_sizes(bma_results)
 
   # Basic structure
-  expect_equal(class(size_graphs), "list")
+  expect_s3_class(size_graphs, "badp_plots")
   expect_equal(length(size_graphs), 3)
   expect_true(inherits(size_graphs[[1]], "ggplot"))
   expect_true(inherits(size_graphs[[2]], "ggplot"))
@@ -50,4 +50,24 @@ test_that(paste("model_sizes creates correct lists with graphs"), {
   )
   expect_true(any(grepl("^a\\)", subplot_titles)))
   expect_true(any(grepl("^b\\)", subplot_titles)))
+})
+
+
+test_that("model_sizes draws bars when type = \"histogram\"", {
+
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  lines <- model_sizes(bma_results, type = "line")
+  bars  <- model_sizes(bma_results, type = "histogram")
+
+  expect_s3_class(bars, "badp_plots")
+  expect_equal(names(bars), names(lines))
+
+  # the bar form uses a different ggplot layer from the line form
+  layer_of <- function(p) class(p$layers[[1]]$geom)[1]
+  expect_equal(layer_of(lines$binomial), "GeomLine")
+  expect_equal(layer_of(bars$binomial),  "GeomCol")
+  expect_equal(layer_of(bars$beta),      "GeomCol")
+
+  expect_error(model_sizes(bma_results, type = "nonsense"))
 })

@@ -22,6 +22,8 @@ An object of class \code{summary.badp_bma} containing:
 \item \code{results_binomial} - Coefficient table for binomial prior
 \item \code{results_beta} - Coefficient table for binomial-beta prior
 \item \code{model_sizes} - Prior and posterior model sizes table
+\item \code{weighting} - Marginal-likelihood approximation used
+\item \code{eta} - Realized learning rate
 \item \code{reg_names} - Variable names
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/best_models.R
 \name{print.badp_best_models}
 \alias{print.badp_best_models}
-\title{Print Best Models Tables}
+\title{Print a Best-Models Selection}
 \usage{
 \method{print}{badp_best_models}(x, ...)
 }
@@ -12,20 +12,21 @@
 \item{...}{Additional arguments (currently unused).}
 }
 \value{
-Invisibly returns the input object \code{x}.
+Invisibly returns \code{x}.
 }
 \description{
-Print method for objects of class \code{badp_best_models} returned by
-\code{\link{best_models}}. Draws the table chosen by the \code{estimate}
-and \code{robust} arguments of the original \code{\link{best_models}}
-call to the active graphics device.
+Prints, to the console, which regressors enter each of the selected models
+together with their posterior model probabilities.
 }
-\details{
-Because R only auto-prints expressions evaluated at the top level, calling
-\code{best_models(bma_list)} without assignment triggers this method (and
-hence the table is drawn), while \code{best <- best_models(bma_list)}
-stays silent.
+\examples{
+data(small_model_space)
+best <- best_models(bma(small_model_space), best = 3)
+
+best
+
 }
 \seealso{
-\code{\link{best_models}}
+\code{\link{best_models}},
+\code{\link{summary.badp_best_models}},
+\code{\link{plot.badp_best_models}}
 }

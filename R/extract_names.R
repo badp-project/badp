@@ -1,4 +1,4 @@
-#' Extraction of names of the variables
+#' Extract the Names of the Variables
 #'
 #' The function extracts the names of the variables from the data set used in the analysis and
 #' places them in a vector.

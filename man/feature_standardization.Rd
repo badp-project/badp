@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_preparation.R
 \name{feature_standardization}
 \alias{feature_standardization}
-\title{Perform feature standardization}
+\title{Perform Feature Standardization}
 \usage{
 feature_standardization(df, excluded_cols, group_by_col, scale = TRUE)
 }

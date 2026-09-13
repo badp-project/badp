@@ -3,7 +3,7 @@
 \docType{data}
 \name{full_model_space}
 \alias{full_model_space}
-\title{Example output of \code{\link{optim_model_space}}}
+\title{Example Model Space}
 \format{
 An object of class \code{badp_model_space}:
 \describe{
@@ -36,6 +36,10 @@ The data frame used in the analysis.
 }
 \item{is_nested}{
 A logical indicating whether the model space uses nested specifications.
+}
+\item{convergence}{
+A matrix of per-model convergence diagnostics; see
+\code{\link{optim_model_space}}.
 }
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_param_matrices.R
 \name{sem_sigma_matrix}
 \alias{sem_sigma_matrix}
-\title{Matrices with the sigma parameters for SEM representation}
+\title{Matrices of the Sigma Parameters for the SEM Representation}
 \usage{
 sem_sigma_matrix(err_var, dep_vars, phis = NULL, psis = NULL)
 }

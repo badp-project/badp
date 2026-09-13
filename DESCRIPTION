@@ -1,6 +1,6 @@
 Package: badp
 Title: Bayesian Averaging for Dynamic Panels
-Version: 0.6.1
+Version: 0.7.0
 Authors@R:
     c(person(given = "Krzysztof",
            family = "Beck",
@@ -40,6 +40,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Suggests:
+    knitr,
     pkgdown,
     rmarkdown,
     spelling,
@@ -50,7 +51,6 @@ Imports:
     ggplot2,
     grid,
     gridExtra,
-    knitr,
     magrittr,
     parallel,
     patchwork (>= 1.1.0),

@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_param_matrices.R
 \name{residual_maker_matrix}
 \alias{residual_maker_matrix}
-\title{Residual maker matrix}
+\title{Residual Maker Matrix}
 \usage{
 residual_maker_matrix(m)
 }

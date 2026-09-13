@@ -145,9 +145,9 @@ sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2,
   }
 }
 
-#' List of matrices for SEM model
+#' List of Matrices for the SEM Model
 #'
-#' @param df Dataframe with data for the likelihood computations.
+#' @param df Data frame with data for the likelihood computations.
 #' @param timestamp_col Column which determines time stamps. For now only
 #' natural numbers can be used.
 #' @param entity_col Column which determines entities (e.g. countries, people)
@@ -228,12 +228,12 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
        res_maker_matrix = res_maker_matrix)
 }
 
-#' Likelihood for the SEM model
+#' Likelihood for the SEM Model
 #'
 #' @param params Parameters describing the model. Can be either a vector or a
 #' list with named parameters. See 'Details'
 #' @param data Data for the likelihood computations. Can be either a list of
-#' matrices or a dataframe. If the dataframe, additional parameters are
+#' matrices or a data frame. If a data frame, additional parameters are
 #' required to build the matrices within the function.
 #' @param timestamp_col Column which determines time stamps. For now only
 #' natural numbers can be used.
@@ -300,7 +300,7 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
 # dispatch on AD types. They must be imported into the package namespace,
 # otherwise the AD path would silently fall through to base::solve/diag,
 # which treat AD objects as plain doubles. For numeric input the RTMB
-# generics fall back to the base behaviour.
+# generics fall back to the base behavior.
 #' @importFrom RTMB solve diag MakeTape ADoverload
 #'
 #' @export

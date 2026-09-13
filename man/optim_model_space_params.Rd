@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{optim_model_space_params}
 \alias{optim_model_space_params}
-\title{Finds MLE parameters for each model in the given model space}
+\title{Maximum Likelihood Parameters for Every Model in the Model Space}
 \usage{
 optim_model_space_params(
   df,
@@ -10,7 +10,7 @@ optim_model_space_params(
   entity_col,
   dep_var_col,
   init_value,
-  nested,
+  nested = TRUE,
   exact_value = FALSE,
   cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
@@ -115,4 +115,31 @@ Given a dataset and a generator of starting values, initializes a model
 space by drawing a starting point for each model. Then for each
 model performs a numerical optimization and finds parameters which maximize
 the likelihood.
+}
+\examples{
+\donttest{
+library(magrittr)
+
+data_prepared <- badp::economic_growth[, 1:5] \%>\%
+  badp::feature_standardization(
+    excluded_cols = c(country, year, gdp)
+  ) \%>\%
+  badp::feature_standardization(
+    group_by_col  = year,
+    excluded_cols = country,
+    scale         = FALSE
+  )
+
+# the parameter matrix only; optim_model_space() adds the statistics
+params <- optim_model_space_params(
+  df            = data_prepared,
+  dep_var_col   = gdp,
+  timestamp_col = year,
+  entity_col    = country,
+  init_value    = function(n) rep(0.5, n),
+  nested        = TRUE
+)
+dim(params)
+}
+
 }

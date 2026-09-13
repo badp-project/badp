@@ -2,14 +2,20 @@
 % Please edit documentation in R/model_pmp.R
 \name{model_pmp}
 \alias{model_pmp}
-\title{Graphs of the prior and posterior model probabilities for the best individual models}
+\title{Graphs of the Prior and Posterior Probabilities of Individual Models}
 \usage{
-model_pmp(bma_list, top = NULL)
+model_pmp(x, top = NULL, type = c("line", "histogram"))
 }
 \arguments{
-\item{bma_list}{bma_list object (the result of the bma function)}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{top}{The number of the best model to be placed on the graphs}
+
+\item{type}{Character, either \code{"line"} (the default) for the prior and
+posterior drawn as lines against the model ranking, or
+\code{"histogram"} for them drawn as side-by-side bars. The bar form
+suits a small \code{top}, where individual models can still be told
+apart; with a large \code{top} the lines are easier to read.}
 }
 \value{
 A list with three graphs with prior and posterior model probabilities for individual models:\cr
@@ -46,5 +52,8 @@ bma_results <- bma(
 )
 
 model_graphs <- model_pmp(bma_results, top = 16)
+
+# bars instead of lines
+model_pmp(bma_results, top = 5, type = "histogram")
 }
 }

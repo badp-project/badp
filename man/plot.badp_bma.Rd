@@ -4,7 +4,12 @@
 \alias{plot.badp_bma}
 \title{Plot Bayesian Model Averaging Results}
 \usage{
-\method{plot}{badp_bma}(x, which = "model_sizes", ...)
+\method{plot}{badp_bma}(
+  x,
+  which = c("model_sizes", "model_pmp", "best_models", "jointness", "coef_hist",
+    "posterior_dens"),
+  ...
+)
 }
 \arguments{
 \item{x}{An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.}
@@ -22,9 +27,9 @@
 \item{...}{Additional arguments passed to the underlying plot function.}
 }
 \value{
-The object returned by the selected visualization helper. Depending on
-\code{which}, this may be a single plot object or a list containing plots
-and/or tables; some helpers may also print output as a side effect.
+Invisibly returns the object produced by the selected helper. The
+figure or table is drawn to the active device as a side effect, so a
+single call draws exactly one graphic.
 }
 \description{
 Plot method for objects of class \code{badp_bma}.
@@ -34,6 +39,15 @@ This function dispatches to the appropriate visualization function based on the
 \code{which} parameter. The default plot shows model size distributions, which
 provides a comprehensive overview of the prior and posterior distributions over
 model sizes.
+
+With \code{which = "best_models"} two functions are involved,
+\code{\link{best_models}} to select the models and
+\code{\link{plot.badp_best_models}} to draw them, and the arguments in
+\code{...} are split between them by name: \code{prior}, \code{best} and
+\code{round} are passed to the first, \code{robust} to the second. The
+table drawn is the one of estimates; for the inclusion table call
+\code{plot(best_models(x), which = "inclusion")} directly, since
+\code{which} is taken here by the choice of plot.
 }
 \examples{
 \donttest{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_matrices.R
 \name{sem_regressors_matrix}
 \alias{sem_regressors_matrix}
-\title{Matrix with regressors data for SEM representation}
+\title{Matrix of Regressor Data for the SEM Representation}
 \usage{
 sem_regressors_matrix(df, timestamp_col, entity_col, dep_var_col)
 }

@@ -26,10 +26,10 @@ as_init_generator <- function(init_value) {
        "non-zero number.", call. = FALSE)
 }
 
-#' Initialize model space matrix
+#' Initialize the Model Space Matrix
 #'
 #' This function builds a representation of the model space, by creating a
-#' dataframe where each column represents values of the parameters for a given
+#' data frame where each column represents values of the parameters for a given
 #' model. Real value means that the parameter is included in the model. A
 #' parameter not present in the model is marked as \code{NA}.
 #'
@@ -130,7 +130,7 @@ init_model_space_params <- function(df, timestamp_col, entity_col,
 }
 
 
-#' Helper function to extract names from a vector defining a model
+#' Extract Regressor Names from a Parameter Vector
 #'
 #' For now it is assumed that we can only exclude linear relationships between
 #' regressors and the dependent variable.
@@ -376,8 +376,7 @@ optim_from_usable_start <- function(params_no_na, data, exact_value,
   best
 }
 
-#' Helper-function - finds parameters minimizing log-likelihood function
-#' for the nested version of the SEM setup, using BFGS method
+#' Optimize a Single Model under the Nested SEM Setup
 #'
 #' @param params Vector of the initial parameters
 #' @param df Data frame with data for the SEM analysis.
@@ -457,8 +456,7 @@ nested_optimization_wrapper <- function(
 }
 
 
-#' Helper-function - finds parameters minimizing log-likelihood function
-#' for the non-nested version of the SEM setup, using BFGS method
+#' Optimize a Single Model under the Non-Nested SEM Setup
 #'
 #' @param params Vector of the initial parameters
 #' @param df Data frame with data for the SEM analysis.
@@ -572,7 +570,7 @@ non_nested_optimization_wrapper <- function(
 
 
 
-#' Finds MLE parameters for each model in the given model space
+#' Maximum Likelihood Parameters for Every Model in the Model Space
 #'
 #' Given a dataset and a generator of starting values, initializes a model
 #' space by drawing a starting point for each model. Then for each
@@ -658,6 +656,32 @@ non_nested_optimization_wrapper <- function(
 #'
 #' @importFrom pbapply pbapply
 #'
+#' @examples
+#' \donttest{
+#' library(magrittr)
+#'
+#' data_prepared <- badp::economic_growth[, 1:5] %>%
+#'   badp::feature_standardization(
+#'     excluded_cols = c(country, year, gdp)
+#'   ) %>%
+#'   badp::feature_standardization(
+#'     group_by_col  = year,
+#'     excluded_cols = country,
+#'     scale         = FALSE
+#'   )
+#'
+#' # the parameter matrix only; optim_model_space() adds the statistics
+#' params <- optim_model_space_params(
+#'   df            = data_prepared,
+#'   dep_var_col   = gdp,
+#'   timestamp_col = year,
+#'   entity_col    = country,
+#'   init_value    = function(n) rep(0.5, n),
+#'   nested        = TRUE
+#' )
+#' dim(params)
+#' }
+#'
 #' @export
 optim_model_space_params <- function(
   df,
@@ -665,7 +689,7 @@ optim_model_space_params <- function(
   entity_col,
   dep_var_col,
   init_value,
-  nested,
+  nested = TRUE,
   exact_value = FALSE, cl = NULL,
   control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
   max_restarts = 5,
@@ -758,8 +782,7 @@ split_convergence_diagnostics <- function(raw, n_param_rows) {
   params
 }
 
-#' Helper function - wraps single execution of the log-likelihood & deviation
-#' parameters calculations. Used for nested version of SEM likelihood.
+#' Log-Likelihood and Standard Deviations for a Single Nested Model
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with
@@ -865,7 +888,7 @@ nested_std_dev_from_params <- function(
   # dimension of theta and the numerical rank of J. Computed here because H
   # and J are available only at this point.
   #
-  # The rank matters. J is unchanged by centring the rows of G, because the
+  # The rank matters. J is unchanged by centering the rows of G, because the
   # per-entity scores share a component that is identical across entities
   # (the terms of the log-likelihood that do not depend on a single entity's
   # data), and at the maximum the scores sum to zero. Any parameter entering
@@ -886,8 +909,7 @@ nested_std_dev_from_params <- function(
 }
 
 
-#' Helper function - wraps single execution of the log-likelihood & deviation
-#' parameters calculations. Used for non-nested version of SEM likelihood.
+#' Log-Likelihood and Standard Deviations for a Single Non-Nested Model
 #'
 #' @param params A matrix (with named rows) with each column corresponding
 #' to a model. Each row specifies model parameters. Compare with
@@ -996,7 +1018,7 @@ non_nested_std_dev_from_params <- function(
   # dimension of theta and the numerical rank of J. Computed here because H
   # and J are available only at this point.
   #
-  # The rank matters. J is unchanged by centring the rows of G, because the
+  # The rank matters. J is unchanged by centering the rows of G, because the
   # per-entity scores share a component that is identical across entities
   # (the terms of the log-likelihood that do not depend on a single entity's
   # data), and at the maximum the scores sum to zero. Any parameter entering
@@ -1018,7 +1040,7 @@ non_nested_std_dev_from_params <- function(
 }
 
 
-#' Approximate standard deviations for the models
+#' Statistics and Standard Deviations for the Model Space
 #'
 #' Approximate standard deviations are computed for the models in the given
 #' model space. Two versions are computed.
@@ -1137,7 +1159,7 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 }
 
 
-#' Calculation of the model_space object
+#' Estimate the Model Space
 #'
 #' This function calculates model space, values of the maximized likelihood function, BICs, and
 #' standard deviations of the parameters that will be used in Bayesian model averaging. Moreover,
@@ -1354,12 +1376,12 @@ optim_model_space <-
   }
 
 
-#' Numerical rank of the entity-level score matrix
+#' Numerical Rank of the Entity-Level Score Matrix
 #'
 #' The sandwich covariance uses \eqn{J = G'G}, where the rows of \eqn{G} are
 #' the entity-level score vectors. At the maximum the rows of \eqn{G} sum to
-#' zero, so \eqn{J} is unchanged by centring them and its rank is the rank of
-#' the centred matrix: only the \emph{variation across entities} of the scores
+#' zero, so \eqn{J} is unchanged by centering them and its rank is the rank of
+#' the centered matrix: only the \emph{variation across entities} of the scores
 #' contributes. Parameters that enter the log-likelihood solely through terms
 #' common to every entity have no such variation and contribute nothing,
 #' whatever the number of entities.
@@ -1383,7 +1405,7 @@ score_rank <- function(Gmat) {
 }
 
 
-#' Number of models whose sandwich covariance is rank deficient
+#' Number of Models with a Rank-Deficient Sandwich Covariance
 #'
 #' The robust ("sandwich") covariance \eqn{H^{-1} J H^{-1}} is built from
 #' \eqn{J = \sum_i s_i s_i'}, the outer product of the entity-level score
@@ -1407,7 +1429,7 @@ score_rank <- function(Gmat) {
 #' @param K Number of regressors including the lagged dependent variable. When
 #' supplied, \code{dim(theta)} is read from row \code{4 + 2 * K} and
 #' \code{rank(J)} from row \code{5 + 2 * K}; model spaces fitted before these
-#' were stored are recognised and reported as unaffected.
+#' were stored are recognized and reported as unaffected.
 #'
 #' @returns Integer, the number of models for which \code{rank(J)} is less than
 #' \code{dim(theta)}. Zero if the model space does not record the rank.

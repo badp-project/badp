@@ -2,17 +2,12 @@
 % Please edit documentation in R/jointness.R
 \name{jointness}
 \alias{jointness}
-\title{Calculation of the jointness measures}
+\title{Bivariate Jointness Measures}
 \usage{
-jointness(
-  bma_list,
-  measure = c("HCGHM", "LS", "DW", "PPI"),
-  rho = 0.5,
-  round = 3
-)
+jointness(x, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3)
 }
 \arguments{
-\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{measure}{Character string specifying the measure of jointness. One of: \cr
 \code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr

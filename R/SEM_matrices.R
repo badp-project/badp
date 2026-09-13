@@ -12,7 +12,7 @@ determine_min_timestamps <- function(df, timestamp_col) {
   list(timestamp_0 = timestamp_0, timestamp_1 = timestamp_1)
 }
 
-#' Matrix with dependent variable data for SEM representation
+#' Matrix of Dependent Variable Data for the SEM Representation
 #'
 #' Create matrix which contains dependent variable data used in the Simultaneous
 #' Equations Model (SEM) representation on the left hand side of the equations.
@@ -54,7 +54,7 @@ sem_dep_var_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
     dplyr::select(!{{ entity_col }}) %>% as.matrix()
 }
 
-#' Matrix with regressors data for SEM representation
+#' Matrix of Regressor Data for the SEM Representation
 #'
 #' Create matrix which contains regressors data used in the Simultaneous
 #' Equations Model (SEM) representation on the left hand side of the equations.
@@ -111,7 +111,7 @@ sem_regressors_matrix <- function(df, timestamp_col, entity_col, dep_var_col) {
   }
 }
 
-#' Matrix with exogenous variables for SEM representation
+#' Matrix of Exogenous Variables for the SEM Representation
 #'
 #' Create matrix which contains exogenous variables used in the Simultaneous
 #' Equations Model (SEM) representation. Currently these are: dependent variable

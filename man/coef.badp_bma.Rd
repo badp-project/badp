@@ -2,7 +2,7 @@
 % Please edit documentation in R/s3_methods_bma.R
 \name{coef.badp_bma}
 \alias{coef.badp_bma}
-\title{Extract posterior statistics from Bayesian Model Averaging Results}
+\title{Extract Posterior Statistics from Bayesian Model Averaging Results}
 \usage{
 \method{coef}{badp_bma}(
   object,
@@ -95,7 +95,7 @@ coef(results, conditional = TRUE, se = TRUE)
 # Suppress PIP column
 coef(results, PIP = FALSE)
 
-# Single-prior numeric vector (legacy behaviour)
+# Single-prior numeric vector (legacy behavior)
 coef(results, prior = "binomial", PIP = FALSE)
 }
 

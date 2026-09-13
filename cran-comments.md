@@ -1,3 +1,54 @@
+# 0.7.0
+
+## Update
+
+This is a minor update of the CRAN version 0.6.1. It reworks the user-facing
+interface in response to a review of the manuscript submitted to the Journal
+of Statistical Software. Several changes are breaking; they are listed in
+NEWS.md and summarized here:
+
+* Nine accessor generics were added (`bma_table()`, `pip()`, `pmp()`,
+  `model_size_table()`, `regressors()`, `n_models()`, `weighting()`,
+  `learning_rate()`, `convergence()`), so that results no longer have to be
+  extracted by position or by component name.
+* `best_models()` returns a list of `badp_model` objects carrying numeric
+  coefficients, standard errors and p-values, rather than nine tables already
+  formatted for display. The new classes have `print()`, `summary()`,
+  `coef()`, `plot()` and `[` methods.
+* `model_sizes()`, `model_pmp()`, `coef_hist()` and `posterior_dens()` no
+  longer draw as a side effect. They return a classed collection whose
+  `print()` method draws one figure.
+* The residual degrees of freedom were removed. The estimator is maximum
+  likelihood with standard errors from the observed information, so the Wald
+  statistics are referred to the standard normal rather than to a t
+  distribution.
+* The first argument of six functions was renamed from `bma_list` to `x`,
+  for consistency with the accessors and with the S3 methods.
+* `join_lagged_col()` is no longer marked as internal and now appears in the
+  package index.
+
+## R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* checking for future file timestamps ... NOTE
+  unable to verify current time
+
+  This NOTE reflects the check machine being unable to reach the time server
+  and is unrelated to the package.
+
+Checked locally with `R CMD check --as-cran`, including the CRAN incoming
+checks and the PDF manual, against R 4.4.1 on macOS (aarch64-apple-darwin20),
+and via the GitHub Actions R-CMD-check workflow on Linux, macOS and Windows
+across release, oldrel and devel.
+
+The reference manual builds without error, and the CRAN incoming feasibility
+check reports no problems.
+
+## Downstream dependencies
+
+There are no downstream dependencies on CRAN.
+
 # 0.6.1
 
 ## Update
@@ -47,7 +98,7 @@ NEWS.md; the points most relevant to the check results are:
   accurate.
 * Consequently the package no longer contains compiled code: the `src`
   directory has been removed, and the `Rcpp`, `RcppArmadillo`, `rootSolve`
-  and `optimbase` dependencies have been dropped in favour of
+  and `optimbase` dependencies have been dropped in favor of
   `RTMB (>= 1.6)`. This also resolves the installed package size NOTE
   reported on r-oldrel-macos-x86_64 for 0.4.0.
 * S3 classes and methods were added for the objects returned by `bma()` and

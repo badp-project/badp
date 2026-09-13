@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+options(useFancyQuotes = FALSE)
 ```
 
 # badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
@@ -97,7 +98,7 @@ set.seed(20)
 
 # Features are scaled and demeaned,
 # then centralized around the mean within cross-sections (fixed time effects)
-data_prepared <- badp::economic_growth %>%
+data_prepared <- badp::economic_growth[, 1:5] %>%
   badp::feature_standardization(
     excluded_cols = c(country, year, gdp)
   ) %>%
@@ -113,19 +114,19 @@ data_prepared <- badp::economic_growth %>%
 
 The function `optim_model_space()` estimates all possible models
 (each possible subset of regressors) via maximum likelihood,
-storing the results in a list object.
+returning an object of class `badp_model_space`.
 
 **Note:** with strongly correlated regressors, both the estimation and the
 subsequent statistics step may emit warnings (e.g. `NaNs produced`, or a
 message that some models did not converge). The exact reason is
-non-trivial: it is typically connected to degenerate behaviour of the
+non-trivial: it is typically connected to degenerate behavior of the
 likelihood function for some of the models, and understanding it for a
 particular dataset requires inspecting the data (e.g. correlations between
-regressors), the behaviour of the likelihood, and the per-model
-diagnostics stored in the `convergence` element of the result. A good
+regressors), the behavior of the likelihood, and the per-model
+per-model diagnostics returned by `convergence()`. A good
 starting point is to check which models are affected and how much
 posterior model probability they carry - if it is negligible, the
-warnings can usually be treated as expected behaviour.
+warnings can usually be treated as expected behavior.
 
 For small to moderately sized datasets:
 
@@ -177,12 +178,15 @@ under the **binomial** and **binomial-beta** model priors:
 ```{r}
 bma_results <- badp::bma(model_space, round = 3)
 
-# Inspect the BMA summary (binomial prior results first, binomial-beta second)
-bma_results[[1]]  # BMA stats under binomial prior
-bma_results[[2]]  # BMA stats under binomial-beta prior
+# BMA statistics under each model prior
+badp::bma_table(bma_results)
+badp::bma_table(bma_results, prior = "beta")
 
-# Posterior model sizes:
-bma_results[[16]]
+# Posterior inclusion probabilities on their own
+sort(badp::pip(bma_results), decreasing = TRUE)
+
+# Prior and posterior model sizes
+badp::model_size_table(bma_results)
 ```
 
 Key columns in the BMA output include:
@@ -200,11 +204,13 @@ ranking models from best to worst.
 is distributed across different model sizes.
 
 ```{r}
-# Plot prior vs. posterior model probabilities
-pmp_graphs <- badp::model_pmp(bma_results, top = 3)  # Show top 3 models
+# Prior vs. posterior model probabilities, three best models.
+# `type = "histogram"` draws bars, which read well for a handful of models;
+# the default `"line"` is better once there are many.
+badp::model_pmp(bma_results, top = 3, type = "histogram")
 
-# Plot probabilities by model size
-size_graphs <- badp::model_sizes(bma_results)
+# Probabilities by model size
+badp::model_sizes(bma_results)
 ```
 
 ### Selecting the Best Models
@@ -215,11 +221,14 @@ Use `best_models()` to extract specific information about the top-ranked models:
 # Retrieve the 5 best models according to binomial prior
 top3_binom <- badp::best_models(bma_results, prior = "binomial", best = 3)
 
-# Print the inclusion matrix for each of the top 3 models
-top3_binom[[1]]
+# Which regressors enter each of the three models
+top3_binom
 
-# Retrieve robust standard errors in a knit-friendly table
-top3_binom[[6]]
+# Estimates for all three, with robust standard errors
+summary(top3_binom, robust = TRUE)
+
+# A single model on its own
+top3_binom[[1]]
 ```
 
 ### Jointness Measures
@@ -272,12 +281,12 @@ bma_obj <- badp::bma(
 
 # 4) Inspect the top 3 models under binomial prior
 best_3 <- badp::best_models(
-  bma_list = bma_obj,
+  x = bma_obj,
   prior = "binomial",
   best = 3
 )
-best_3[[1]]  # Inclusion table
-best_3[[2]]  # Coefficients & standard errors
+best_3                      # inclusion table for the three models
+coef(best_3[[1]], se = TRUE)  # estimates for the best one
 ```
 
 

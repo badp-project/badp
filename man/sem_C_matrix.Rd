@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_param_matrices.R
 \name{sem_C_matrix}
 \alias{sem_C_matrix}
-\title{Matrix with alpha, beta, phi_0 and phi_1 parameters for SEM representation}
+\title{Matrix of the Alpha, Beta, Phi_0 and Phi_1 Parameters for the SEM Representation}
 \usage{
 sem_C_matrix(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL)
 }

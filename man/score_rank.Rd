@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{score_rank}
 \alias{score_rank}
-\title{Numerical rank of the entity-level score matrix}
+\title{Numerical Rank of the Entity-Level Score Matrix}
 \usage{
 score_rank(Gmat)
 }
@@ -15,8 +15,8 @@ Integer, the numerical rank.
 \description{
 The sandwich covariance uses \eqn{J = G'G}, where the rows of \eqn{G} are
 the entity-level score vectors. At the maximum the rows of \eqn{G} sum to
-zero, so \eqn{J} is unchanged by centring them and its rank is the rank of
-the centred matrix: only the \emph{variation across entities} of the scores
+zero, so \eqn{J} is unchanged by centering them and its rank is the rank of
+the centered matrix: only the \emph{variation across entities} of the scores
 contributes. Parameters that enter the log-likelihood solely through terms
 common to every entity have no such variation and contribute nothing,
 whatever the number of entities.

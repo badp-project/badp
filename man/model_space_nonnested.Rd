@@ -3,13 +3,15 @@
 \docType{data}
 \name{model_space_nonnested}
 \alias{model_space_nonnested}
-\title{Example output of \code{\link{optim_model_space}} for non-nested models}
+\title{Example Model Space for Non-Nested Models}
 \format{
 An object of class \code{badp_model_space}:
 \describe{
 \item{params}{
-A numeric matrix of parameter values for the model space, one column per
-model. Entries are \code{NA} for parameters absent from a given model.
+A numeric matrix with 106 rows and 512 columns (corresponding to
+\eqn{2^9 = 512} models), containing parameter values for the model
+space. Each column represents a different model. Entries are \code{NA}
+for parameters absent from a given model.
 }
 \item{stats}{
 A numeric matrix of statistics computed by

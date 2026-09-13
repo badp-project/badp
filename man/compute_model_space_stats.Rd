@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{compute_model_space_stats}
 \alias{compute_model_space_stats}
-\title{Approximate standard deviations for the models}
+\title{Statistics and Standard Deviations for the Model Space}
 \usage{
 compute_model_space_stats(
   df,

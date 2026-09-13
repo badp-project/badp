@@ -2,81 +2,56 @@
 % Please edit documentation in R/best_models.R
 \name{best_models}
 \alias{best_models}
-\title{Table with the best models according to one of the posterior criteria}
+\title{Best Models by Posterior Model Probability}
 \usage{
-best_models(
-  bma_list,
-  prior = "binomial",
-  best = 5,
-  round = 3,
-  estimate = TRUE,
-  robust = TRUE
-)
+best_models(x, prior = "binomial", best = 5, round = 3)
 }
 \arguments{
-\item{bma_list}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
+\item{x}{An object of class \code{badp_bma}, typically the result of
+\code{\link{bma}}.}
 
-\item{prior}{Character string specifying the model prior used for the
-ranking. Options are \code{"binomial"} (default) or \code{"beta"}
-(binomial-beta). Models are ranked by the posterior model probability
-computed under the chosen prior.}
+\item{prior}{Model prior used to rank the models: \code{"binomial"} (the
+default) or \code{"beta"} for the binomial-beta prior.}
 
-\item{best}{Integer. The number of best models to display (default: 5).}
+\item{best}{Number of models to return. If it exceeds the size of the model
+space, every model is returned and a message is issued.}
 
-\item{round}{Integer indicating the decimal place to which numbers in the tables should be rounded (default: 3).}
-
-\item{estimate}{A parameter with values TRUE or FALSE indicating which table should be displayed when
-TRUE - table with the estimation results \cr
-FALSE - table with the inclusion of regressors in the best models}
-
-\item{robust}{A parameter with values TRUE or FALSE indicating which type of standard errors should be displayed
-when the function finishes calculations. Works only if estimate = TRUE. Works well when best is small.\cr
-TRUE - robust standard errors \cr
-FALSE - regular standard errors}
+\item{round}{Number of decimal places used when the estimates are formatted
+for display. The stored values are not rounded.}
 }
 \value{
-A list with best_models objects: \cr
-\enumerate{
-\item matrix with inclusion of the regressors in the best models \cr
-\item matrix with estimation output in the best models with regular standard errors \cr
-\item matrix with estimation output in the best models with robust standard errors \cr
-\item knitr_kable table with inclusion of the regressors in the best models (the best for the display on the console - up to 11 models) \cr
-\item knitr_kable table with estimation output in the best models with regular standard errors (the best for the display on the console - up to 6 models) \cr
-\item knitr_kable table with estimation output in the best models with robust standard errors (the best for the display on the console - up to 6 models) \cr
-\item gTree table with inclusion of the regressors in the best models (displayed as a plot). Use grid::grid.draw() to display.\cr
-\item gTree table with estimation output in the best models with regular standard errors (displayed as a plot). Use grid::grid.draw() to display.
-\item gTree table with estimation output in the best models with robust standard errors (displayed as a plot). Use grid::grid.draw() to display.
-}
+An object of class \code{badp_best_models}: a list of
+\code{badp_model} objects with attributes \code{prior}, \code{n_models}
+(the size of the model space), \code{reg_names} and \code{digits}.
 }
 \description{
-This function ranks the best models according to posterior model probabilities
-calculated using one of the available model priors: binomial or beta-binomial.
-It returns three types of tables in three different formats: an inclusion table,
-where 1 indicates that a regressor is included in the model and 0 indicates that
-it is excluded; an estimation results table, which displays the best models and
-their estimation output, including point estimates, standard errors, and
-significance levels; and an estimation results table with robust standard errors.
+Ranks the models in a fitted model space by their posterior model
+probability and returns the highest ranked ones as a list of individual
+models, each carrying its own estimates and diagnostics.
+}
+\details{
+The object returned is a list of \code{badp_model} objects, one per
+selected model, ordered from the highest to the lowest posterior model
+probability. Individual models are reached by position, for example
+\code{best_models(bma_results)[[1]]} for the best one, and each has its own
+\code{print}, \code{summary} and \code{coef} methods. The container has
+\code{print}, \code{summary} and \code{plot} methods that display the whole
+selection.
 }
 \examples{
 \donttest{
-library(magrittr)
+data(full_model_space)
+results <- bma(full_model_space)
 
-data_prepared <- badp::economic_growth[, 1:6] \%>\%
-  badp::feature_standardization(
-    excluded_cols = c(country, year, gdp)
-  ) \%>\%
-  badp::feature_standardization(
-    group_by_col  = year,
-    excluded_cols = country,
-    scale         = FALSE
-  )
-
-bma_results <- bma(
-  model_space = badp::small_model_space,
-  round       = 3,
-  dilution    = 0
-)
-
-best_5_models <- best_models(bma_results, prior = "binomial", best = 5, estimate = TRUE)
+best <- best_models(results, best = 5)
+best                      # the selection
+best[[1]]                 # the single best model
+coef(best[[1]])           # its coefficients
+summary(best, robust = TRUE)
 }
+
+}
+\seealso{
+\code{\link{bma}}, \code{\link{summary.badp_best_models}},
+\code{\link{plot.badp_best_models}}, \code{\link{print.badp_model}}
 }

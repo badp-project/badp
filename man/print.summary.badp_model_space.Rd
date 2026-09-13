@@ -17,6 +17,12 @@ Invisibly returns the input object \code{x}.
 \description{
 Print method for \code{summary.badp_model_space} objects.
 }
+\examples{
+data(small_model_space)
+
+print(summary(small_model_space))
+
+}
 \seealso{
 \code{\link{summary.badp_model_space}}
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{nested_optimization_wrapper}
 \alias{nested_optimization_wrapper}
-\title{Helper-function - finds parameters minimizing log-likelihood function
-for the nested version of the SEM setup, using BFGS method}
+\title{Optimize a Single Model under the Nested SEM Setup}
 \usage{
 nested_optimization_wrapper(
   params,
@@ -70,7 +69,6 @@ one no standard errors can be computed from. See
 List (or matrix) of parameters describing analyzed models.
 }
 \description{
-Helper-function - finds parameters minimizing log-likelihood function
-for the nested version of the SEM setup, using BFGS method
+Optimize a Single Model under the Nested SEM Setup
 }
 \keyword{internal}

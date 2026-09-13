@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{init_model_space_params}
 \alias{init_model_space_params}
-\title{Initialize model space matrix}
+\title{Initialize the Model Space Matrix}
 \usage{
 init_model_space_params(df, timestamp_col, entity_col, dep_var_col, init_value)
 }
@@ -29,7 +29,7 @@ matrix of model parameters
 }
 \description{
 This function builds a representation of the model space, by creating a
-dataframe where each column represents values of the parameters for a given
+data frame where each column represents values of the parameters for a given
 model. Real value means that the parameter is included in the model. A
 parameter not present in the model is marked as \code{NA}.
 }

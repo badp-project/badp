@@ -3,7 +3,7 @@
 \docType{data}
 \name{full_bma_results}
 \alias{full_bma_results}
-\title{Example output of the bma function}
+\title{Example Bayesian Model Averaging Results}
 \format{
 An object of class \code{badp_bma}
 }

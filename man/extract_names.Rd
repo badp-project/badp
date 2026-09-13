@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract_names.R
 \name{extract_names}
 \alias{extract_names}
-\title{Extraction of names of the variables}
+\title{Extract the Names of the Variables}
 \usage{
 extract_names(df)
 }

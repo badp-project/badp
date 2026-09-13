@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_likelihood.R
 \name{sem_likelihood}
 \alias{sem_likelihood}
-\title{Likelihood for the SEM model}
+\title{Likelihood for the SEM Model}
 \usage{
 sem_likelihood(
   params,
@@ -20,7 +20,7 @@ sem_likelihood(
 list with named parameters. See 'Details'}
 
 \item{data}{Data for the likelihood computations. Can be either a list of
-matrices or a dataframe. If the dataframe, additional parameters are
+matrices or a data frame. If a data frame, additional parameters are
 required to build the matrices within the function.}
 
 \item{timestamp_col}{Column which determines time stamps. For now only
@@ -54,7 +54,7 @@ The value of the likelihood for SEM model (or a part of interest of the
 likelihood)
 }
 \description{
-Likelihood for the SEM model
+Likelihood for the SEM Model
 }
 \details{
 The \code{params} argument is a list that should contain the following

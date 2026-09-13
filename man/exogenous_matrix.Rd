@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_matrices.R
 \name{exogenous_matrix}
 \alias{exogenous_matrix}
-\title{Matrix with exogenous variables for SEM representation}
+\title{Matrix of Exogenous Variables for the SEM Representation}
 \usage{
 exogenous_matrix(df, timestamp_col, entity_col, dep_var_col)
 }
