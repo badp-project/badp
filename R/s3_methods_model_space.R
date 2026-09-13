@@ -44,7 +44,8 @@ print.badp_model_space <- function(x, ...) {
 #'
 #' @return An object of class \code{summary.badp_model_space} containing:
 #' \itemize{
-#'   \item \code{num_models} - Number of models in the model space (\eqn{2^R}).
+#'   \item \code{num_models} - Number of models in the model space, two to the
+#'     power of \code{num_regressors}.
 #'   \item \code{num_regressors} - Number of regressors excluding the lagged
 #'     dependent variable (\eqn{R}).
 #'   \item \code{num_params} - Number of parameters in the full parameter
@@ -134,6 +135,11 @@ summary.badp_model_space <- function(object, ...) {
 #' @return Invisibly returns the input object \code{x}.
 #'
 #' @seealso \code{\link{summary.badp_model_space}}
+#'
+#' @examples
+#' data(small_model_space)
+#'
+#' print(summary(small_model_space))
 #'
 #' @export
 print.summary.badp_model_space <- function(x, ...) {

@@ -5,7 +5,7 @@
 # subassignment (with RTMB::ADoverload) instead of matrix() constructors,
 # which would drop the AD class.
 
-#' Residual maker matrix
+#' Residual Maker Matrix
 #'
 #' Computes the residual maker matrix, i.e. a matrix M such that given a
 #' matrix X and a vector Y the vector of residuals from the regression of Y on
@@ -26,7 +26,7 @@ residual_maker_matrix <- function(m) {
   diag(nrow(m)) - m %*% solve(crossprod(m), t(m))
 }
 
-#' Matrices with alpha and beta parameters for SEM representation
+#' Matrices of the Alpha and Beta Parameters for the SEM Representation
 #'
 #' Matrices which describe linear dependencies between dependent variable and
 #' regressors (including lagged dependent variable) within the SEM
@@ -64,7 +64,7 @@ sem_B_matrix <- function(alpha, n_periods, beta = NULL) {
   list(B11, B12)
 }
 
-#' Matrix with alpha, beta, phi_0 and phi_1 parameters for SEM representation
+#' Matrix of the Alpha, Beta, Phi_0 and Phi_1 Parameters for the SEM Representation
 #'
 #' Matrix which describes linear dependencies between the dependent variable
 #' and the initial values of the dependent variable and the regressors within
@@ -113,7 +113,7 @@ sem_C_matrix <- function(alpha, phi_0, n_periods, beta = NULL, phi_1 = NULL) {
   cbind(C1, C2)
 }
 
-#' Matrix with psi parameters for SEM representation
+#' Matrix of the Psi Parameters for the SEM Representation
 #'
 #' @param psis double vector with psi parameter values
 #' @param n_timestamps number of time stamps (e.g. years)
@@ -147,7 +147,7 @@ sem_psi_matrix <- function(psis, n_timestamps, n_features) {
   psi_m
 }
 
-#' Matrices with the sigma parameters for SEM representation
+#' Matrices of the Sigma Parameters for the SEM Representation
 #'
 #' Matrices which describe the covariance structure within the SEM
 #' representation.

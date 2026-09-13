@@ -1,4 +1,4 @@
-#' Economic Growth Data in the original format
+#' Economic Growth Data in the Original Format
 #'
 #' Data used in Growth Empirics in Panel Data under Model Uncertainty and Weak
 #' Exogeneity (Moral-Benito, 2016, Journal of Applied Econometrics).
@@ -53,7 +53,7 @@
 "economic_growth"
 
 
-#' Example output of \code{\link{optim_model_space}} (small version)
+#' Example Model Space (Small Version)
 #'
 #' A list created with \code{\link{optim_model_space}} using the
 #' \code{\link{economic_growth}} dataset and only three regressors:
@@ -90,11 +90,15 @@
 #'   \item{is_nested}{
 #'     A logical indicating whether the model space uses nested specifications.
 #'   }
+#'   \item{convergence}{
+#'     A matrix of per-model convergence diagnostics; see
+#'     \code{\link{optim_model_space}}.
+#'   }
 #' }
 "small_model_space"
 
 
-#' Example output of \code{\link{optim_model_space}}
+#' Example Model Space
 #'
 #' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{economic_growth}} dataset.
@@ -131,11 +135,15 @@
 #'   \item{is_nested}{
 #'     A logical indicating whether the model space uses nested specifications.
 #'   }
+#'   \item{convergence}{
+#'     A matrix of per-model convergence diagnostics; see
+#'     \code{\link{optim_model_space}}.
+#'   }
 #' }
 "full_model_space"
 
 
-#' Example output of \code{\link{optim_model_space}} for non-nested models
+#' Example Model Space for Non-Nested Models
 #'
 #' A badp_model_space object created with \code{\link{optim_model_space}} using
 #' the \code{\link{economic_growth}} dataset and \code{nested = FALSE}. Compare
@@ -145,8 +153,10 @@
 #' @format An object of class \code{badp_model_space}:
 #' \describe{
 #'   \item{params}{
-#'     A numeric matrix of parameter values for the model space, one column per
-#'     model. Entries are \code{NA} for parameters absent from a given model.
+#'     A numeric matrix with 106 rows and 512 columns (corresponding to
+#'     \eqn{2^9 = 512} models), containing parameter values for the model
+#'     space. Each column represents a different model. Entries are \code{NA}
+#'     for parameters absent from a given model.
 #'   }
 #'   \item{stats}{
 #'     A numeric matrix of statistics computed by
@@ -180,7 +190,7 @@
 "model_space_nonnested"
 
 
-#' Example output of the bma function
+#' Example Bayesian Model Averaging Results
 #'
 #' A badp_bma object summarising the BMA analysis
 #'
@@ -188,7 +198,7 @@
 "full_bma_results"
 
 
-#' Migration data in the original format
+#' Migration Data in the Original Format
 #'
 #' Data used in the manuscript Afonso, A., Alves, J., & Beck, K. (2025).
 #' Drivers of migration flows in the European Union: Earnings or unemployment?
@@ -211,7 +221,7 @@
 #' @source \doi{10.7910/DVN/GTOFJB}
 "migration_data"
 
-#' Example output of \code{\link{optim_model_space}} in the case of migration data
+#' Example Model Space for the Migration Data
 #'
 #' A badp_model_space object created with \code{\link{optim_model_space}} using the
 #' \code{\link{migration_data}} dataset.
@@ -246,13 +256,17 @@
 #'   \item{is_nested}{
 #'     A logical indicating whether the model space uses nested specifications.
 #'   }
+#'   \item{convergence}{
+#'     A matrix of per-model convergence diagnostics; see
+#'     \code{\link{optim_model_space}}.
+#'   }
 #' }
 "migration_model_space"
 
-#' Example output of \code{\link{optim_model_space}} in the case of migration data obtained with nonnested approach.
+#' Example Non-Nested Model Space for the Migration Data
 #'
 #' A badp_model_space object created with \code{\link{optim_model_space}} using the
-#' \code{\link{migration_data}} dataset with nonnested approach.
+#' \code{\link{migration_data}} dataset with the non-nested approach.
 #'
 #' @format An object of class \code{badp_model_space}:
 #' \describe{
@@ -283,6 +297,10 @@
 #'   }
 #'   \item{is_nested}{
 #'     A logical indicating whether the model space uses nested specifications.
+#'   }
+#'   \item{convergence}{
+#'     A matrix of per-model convergence diagnostics; see
+#'     \code{\link{optim_model_space}}.
 #'   }
 #' }
 "migration_model_space_nonnested"

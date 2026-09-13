@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{regressor_names_from_params_vector}
 \alias{regressor_names_from_params_vector}
-\title{Helper function to extract names from a vector defining a model}
+\title{Extract Regressor Names from a Parameter Vector}
 \usage{
 regressor_names_from_params_vector(params)
 }

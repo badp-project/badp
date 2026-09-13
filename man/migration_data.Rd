@@ -3,7 +3,7 @@
 \docType{data}
 \name{migration_data}
 \alias{migration_data}
-\title{Migration data in the original format}
+\title{Migration Data in the Original Format}
 \format{
 \subsection{\code{migration_data}}{
 

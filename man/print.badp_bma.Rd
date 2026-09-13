@@ -4,10 +4,13 @@
 \alias{print.badp_bma}
 \title{Print Bayesian Model Averaging Results}
 \usage{
-\method{print}{badp_bma}(x, ...)
+\method{print}{badp_bma}(x, n = 10, ...)
 }
 \arguments{
 \item{x}{An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.}
+
+\item{n}{Maximum number of regressors to list: a single non-negative
+number, or \code{Inf} for all of them. Defaults to 10.}
 
 \item{...}{Additional arguments (currently unused).}
 }
@@ -18,11 +21,11 @@ Invisibly returns the input object \code{x}.
 Print method for objects of class \code{badp_bma}.
 }
 \details{
-This method is a thin wrapper that delegates to
-\code{\link{summary.badp_bma}} and then prints the resulting summary, so
-\code{print(x)} and \code{print(summary(x))} produce identical output.
-The output displays BMA statistics for both the binomial and binomial-beta
-priors to allow direct comparison.
+\code{print} gives a compact overview: the size of the model space, the
+prior and weighting settings, and the regressors ordered by posterior
+inclusion probability. Use \code{\link{summary.badp_bma}} for the full BMA
+statistics under both model priors, and \code{\link{coef.badp_bma}} to
+extract posterior means and standard deviations.
 }
 \examples{
 \donttest{

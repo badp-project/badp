@@ -1,10 +1,22 @@
-#' Dataframe with no lagged column
+#' Merge a Lagged Column into a Single Column
 #'
-#' This function allows the user to turn data in the format with lagged values for a
-#' chosen column (i.e. there are two columns with the same quantity, but one
-#' column is lagged in time) into the format with just one column
+#' Turns data in which a quantity is stored twice, once in levels and once
+#' lagged in time, into the single-column form the rest of the package
+#' expects.
 #'
-#' @param df Dataframe with data with a column with lagged values
+#' Some panel data sets ship the dependent variable in two columns, the value
+#' at time \eqn{t} and the value at time \eqn{t-1}, held side by side in the
+#' same row. The functions in \pkg{badp} build the lags themselves from the
+#' panel structure, so they need the quantity only once. This function
+#' performs that reduction: the two columns are merged into one and the rows
+#' are re-indexed so that no observation is lost.
+#'
+#' The step is conditional. Data that already store the quantity once, as
+#' \code{\link{economic_growth}} and \code{\link{migration_data}} do, pass
+#' straight to \code{\link{feature_standardization}} and do not need this
+#' function at all.
+#'
+#' @param df Data frame with a column holding lagged values
 #' @param col Column with quantity not lagged
 #' @param col_lagged Column with the same quantity as \code{col}, but the values
 #' are lagged in time
@@ -13,7 +25,7 @@
 #' @param timestep Difference between timestamps (e.g. 10)
 #'
 #' @return
-#' A dataframe with two columns merged, i.e. just one column with the desired
+#' A data frame with two columns merged, i.e. just one column with the desired
 #' quantity is left.
 #'
 #' @examples
@@ -26,10 +38,11 @@
 #'
 #' join_lagged_col(df, gdp, gdp_lagged, year, country, 1)
 #'
+#' @seealso \code{\link{feature_standardization}}
+#'
 #' @importFrom rlang :=
 #'
 #' @export
-#' @keywords internal
 join_lagged_col <- function(df, col, col_lagged, timestamp_col,
                             entity_col, timestep = NULL) {
   non_lagged_df <- df %>%
@@ -54,7 +67,7 @@ join_lagged_col <- function(df, col, col_lagged, timestamp_col,
 }
 
 
-#' Perform feature standardization
+#' Perform Feature Standardization
 #'
 #' @description
 #' This function performs

@@ -168,8 +168,8 @@ test_that(paste("model_space computes correct model_space list"), {
 
   expect_equal(length(model_space), 7)
   expect_s3_class(model_space, "badp_model_space")
-  expect_equal(class(model_space[[1]]), c("matrix","array"))
-  expect_equal(class(model_space[[2]]), c("matrix","array"))
+  expect_equal(class(model_space$params), c("matrix","array"))
+  expect_equal(class(model_space$stats), c("matrix","array"))
 
   convergence <- model_space$convergence
   expect_equal(
@@ -201,8 +201,8 @@ test_that(paste("model_space computes correct model_space list"), {
 # estimation step is covered by the small model space tests above.
 
 test_that("bma() reproduces the bundled results for the bundled model space", {
-  actual <- badp::bma(badp::full_model_space, round = 5)[[1]]
-  expected <- badp::full_bma_results[[1]]
+  actual <- bma(full_model_space, round = 5)$uniform_table
+  expected <- full_bma_results$uniform_table
 
   expect_equal(dim(actual), dim(expected))
   expect_equal(dimnames(actual), dimnames(expected))

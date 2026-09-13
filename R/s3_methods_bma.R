@@ -3,16 +3,18 @@
 #' Print method for objects of class \code{badp_bma}.
 #'
 #' @param x An object of class \code{badp_bma}, typically the result of \code{\link{bma}}.
+#' @param n Maximum number of regressors to list: a single non-negative
+#'   number, or \code{Inf} for all of them. Defaults to 10.
 #' @param ... Additional arguments (currently unused).
 #'
 #' @return Invisibly returns the input object \code{x}.
 #'
 #' @details
-#' This method is a thin wrapper that delegates to
-#' \code{\link{summary.badp_bma}} and then prints the resulting summary, so
-#' \code{print(x)} and \code{print(summary(x))} produce identical output.
-#' The output displays BMA statistics for both the binomial and binomial-beta
-#' priors to allow direct comparison.
+#' \code{print} gives a compact overview: the size of the model space, the
+#' prior and weighting settings, and the regressors ordered by posterior
+#' inclusion probability. Use \code{\link{summary.badp_bma}} for the full BMA
+#' statistics under both model priors, and \code{\link{coef.badp_bma}} to
+#' extract posterior means and standard deviations.
 #'
 #' @seealso \code{\link{bma}}, \code{\link{summary.badp_bma}}, \code{\link{coef.badp_bma}}
 #'
@@ -24,8 +26,57 @@
 #' }
 #'
 #' @export
-print.badp_bma <- function(x, ...) {
-  print(summary(x, ...))
+print.badp_bma <- function(x, n = 10, ...) {
+  # `n` only reaches seq_len() further down, where a negative or missing
+  # value would fail with a message about seq_len rather than about `n`.
+  if (length(n) != 1L || !is.numeric(n) || is.na(n) || n < 0) {
+    stop("'n' must be a single non-negative number.", call. = FALSE)
+  }
+  n <- floor(n)
+
+  cat("Bayesian model averaging for dynamic panels\n\n")
+  cat("Model space:          ", x$num_of_models, " models over ", x$R,
+      " regressors\n", sep = "")
+  cat("Expected model size:  ", round(x$EMS, 3), "\n", sep = "")
+
+  cat("Model priors:         binomial, binomial-beta", sep = "")
+  if (isTRUE(x$dilution == 1)) {
+    cat(" (diluted, omega = ", x$omega, ")", sep = "")
+  }
+  cat("\n")
+
+  cat("Weighting:            ", x$weighting, sep = "")
+  if (!is.null(x$eta) && !is.na(x$eta)) {
+    cat(" (eta = ", signif(x$eta, 3), ")", sep = "")
+  }
+  cat("\n\n")
+
+  # The first row is the lagged dependent variable, which enters every model
+  # by construction and so carries no inclusion probability. It is shown
+  # first rather than sorted to the bottom by its missing PIP.
+  lagged <- 1L
+  regressors <- seq_len(nrow(x$uniform_table))[-lagged]
+  ranked <- regressors[order(x$uniform_table[regressors, "PIP"],
+                             decreasing = TRUE)]
+  kept <- ranked[seq_len(min(n, length(ranked)))]
+  shown <- c(lagged, kept)
+
+  tab <- data.frame(
+    PIP = round(x$uniform_table[shown, "PIP"], 3),
+    PM = round(x$uniform_table[shown, "PM"], 3),
+    PSD = round(x$uniform_table[shown, "PSD"], 3),
+    row.names = rownames(x$uniform_table)[shown]
+  )
+
+  cat("Regressors by posterior inclusion probability (binomial prior):\n")
+  print(tab)
+  if (length(ranked) > length(kept)) {
+    cat("... and ", length(ranked) - length(kept), " more\n", sep = "")
+  }
+  cat("\n", rownames(x$uniform_table)[lagged],
+      " enters every model by construction and has no PIP.\n", sep = "")
+
+  cat("Use summary() for the full tables under both model priors.\n")
   invisible(x)
 }
 
@@ -47,6 +98,8 @@ print.badp_bma <- function(x, ...) {
 #'   \item \code{results_binomial} - Coefficient table for binomial prior
 #'   \item \code{results_beta} - Coefficient table for binomial-beta prior
 #'   \item \code{model_sizes} - Prior and posterior model sizes table
+#'   \item \code{weighting} - Marginal-likelihood approximation used
+#'   \item \code{eta} - Realized learning rate
 #'   \item \code{reg_names} - Variable names
 #' }
 #'
@@ -78,6 +131,8 @@ summary.badp_bma <- function(object, ...) {
       results_binomial = object$uniform_table,
       results_beta = object$random_table,
       model_sizes = object$PMS_table,
+      weighting = object$weighting,
+      eta = object$eta,
       reg_names = object$reg_names
     ),
     class = "summary.badp_bma"
@@ -98,6 +153,12 @@ summary.badp_bma <- function(object, ...) {
 #'
 #' @seealso \code{\link{summary.badp_bma}}
 #'
+#' @examples
+#' data(small_model_space)
+#' results <- bma(small_model_space)
+#'
+#' print(summary(results))
+#'
 #' @export
 print.summary.badp_bma <- function(x, ...) {
   cat("Bayesian Model Averaging Summary\n")
@@ -110,7 +171,10 @@ print.summary.badp_bma <- function(x, ...) {
   if (isTRUE(x$dilution_applied) && !is.null(x$omega)) {
     cat("  Dilution parameter (omega):", x$omega, "\n")
   }
-  cat("  Model prior: binomial, binomial-beta\n\n")
+  cat("  Model prior: binomial, binomial-beta\n")
+  cat("  Weighting:", x$weighting)
+  if (!is.null(x$eta) && !is.na(x$eta)) cat(" (eta =", signif(x$eta, 3), ")")
+  cat("\n\n")
 
   cat("BMA statistics (binomial prior):\n")
   cat(strrep("-", 40), "\n", sep = "")
@@ -141,7 +205,7 @@ print.summary.badp_bma <- function(x, ...) {
 }
 
 
-#' Extract posterior statistics from Bayesian Model Averaging Results
+#' Extract Posterior Statistics from Bayesian Model Averaging Results
 #'
 #' Coefficient extraction method for objects of class \code{badp_bma}.
 #'
@@ -218,7 +282,7 @@ print.summary.badp_bma <- function(x, ...) {
 #' # Suppress PIP column
 #' coef(results, PIP = FALSE)
 #'
-#' # Single-prior numeric vector (legacy behaviour)
+#' # Single-prior numeric vector (legacy behavior)
 #' coef(results, prior = "binomial", PIP = FALSE)
 #' }
 #'
@@ -328,6 +392,13 @@ coef.badp_bma <- function(object,
 #'
 #' @seealso \code{\link{coef.badp_bma}}
 #'
+#' @examples
+#' data(small_model_space)
+#' results <- bma(small_model_space)
+#'
+#' coef(results)
+#' print(coef(results, se = TRUE), digits = 3)
+#'
 #' @export
 print.badp_bma_coef <- function(x, digits = 4, ...) {
   conditional <- isTRUE(attr(x, "conditional"))
@@ -413,15 +484,24 @@ print.badp_bma_coef <- function(x, digits = 4, ...) {
 #'   }
 #' @param ... Additional arguments passed to the underlying plot function.
 #'
-#' @return The object returned by the selected visualization helper. Depending on
-#'   \code{which}, this may be a single plot object or a list containing plots
-#'   and/or tables; some helpers may also print output as a side effect.
+#' @return Invisibly returns the object produced by the selected helper. The
+#'   figure or table is drawn to the active device as a side effect, so a
+#'   single call draws exactly one graphic.
 #'
 #' @details
 #' This function dispatches to the appropriate visualization function based on the
 #' \code{which} parameter. The default plot shows model size distributions, which
 #' provides a comprehensive overview of the prior and posterior distributions over
 #' model sizes.
+#'
+#' With \code{which = "best_models"} two functions are involved,
+#' \code{\link{best_models}} to select the models and
+#' \code{\link{plot.badp_best_models}} to draw them, and the arguments in
+#' \code{...} are split between them by name: \code{prior}, \code{best} and
+#' \code{round} are passed to the first, \code{robust} to the second. The
+#' table drawn is the one of estimates; for the inclusion table call
+#' \code{plot(best_models(x), which = "inclusion")} directly, since
+#' \code{which} is taken here by the choice of plot.
 #'
 #' @seealso \code{\link{bma}}, \code{\link{model_sizes}}, \code{\link{best_models}},
 #'   \code{\link{jointness}}, \code{\link{coef_hist}}, \code{\link{posterior_dens}},
@@ -441,16 +521,44 @@ print.badp_bma_coef <- function(x, digits = 4, ...) {
 #' }
 #'
 #' @export
-plot.badp_bma <- function(x, which = "model_sizes", ...) {
-  which <- match.arg(which, c("model_sizes", "best_models", "jointness",
-                               "coef_hist", "posterior_dens", "model_pmp"))
+plot.badp_bma <- function(x, which = c("model_sizes", "model_pmp",
+                                       "best_models", "jointness",
+                                       "coef_hist", "posterior_dens"), ...) {
+  which <- match.arg(which)
 
-  switch(which,
-    "model_sizes" = model_sizes(x, ...),
-    "best_models" = best_models(x, ...),
-    "jointness" = jointness(x, ...),
-    "coef_hist" = coef_hist(x, ...),
-    "posterior_dens" = posterior_dens(x, ...),
-    "model_pmp" = model_pmp(x, ...)
+  if (which == "best_models") {
+    # This branch calls two functions, so the arguments in `...` are split
+    # between them: a named argument goes to the one that declares it, and
+    # anything unnamed goes to best_models(). Handing the whole of `...` to
+    # both would send a plotting argument such as `robust` into
+    # best_models(), which does not have it, and the call would fail there
+    # before anything was drawn.
+    dots <- list(...)
+    nms <- names(dots)
+    if (is.null(nms)) nms <- rep("", length(dots))
+    for_fit <- nms == "" | nms %in% setdiff(names(formals(best_models)), "x")
+
+    models <- do.call(best_models, c(list(x), dots[for_fit]))
+    do.call(plot, c(list(models), dots[!for_fit]))
+
+    return(invisible(models))
+  }
+
+  out <- switch(which,
+    model_sizes    = model_sizes(x, ...),
+    model_pmp      = model_pmp(x, ...),
+    jointness      = jointness(x, ...),
+    coef_hist      = coef_hist(x, ...),
+    posterior_dens = posterior_dens(x, ...)
   )
+
+  # Every branch draws exactly one graphic, whatever the helper returns.
+  if (inherits(out, "badp_plots")) {
+    print(out)
+  } else {
+    grid::grid.newpage()
+    gridExtra::grid.table(out)
+  }
+
+  invisible(out)
 }

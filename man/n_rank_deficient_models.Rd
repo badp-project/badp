@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{n_rank_deficient_models}
 \alias{n_rank_deficient_models}
-\title{Number of models whose sandwich covariance is rank deficient}
+\title{Number of Models with a Rank-Deficient Sandwich Covariance}
 \usage{
 n_rank_deficient_models(stats, n_entities = NULL, K = NULL)
 }
@@ -15,7 +15,7 @@ dimension of the parameter vector and the rank of \eqn{J} for each model.}
 \item{K}{Number of regressors including the lagged dependent variable. When
 supplied, \code{dim(theta)} is read from row \code{4 + 2 * K} and
 \code{rank(J)} from row \code{5 + 2 * K}; model spaces fitted before these
-were stored are recognised and reported as unaffected.}
+were stored are recognized and reported as unaffected.}
 }
 \value{
 Integer, the number of models for which \code{rank(J)} is less than

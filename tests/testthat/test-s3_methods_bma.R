@@ -3,50 +3,49 @@ test_that("badp_bma class is properly assigned", {
   expect_s3_class(bma_results, "badp_bma")
 })
 
-test_that("numeric indexing still works after adding S3 class (backward compatibility)", {
+test_that("the components of a badp_bma object are reachable by name", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test all 19 components are accessible by numeric index
-  expect_equal(length(bma_results), 19)
-  expect_true(is.matrix(bma_results[[1]]))  # uniform_table
-  expect_true(is.matrix(bma_results[[2]]))  # random_table
-  expect_equal(length(bma_results[[3]]), bma_results[[4]] + 1)  # reg_names length = R + 1
-  expect_true(is.numeric(bma_results[[4]]))  # R
-  expect_true(is.numeric(bma_results[[5]]))  # num_of_models
-  expect_true(is.matrix(bma_results[[6]]))  # jointness_data
-  expect_true(is.matrix(bma_results[[7]]))  # best_models_data
-  expect_true(is.numeric(bma_results[[8]]))  # EMS
-  expect_true(is.matrix(bma_results[[9]]))  # size_priors
-  expect_true(is.matrix(bma_results[[10]])) # PMPs
-  expect_true(is.matrix(bma_results[[11]])) # model_priors
-  expect_true(is.numeric(bma_results[[12]])) # dilution
-  expect_true(is.matrix(bma_results[[13]])) # alphas
-  expect_true(is.matrix(bma_results[[14]])) # betas_nonzero
-  expect_true(is.matrix(bma_results[[15]])) # df_free
-  expect_true(is.matrix(bma_results[[16]])) # PMS_table
-  expect_true(is.numeric(bma_results[[17]])) # omega
+  expect_equal(length(bma_results), 18)
+  expect_true(is.matrix(bma_results$uniform_table))
+  expect_true(is.matrix(bma_results$random_table))
+  expect_equal(length(bma_results$reg_names), bma_results$R + 1)
+  expect_true(is.numeric(bma_results$R))
+  expect_true(is.numeric(bma_results$num_of_models))
+  expect_true(is.matrix(bma_results$jointness_data))
+  expect_true(is.matrix(bma_results$best_models_data))
+  expect_true(is.numeric(bma_results$EMS))
+  expect_true(is.matrix(bma_results$size_priors))
+  expect_true(is.matrix(bma_results$PMPs))
+  expect_true(is.matrix(bma_results$model_priors))
+  expect_true(is.numeric(bma_results$dilution))
+  expect_true(is.matrix(bma_results$alphas))
+  expect_true(is.matrix(bma_results$betas_nonzero))
+  expect_true(is.matrix(bma_results$PMS_table))
+  expect_true(is.numeric(bma_results$omega))
+  expect_true(is.character(bma_results$weighting))
+  expect_true(is.numeric(bma_results$eta))
 })
 
-test_that("named access works for bma components", {
+test_that("bma components are reached by name", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # Test named access matches numeric access
-  expect_equal(bma_results$uniform_table, bma_results[[1]])
-  expect_equal(bma_results$random_table, bma_results[[2]])
-  expect_equal(bma_results$reg_names, bma_results[[3]])
-  expect_equal(bma_results$R, bma_results[[4]])
-  expect_equal(bma_results$num_of_models, bma_results[[5]])
-  expect_equal(bma_results$jointness_data, bma_results[[6]])
-  expect_equal(bma_results$best_models_data, bma_results[[7]])
-  expect_equal(bma_results$EMS, bma_results[[8]])
-  expect_equal(bma_results$size_priors, bma_results[[9]])
-  expect_equal(bma_results$PMPs, bma_results[[10]])
-  expect_equal(bma_results$model_priors, bma_results[[11]])
-  expect_equal(bma_results$dilution, bma_results[[12]])
-  expect_equal(bma_results$alphas, bma_results[[13]])
-  expect_equal(bma_results$betas_nonzero, bma_results[[14]])
-  expect_equal(bma_results$df_free, bma_results[[15]])
-  expect_equal(bma_results$PMS_table, bma_results[[16]])
+  # The object is addressed by name throughout the package, the accessors and
+  # the manuscript. Pinning the names rather than the positions is what
+  # protects callers: adding or removing a component must never silently
+  # change what an existing name refers to.
+  expect_equal(
+    names(bma_results),
+    c("uniform_table", "random_table", "reg_names", "R", "num_of_models",
+      "jointness_data", "best_models_data", "EMS", "size_priors", "PMPs",
+      "model_priors", "dilution", "alphas", "betas_nonzero", "PMS_table",
+      "omega", "weighting", "eta")
+  )
+  expect_equal(anyDuplicated(names(bma_results)), 0L)
+  expect_equal(bma_results$PMS_table, bma_results[["PMS_table"]])
+
+  # df_free was removed in 0.7.0
+  expect_null(bma_results$df_free)
 })
 
 test_that("existing helper functions work with classed objects", {
@@ -61,29 +60,39 @@ test_that("existing helper functions work with classed objects", {
   expect_no_error(posterior_dens(bma_results))
 })
 
-test_that("print.badp_bma produces expected output", {
+test_that("print.badp_bma gives a compact overview", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  # print.badp_bma delegates to print(summary(x)), so the output should
-  # match the summary printer.
-  expect_output(print(bma_results), "Bayesian Model Averaging Summary")
-  expect_output(print(bma_results), "Model Space Information:")
-  expect_output(print(bma_results), "Total models:")
-  expect_output(print(bma_results), "Number of regressors:")
+  expect_output(print(bma_results),
+                "Bayesian model averaging for dynamic panels")
+  expect_output(print(bma_results), "Model space:")
   expect_output(print(bma_results), "Expected model size:")
-  expect_output(print(bma_results), "Dilution prior:")
-  expect_output(print(bma_results), "BMA statistics")
-  expect_output(print(bma_results), "binomial prior")
-  expect_output(print(bma_results), "binomial-beta prior")
-  expect_output(print(bma_results), "Prior and Posterior Model Sizes:")
+  expect_output(print(bma_results), "Model priors:")
+  expect_output(print(bma_results), "Weighting:")
+  expect_output(print(bma_results), "posterior inclusion probability")
+  expect_output(print(bma_results), "enters every model by construction")
+  expect_invisible(print(bma_results))
+
+  # the lagged dependent variable is listed first, not sorted to the bottom
+  # by its missing inclusion probability
+  out <- capture.output(print(bma_results))
+  table_start <- grep("^ *PIP", out)[1]
+  first_row <- out[table_start + 1]
+  expect_true(startsWith(first_row, bma_results$reg_names[1]))
 })
 
-test_that("print.badp_bma matches print.summary.badp_bma output", {
+test_that("print and summary of a badp_bma object differ", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  out_print   <- utils::capture.output(print(bma_results))
-  out_summary <- utils::capture.output(print(summary(bma_results)))
-  expect_identical(out_print, out_summary)
+  out_print <- capture.output(print(bma_results))
+  out_summary <- capture.output(print(summary(bma_results)))
+
+  expect_false(identical(out_print, out_summary))
+
+  # summary says strictly more than print
+  expect_true(length(out_summary) > length(out_print))
+  expect_true(any(grepl("BMA statistics", out_summary)))
+  expect_false(any(grepl("BMA statistics", out_print)))
 })
 
 test_that("summary.badp_bma returns correct structure", {
@@ -275,6 +284,21 @@ test_that("print.badp_bma_coef adapts to the requested view", {
                 "PMcon")
 })
 
+test_that("print.badp_bma validates n before it reaches seq_len()", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  expect_error(print(bma_results, n = -1), "non-negative")
+  expect_error(print(bma_results, n = NA), "non-negative")
+  expect_error(print(bma_results, n = c(1, 2)), "non-negative")
+  expect_error(print(bma_results, n = "5"), "non-negative")
+
+  # 0 lists no regressors and Inf lists all of them; both still print the
+  # overview and the line about the lagged dependent variable
+  expect_output(print(bma_results, n = 0), "Bayesian model averaging")
+  expect_output(print(bma_results, n = 0), "enters every model")
+  expect_output(print(bma_results, n = Inf), "Bayesian model averaging")
+})
+
 test_that("plot.badp_bma dispatches correctly", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
@@ -288,6 +312,21 @@ test_that("plot.badp_bma dispatches correctly", {
   expect_no_error(plot(bma_results, which = "coef_hist"))
   expect_no_error(plot(bma_results, which = "posterior_dens"))
   expect_no_error(plot(bma_results, which = "model_pmp"))
+})
+
+test_that("plot.badp_bma routes arguments to the function that declares them", {
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  # `robust` belongs to plot.badp_best_models() and `best` to best_models();
+  # the whole of `...` used to go to best_models(), which has no `robust`
+  expect_no_error(plot(bma_results, which = "best_models", robust = TRUE))
+  expect_no_error(plot(bma_results, which = "best_models", best = 3,
+                       robust = TRUE))
+
+  # the selection arguments still reach best_models()
+  out <- plot(bma_results, which = "best_models", best = 2)
+  expect_s3_class(out, "badp_best_models")
+  expect_length(out, 2)
 })
 
 test_that("plot.badp_bma returns appropriate objects", {

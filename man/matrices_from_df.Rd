@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_likelihood.R
 \name{matrices_from_df}
 \alias{matrices_from_df}
-\title{List of matrices for SEM model}
+\title{List of Matrices for the SEM Model}
 \usage{
 matrices_from_df(
   df,
@@ -14,7 +14,7 @@ matrices_from_df(
 )
 }
 \arguments{
-\item{df}{Dataframe with data for the likelihood computations.}
+\item{df}{Data frame with data for the likelihood computations.}
 
 \item{timestamp_col}{Column which determines time stamps. For now only
 natural numbers can be used.}
@@ -38,7 +38,7 @@ all possible matrices are generated}
 Named list with matrices as its elements
 }
 \description{
-List of matrices for SEM model
+List of Matrices for the SEM Model
 }
 \examples{
 matrices_from_df(economic_growth, year, country, gdp, c("pop", "sed"),

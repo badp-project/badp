@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_param_matrices.R
 \name{sem_psi_matrix}
 \alias{sem_psi_matrix}
-\title{Matrix with psi parameters for SEM representation}
+\title{Matrix of the Psi Parameters for the SEM Representation}
 \usage{
 sem_psi_matrix(psis, n_timestamps, n_features)
 }
@@ -20,7 +20,7 @@ in a block manner, i.e. blocks of size \code{n_features} are placed next to
 each other
 }
 \description{
-Matrix with psi parameters for SEM representation
+Matrix of the Psi Parameters for the SEM Representation
 }
 \examples{
 sem_psi_matrix(1:30, 4, 5)

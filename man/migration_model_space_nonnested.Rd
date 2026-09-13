@@ -3,7 +3,7 @@
 \docType{data}
 \name{migration_model_space_nonnested}
 \alias{migration_model_space_nonnested}
-\title{Example output of \code{\link{optim_model_space}} in the case of migration data obtained with nonnested approach.}
+\title{Example Non-Nested Model Space for the Migration Data}
 \format{
 An object of class \code{badp_model_space}:
 \describe{
@@ -35,6 +35,10 @@ The data frame used in the analysis.
 \item{is_nested}{
 A logical indicating whether the model space uses nested specifications.
 }
+\item{convergence}{
+A matrix of per-model convergence diagnostics; see
+\code{\link{optim_model_space}}.
+}
 }
 }
 \usage{
@@ -42,6 +46,6 @@ migration_model_space_nonnested
 }
 \description{
 A badp_model_space object created with \code{\link{optim_model_space}} using the
-\code{\link{migration_data}} dataset with nonnested approach.
+\code{\link{migration_data}} dataset with the non-nested approach.
 }
 \keyword{datasets}

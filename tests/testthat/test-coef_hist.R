@@ -4,7 +4,7 @@ test_that(paste("coef_hist creates correct lists with graphs"), {
 
   coef_plots <- coef_hist(bma_results, use_kernel = 1)
 
-  expect_equal(class(coef_plots), "list")
+  expect_s3_class(coef_plots, "badp_plots")
   expect_true(ggplot2::is_ggplot(coef_plots[[1]]))
   expect_true(ggplot2::is_ggplot(coef_plots[[2]]))
   expect_true(ggplot2::is_ggplot(coef_plots[[3]]))
@@ -17,7 +17,7 @@ test_that("coef_hist works with default histogram (FD bin method)", {
   # IQR computation across all betas columns; regression test for the
   # off-by-one where betas[, K] was accessed but betas only has R columns.
   coef_plots <- coef_hist(bma_results)
-  expect_equal(class(coef_plots), "list")
+  expect_s3_class(coef_plots, "badp_plots")
   expect_equal(length(coef_plots), bma_results$R + 1)
   for (p in coef_plots) {
     expect_true(ggplot2::is_ggplot(p))

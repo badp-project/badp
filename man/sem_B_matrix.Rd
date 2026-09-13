@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_param_matrices.R
 \name{sem_B_matrix}
 \alias{sem_B_matrix}
-\title{Matrices with alpha and beta parameters for SEM representation}
+\title{Matrices of the Alpha and Beta Parameters for the SEM Representation}
 \usage{
 sem_B_matrix(alpha, n_periods, beta = NULL)
 }

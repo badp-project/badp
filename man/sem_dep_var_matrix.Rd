@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_matrices.R
 \name{sem_dep_var_matrix}
 \alias{sem_dep_var_matrix}
-\title{Matrix with dependent variable data for SEM representation}
+\title{Matrix of Dependent Variable Data for the SEM Representation}
 \usage{
 sem_dep_var_matrix(df, timestamp_col, entity_col, dep_var_col)
 }

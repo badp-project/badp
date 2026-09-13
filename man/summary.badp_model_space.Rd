@@ -15,7 +15,8 @@ result of \code{\link{optim_model_space}}.}
 \value{
 An object of class \code{summary.badp_model_space} containing:
 \itemize{
-\item \code{num_models} - Number of models in the model space (\eqn{2^R}).
+\item \code{num_models} - Number of models in the model space, two to the
+power of \code{num_regressors}.
 \item \code{num_regressors} - Number of regressors excluding the lagged
 dependent variable (\eqn{R}).
 \item \code{num_params} - Number of parameters in the full parameter

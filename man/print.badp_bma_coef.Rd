@@ -30,6 +30,14 @@ the requested combination of \code{estimate}, \code{std.error} and
 unconditional or conditional on inclusion, and whether standard errors
 are robust.
 }
+\examples{
+data(small_model_space)
+results <- bma(small_model_space)
+
+coef(results)
+print(coef(results, se = TRUE), digits = 3)
+
+}
 \seealso{
 \code{\link{coef.badp_bma}}
 }

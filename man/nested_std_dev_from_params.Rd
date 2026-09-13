@@ -2,8 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{nested_std_dev_from_params}
 \alias{nested_std_dev_from_params}
-\title{Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for nested version of SEM likelihood.}
+\title{Log-Likelihood and Standard Deviations for a Single Nested Model}
 \usage{
 nested_std_dev_from_params(
   params,
@@ -52,7 +51,6 @@ why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
 weighting option is built on it.
 }
 \description{
-Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for nested version of SEM likelihood.
+Log-Likelihood and Standard Deviations for a Single Nested Model
 }
 \keyword{internal}

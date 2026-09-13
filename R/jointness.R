@@ -1,4 +1,4 @@
-#' Calculation of the jointness measures
+#' Bivariate Jointness Measures
 #'
 #' This function calculates four types of the jointness measures based on the posterior model probabilities calculated using binomial and binomial-beta model prior. The four measures are: \cr
 #' 1) HCGHM - for Hofmarcher et al. (2018) measure; \cr
@@ -12,7 +12,7 @@
 #' Hofmarcher P, Crespo Cuaresma J, Gr\enc{ü}{u}n B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
 #' Ley E, Steel M (2007) Jointness in Bayesian variable selection with applications to growth regression. Journal of Macroeconomics, 29(3), 476-493. doi: 10.1016/j.jmacro.2006.12.002
 #'
-#' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
+#' @param x An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param measure Character string specifying the measure of jointness. One of: \cr
 #' \code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr
 #' \code{"LS"} - Ley & Steel (2007) measure; \cr
@@ -47,14 +47,14 @@
 #'
 #' jointness_table <- jointness(bma_results, measure = "HCGHM", rho = 0.5, round = 3)
 #' }
-jointness <- function(bma_list, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3) {
+jointness <- function(x, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3) {
   measure <- match.arg(measure)
 
   # Extraction of the elements of the bma object
-  reg_names <- bma_list[[3]]      # names of all regressors incl. lagged dep var
+  reg_names <- x$reg_names      # names of all regressors incl. lagged dep var
   reg_names <- reg_names[-1]      # drop lagged dep var: keep only the R regressors
-  R <- bma_list[[4]]              # number of regressors
-  forJointness <- bma_list[[6]]   # M x (R + 2): inclusion flags + two prior PMP columns
+  R <- x$R              # number of regressors
+  forJointness <- x$jointness_data   # M x (R + 2): inclusion flags + two prior PMP columns
 
   # Inclusion matrix (0/1), M x R
   Z <- as.matrix(forJointness[, 1:R])

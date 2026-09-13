@@ -1,4 +1,4 @@
-test_that(paste("bma computes correct bma_list and all its objects"), {
+test_that("bma computes the badp_bma object and all its components", {
 
   data_prepared <- badp::economic_growth[,1:6] %>%
     badp::feature_standardization(
@@ -12,43 +12,37 @@ test_that(paste("bma computes correct bma_list and all its objects"), {
 
   bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
-  expect_equal(length(bma_results), 19)
-  expect_equal(is.numeric(bma_results[[4]]), TRUE)
-  expect_equal(is.numeric(bma_results[[5]]), TRUE)
-  expect_equal(length(bma_results[[3]]), bma_results[[4]]+1)
-  # Slot 17 holds omega (the dilution prior parameter)
-  expect_equal(is.numeric(bma_results[[17]]), TRUE)
-  expect_equal(bma_results$omega, bma_results[[17]])
-  expect_equal(nrow(bma_results[[1]]), bma_results[[4]]+1)
-  expect_equal(ncol(bma_results[[1]]), 8)
-  expect_equal(nrow(bma_results[[2]]), bma_results[[4]]+1)
-  expect_equal(ncol(bma_results[[2]]), 8)
-  expect_equal(ncol(bma_results[[6]]), bma_results[[4]]+2)
-  expect_equal(nrow(bma_results[[6]]), bma_results[[5]])
-  expect_equal(ncol(bma_results[[7]]), bma_results[[4]]+2+3*(bma_results[[4]]+1))
-  expect_equal(nrow(bma_results[[7]]), bma_results[[5]])
-  expect_equal(is.numeric(bma_results[[8]]), TRUE)
-  expect_equal(ncol(bma_results[[9]]), 2)
-  expect_equal(nrow(bma_results[[9]]), bma_results[[4]]+1)
-  expect_equal(ncol(bma_results[[10]]), bma_results[[4]]+2)
-  expect_equal(nrow(bma_results[[10]]), bma_results[[5]])
-  expect_equal(ncol(bma_results[[11]]), 2)
-  expect_equal(nrow(bma_results[[11]]), bma_results[[5]])
-  expect_equal(is.numeric(bma_results[[12]]), TRUE)
-  expect_equal(ncol(bma_results[[13]]), 1)
-  expect_equal(nrow(bma_results[[13]]), bma_results[[5]])
-  expect_equal(ncol(bma_results[[14]]), bma_results[[4]])
-  expect_equal(nrow(bma_results[[14]]), bma_results[[5]]/2)
-  expect_equal(ncol(bma_results[[15]]), 1)
-  expect_equal(nrow(bma_results[[15]]), bma_results[[5]])
-  expect_equal(ncol(bma_results[[16]]), 2)
-  expect_equal(nrow(bma_results[[16]]), 2)
-  # Slot 18 records which marginal-likelihood approximation was used
-  expect_identical(bma_results[[18]], "mb2016")
-  expect_identical(bma_results$weighting, bma_results[[18]])
-  # Slot 19 records the realised learning rate
-  expect_true(is.numeric(bma_results[[19]]))
-  expect_identical(bma_results$eta, bma_results[[19]])
+  expect_equal(length(bma_results), 18)
+  expect_identical(
+    names(bma_results),
+    c("uniform_table", "random_table", "reg_names", "R", "num_of_models",
+      "jointness_data", "best_models_data", "EMS", "size_priors", "PMPs",
+      "model_priors", "dilution", "alphas", "betas_nonzero", "PMS_table",
+      "omega", "weighting", "eta")
+  )
+
+  R <- bma_results$R
+  M <- bma_results$num_of_models
+
+  expect_true(is.numeric(R))
+  expect_true(is.numeric(M))
+  expect_equal(length(bma_results$reg_names), R + 1)
+
+  expect_equal(dim(bma_results$uniform_table), c(R + 1, 8))
+  expect_equal(dim(bma_results$random_table), c(R + 1, 8))
+  expect_equal(dim(bma_results$jointness_data), c(M, R + 2))
+  expect_equal(dim(bma_results$best_models_data), c(M, R + 2 + 3 * (R + 1)))
+  expect_true(is.numeric(bma_results$EMS))
+  expect_equal(dim(bma_results$size_priors), c(R + 1, 2))
+  expect_equal(dim(bma_results$PMPs), c(M, R + 2))
+  expect_equal(dim(bma_results$model_priors), c(M, 2))
+  expect_true(is.numeric(bma_results$dilution))
+  expect_equal(dim(bma_results$alphas), c(M, 1))
+  expect_equal(dim(bma_results$betas_nonzero), c(M / 2, R))
+  expect_equal(dim(bma_results$PMS_table), c(2, 2))
+  expect_true(is.numeric(bma_results$omega))
+  expect_identical(bma_results$weighting, "mb2016")
+  expect_true(is.numeric(bma_results$eta))
 })
 
 

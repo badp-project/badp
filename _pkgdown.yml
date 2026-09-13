@@ -34,74 +34,96 @@ navbar:
 
 reference:
   - title: "Data Preparation"
-    desc: "Functions for preparing panel data for SEM-based BMA estimation."
+    desc: >
+      Bringing panel data into the form the estimation functions expect.
+      Standardization is always needed; merging a lagged column is needed only
+      for source data that store the dependent variable twice.
     contents:
       - feature_standardization
       - join_lagged_col
-      - matrices_from_df
-      - exogenous_matrix
 
   - title: "Model Space Estimation"
     desc: >
-      Core functions for estimating the full model space via maximum likelihood
-      and computing BIC, posterior probabilities, and standard deviations.
+      Estimating every model in the space by maximum likelihood, and the
+      statistics computed from the fitted parameters.
     contents:
       - optim_model_space
       - optim_model_space_params
-      - init_model_space_params
       - compute_model_space_stats
-
-  - title: "Optimization Internals"
-    desc: "Low-level wrappers for the nested and non-nested SEM optimization."
-    contents:
-      - nested_optimization_wrapper
-      - non_nested_optimization_wrapper
-      - nested_std_dev_from_params
-      - non_nested_std_dev_from_params
-
-  - title: "Bayesian Model Averaging"
-    desc: >
-      Perform BMA and inspect results: posterior inclusion probabilities,
-      best models, jointness measures, and regressor names.
-    contents:
-      - bma
-      - best_models
-      - model_pmp
-      - model_sizes
-      - jointness
-      - extract_names
-      - regressor_names_from_params_vector
-
-  - title: "Visualization"
-    desc: "Functions for visualizing BMA results."
-    contents:
-      - coef_hist
-      - posterior_dens
 
   - title: "SEM Likelihood"
     desc: >
-      Structural Equation Model likelihood computation and matrix building blocks.
-      These are used internally but exported for advanced users.
+      The structural equation model likelihood, for fitting or inspecting a
+      single model.
     contents:
       - sem_likelihood
-      - sem_B_matrix
-      - sem_C_matrix
-      - sem_psi_matrix
-      - sem_sigma_matrix
-      - sem_dep_var_matrix
-      - sem_regressors_matrix
-      - residual_maker_matrix
+
+  - title: "Bayesian Model Averaging"
+    desc: >
+      Averaging over the model space, the most probable individual models, and
+      the jointness measures between regressors.
+    contents:
+      - bma
+      - best_models
+      - jointness
+
+  - title: "Extracting Results"
+    desc: >
+      Accessors returning the quantities of interest from a fitted object,
+      without requiring any knowledge of how it is stored internally.
+    contents:
+      - bma_table
+      - pip
+      - pmp
+      - model_size_table
+      - regressors
+      - n_models
+      - weighting
+      - convergence
+
+  - title: "Visualization"
+    desc: "Plot collections summarizing the model space and the coefficients."
+    contents:
+      - model_sizes
+      - model_pmp
+      - coef_hist
+      - posterior_dens
+
+  - title: "Methods"
+    desc: >
+      Methods for the classes the package returns. Each is also reached by
+      calling the generic on the object.
+    contents:
+      - print.badp_model_space
+      - summary.badp_model_space
+      - print.summary.badp_model_space
+      - print.badp_bma
+      - summary.badp_bma
+      - print.summary.badp_bma
+      - coef.badp_bma
+      - plot.badp_bma
+      - print.badp_bma_coef
+      - print.badp_best_models
+      - summary.badp_best_models
+      - print.summary.badp_best_models
+      - plot.badp_best_models
+      - "[.badp_best_models"
+      - print.badp_model
+      - summary.badp_model
+      - print.summary.badp_model
+      - coef.badp_model
+      - print.badp_plots
 
   - title: "Datasets"
     desc: "Bundled example datasets and pre-computed model spaces."
     contents:
       - economic_growth
       - original_economic_growth
+      - migration_data
       - small_model_space
       - full_model_space
       - full_bma_results
       - model_space_nonnested
-      - migration_data
       - migration_model_space
       - migration_model_space_nonnested
 

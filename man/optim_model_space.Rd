@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{optim_model_space}
 \alias{optim_model_space}
-\title{Calculation of the model_space object}
+\title{Estimate the Model Space}
 \usage{
 optim_model_space(
   df,

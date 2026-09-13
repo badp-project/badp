@@ -1,12 +1,12 @@
 utils::globalVariables(".data")
 
-#' Graphs of the distribution of the coefficients over the model space
+#' Histograms of the Coefficients over the Model Space
 #'
 #' This function draws graphs of the distribution (in the form of histogram or kernel density) of
 #' the coefficients for all the considered regressors over the part of the model space that includes
 #' these regressors (half of the model space).
 #'
-#' @param bma_list An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
+#' @param x An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param weight Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
 #' 1) NULL - no weighting (default option) \cr
 #' 2) "binomial" - using posterior model probabilities based on binomial model prior \cr
@@ -50,7 +50,7 @@ utils::globalVariables(".data")
 #'
 #' coef_plots <- coef_hist(bma_results, use_kernel = 1)
 #' }
-coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec"), bin_widths = NULL, use_bin_count = 0, bin_counts = NULL, use_kernel = 0){
+coef_hist <- function(x, weight = NULL, bin_method = c("FD", "SC", "vec"), bin_widths = NULL, use_bin_count = 0, bin_counts = NULL, use_kernel = 0){
   if (!(is.null(weight) || weight %in% c("binomial", "beta"))) {
       stop("weight is wrongly specified: please use NULL, 'binomial', or 'beta'")
   }
@@ -62,15 +62,15 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
     stop("use_bin_count must be 0 or 1")
   }
 
-  x_names <- bma_list[[3]] # names of variables
-  K <- bma_list[[4]] + 1 # number of variables
-  alpha <- bma_list[[13]]
-  betas <- bma_list[[14]]
+  x_names <- x$reg_names # names of variables
+  K <- x$R + 1 # number of variables
+  alpha <- x$alphas
+  betas <- x$betas_nonzero
 
   if (!is.null(weight)){
     R <- K-1
-    forJointness <- bma_list[[6]]
-    alpha <- bma_list[[13]]
+    forJointness <- x$jointness_data
+    alpha <- x$alphas
     numb_of_models <- nrow(forJointness)
     numb_of_betas <- numb_of_models/2
     new_betas <- matrix(0, nrow = numb_of_betas, ncol = R)
@@ -89,7 +89,7 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
     betas <- new_betas
   }
 
-  # Adding colnames and changing to dataframe
+  # Adding colnames and changing to a data frame
   colnames(alpha) <- x_names[1]
   colnames(betas) <- x_names[-1]
   alpha <- as.data.frame(alpha)
@@ -207,5 +207,5 @@ coef_hist <- function(bma_list, weight = NULL, bin_method = c("FD", "SC", "vec")
       }
     }
   }
-  return(histPlots)
+  structure(histPlots, class = "badp_plots")
 }
