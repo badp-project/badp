@@ -1,0 +1,135 @@
+# Keeps the releases page in step with CRAN.
+#
+# The release is cut from `develop`, not `main`. Release branches reach develop
+# as soon as a version is ready, whereas the develop -> main PR waits on a
+# reviewer; triggering on main is what let the page fall behind by six versions.
+#
+# A scheduled drift check is the safety net: if CRAN is publishing a version
+# that has no GitHub release, it opens an issue rather than failing silently.
+on:
+  push:
+    branches: [develop]
+    paths: ['DESCRIPTION']
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+name: release.yaml
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  release:
+    # Only the DESCRIPTION-bump path cuts a release; the cron run only audits.
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read the version from DESCRIPTION
+        id: version
+        run: |
+          version="$(sed -n 's/^Version:[[:space:]]*//p' DESCRIPTION | head -n1)"
+          if [ -z "$version" ]; then
+            echo "::error::No Version field found in DESCRIPTION"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version in DESCRIPTION: $version"
+
+      - name: Check whether the release already exists
+        id: existing
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Release already exists; nothing to do."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract the NEWS.md section for this version
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          awk -v want="# badp $version" '
+            $0 == want { inside = 1; next }
+            /^# badp / { inside = 0 }
+            inside
+          ' NEWS.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::NEWS.md has no '# badp $version' section to use as release notes"
+            exit 1
+          fi
+
+      - name: Create the release
+        if: steps.existing.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          gh release create "$version" \
+            --title "Version $version" \
+            --notes-file release-notes.md \
+            --target "$GITHUB_SHA"
+          echo "Created release $version at $GITHUB_SHA"
+
+  drift-check:
+    # Compares what CRAN publishes against what the releases page shows.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare CRAN against the releases page
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cran="$(curl -fsSL https://cran.r-project.org/web/packages/badp/DESCRIPTION \
+                  | sed -n 's/^Version:[[:space:]]*//p' | head -n1)"
+          if [ -z "$cran" ]; then
+            echo "Could not read the CRAN version; skipping."
+            exit 0
+          fi
+          echo "CRAN publishes: $cran"
+
+          if gh release view "$cran" >/dev/null 2>&1; then
+            echo "A release exists for $cran. No drift."
+            exit 0
+          fi
+
+          echo "::warning::CRAN publishes $cran but there is no GitHub release for it."
+          existing="$(gh issue list --state open --label release-drift \
+                      --search "$cran in:title" --json number --jq 'length')"
+          if [ "$existing" != "0" ]; then
+            echo "An open drift issue already mentions $cran."
+            exit 0
+          fi
+          gh label create release-drift --color FBCA04 \
+            --description "Releases page is behind CRAN" 2>/dev/null || true
+
+          cat > drift-issue.md <<EOF
+          CRAN publishes badp **$cran**, but no GitHub release exists for it.
+
+          Create it from the commit that was submitted. The SHA is recorded in
+          \`CRAN-SUBMISSION\` on that version's branch:
+
+          \`\`\`sh
+          gh release create $cran --title "Version $cran" --target <sha> --notes-file <notes>
+          \`\`\`
+
+          See \`.github/RELEASING.md\`. Opened automatically by \`release.yaml\`.
+          EOF
+          sed -i 's/^          //' drift-issue.md
+
+          gh issue create \
+            --title "Releases page is behind CRAN ($cran)" \
+            --label release-drift \
+            --body-file drift-issue.md
