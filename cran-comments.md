@@ -26,19 +26,23 @@ NEWS.md and summarized here:
   for consistency with the accessors and with the S3 methods.
 * `join_lagged_col()` is no longer marked as internal and now appears in the
   package index.
+* `knitr` moved from `Imports` to `Suggests`. The package no longer calls it;
+  it is still required to build the vignette and remains declared as the
+  `VignetteBuilder`.
 
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note
 
-* checking for future file timestamps ... NOTE
-  unable to verify current time
+* checking HTML version of manual ... NOTE
+  Skipping checking HTML validation: 'tidy' doesn't look like recent enough
+  HTML Tidy
 
-  This NOTE reflects the check machine being unable to reach the time server
+  This NOTE reflects the version of HTML Tidy installed on the check machine
   and is unrelated to the package.
 
 Checked locally with `R CMD check --as-cran`, including the CRAN incoming
-checks and the PDF manual, against R 4.4.1 on macOS (aarch64-apple-darwin20),
+checks and the PDF manual, against R 4.5.1 on macOS (aarch64-apple-darwin20),
 and via the GitHub Actions R-CMD-check workflow on Linux, macOS and Windows
 across release, oldrel and devel.
 
@@ -47,7 +51,8 @@ check reports no problems.
 
 ## Downstream dependencies
 
-There are no downstream dependencies on CRAN.
+There are no downstream dependencies on CRAN. The breaking changes listed
+above therefore affect no other CRAN package.
 
 # 0.6.1
 
