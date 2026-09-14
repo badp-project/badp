@@ -1,14 +1,21 @@
-# Keeps the releases page in step with CRAN.
+# Keeps main, the releases page and CRAN in step.
 #
-# The release is cut from `develop`, not `main`. Release branches reach develop
-# as soon as a version is ready, whereas the develop -> main PR waits on a
-# reviewer; triggering on main is what let the page fall behind by six versions.
+# The release branch is merged into BOTH main and develop. main therefore only
+# ever receives release merges, so its tree is the tree that went to CRAN no
+# matter what else has landed on develop in the meantime. Routing the release to
+# main through develop cannot give that guarantee: work that reaches develop
+# after the submission would ride along into main under the released version's
+# number.
 #
-# A scheduled drift check is the safety net: if CRAN is publishing a version
-# that has no GitHub release, it opens an issue rather than failing silently.
+# Before publishing, the release job asserts that main really does match the
+# commit recorded in CRAN-SUBMISSION, and fails loudly if anything else slipped
+# into the merge.
+#
+# A scheduled drift check is the safety net: if CRAN publishes a version with no
+# GitHub release, it opens an issue rather than failing silently.
 on:
   push:
-    branches: [develop]
+    branches: [main]
     paths: ['DESCRIPTION']
   schedule:
     - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
@@ -52,6 +59,47 @@ jobs:
             echo "Release already exists; nothing to do."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The guard that makes the double merge worth doing: what is on main must
+      # be what was sent to CRAN. If a develop merge carried extra work in, the
+      # shipped paths will differ from the submitted commit and this fails.
+      - name: Verify main matches the commit submitted to CRAN
+        if: steps.existing.outputs.exists == 'false'
+        run: |
+          version="${{ steps.version.outputs.version }}"
+
+          if [ ! -f CRAN-SUBMISSION ]; then
+            echo "::error::CRAN-SUBMISSION is missing. Commit and push the file written by devtools::submit_cran()."
+            exit 1
+          fi
+
+          submitted_version="$(sed -n 's/^Version:[[:space:]]*//p' CRAN-SUBMISSION | head -n1)"
+          submitted_sha="$(sed -n 's/^SHA:[[:space:]]*//p' CRAN-SUBMISSION | head -n1)"
+          echo "DESCRIPTION:     $version"
+          echo "CRAN-SUBMISSION: $submitted_version at $submitted_sha"
+
+          if [ "$submitted_version" != "$version" ]; then
+            echo "::error::CRAN-SUBMISSION records $submitted_version but DESCRIPTION says $version. Submit this version before merging it to main."
+            exit 1
+          fi
+
+          if ! git cat-file -e "$submitted_sha^{commit}" 2>/dev/null; then
+            echo "::error::Submitted commit $submitted_sha is not in this repository. Push the release branch."
+            exit 1
+          fi
+
+          # Only the paths that end up in the tarball; cran-comments.md, renv.lock
+          # and .github are build-ignored and may legitimately differ.
+          paths="R man data tests inst vignettes NAMESPACE DESCRIPTION NEWS.md"
+          if git diff --quiet "$submitted_sha" HEAD -- $paths; then
+            echo "main matches the submitted tree."
+          else
+            echo "::error::main does not match the tree submitted to CRAN as $version."
+            echo "Differences against $submitted_sha:"
+            git diff --stat "$submitted_sha" HEAD -- $paths
+            echo "Merge the release branch into main directly rather than routing it through develop."
+            exit 1
           fi
 
       - name: Extract the NEWS.md section for this version
@@ -118,7 +166,10 @@ jobs:
           cat > drift-issue.md <<EOF
           CRAN publishes badp **$cran**, but no GitHub release exists for it.
 
-          Create it from the commit that was submitted. The SHA is recorded in
+          Usually this means the release branch has not reached \`main\` yet.
+          Merge it into \`main\` (and into \`develop\`), which cuts the release.
+
+          To create it by hand, anchor it to the SHA recorded in
           \`CRAN-SUBMISSION\` on that version's branch:
 
           \`\`\`sh
