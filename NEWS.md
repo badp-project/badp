@@ -50,7 +50,7 @@ breaking; they are marked below.
 
 * `model_sizes()` and `model_pmp()` gained a `type` argument. `"line"` keeps
   the existing display; `"histogram"` draws the prior and the posterior as
-  side-by-side bars, as in the companion package \pkg{rmsBMA}. Bars read well
+  side-by-side bars, as in the companion package `rmsBMA`. Bars read well
   when few models or model sizes are shown -- a small `top`, or a handful of
   regressors -- while the lines stay legible when there are many. The
   argument passes through `plot()`, so

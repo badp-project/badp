@@ -170,7 +170,7 @@ bma_results <- badp::bma(model_space, round = 3)
 badp::bma_table(bma_results)
 #>           PIP     PM   PSD  PSDR  PMcon PSDcon PSDRcon %(+)
 #> gdp_lag    NA  1.078 0.110 0.227  1.078  0.110   0.227  100
-#> ish     0.710  0.085 0.061 0.090  0.120  0.032   0.084  100
+#> ish     0.710  0.085 0.061 0.090  0.120  0.032   0.085  100
 #> sed     0.714 -0.046 0.061 0.111 -0.065  0.064   0.127    0
 badp::bma_table(bma_results, prior = "beta")
 #>           PIP     PM   PSD  PSDR  PMcon PSDcon PSDRcon %(+)
@@ -205,8 +205,10 @@ parameter estimate is positive.
     mass is distributed across different model sizes.
 
 ``` r
-# Prior vs. posterior model probabilities, three best models
-badp::model_pmp(bma_results, top = 3)
+# Prior vs. posterior model probabilities, three best models.
+# `type = "histogram"` draws bars, which read well for a handful of models;
+# the default `"line"` is better once there are many.
+badp::model_pmp(bma_results, top = 3, type = "histogram")
 ```
 
 <img src="man/figures/README-unnamed-chunk-6-1.png" alt="" width="100%" />
@@ -254,8 +256,8 @@ summary(top3_binom, robust = TRUE)
 #> Estimates (robust standard errors in parentheses):
 #>         No. 1            No. 2            No. 3           
 #> gdp_lag 1.079 (0.273)*** 1.126 (0.151)*** 1.027 (0.191)***
-#> ish     0.119 (0.085)                     0.121 (0.082)   
-#> sed     -0.06 (0.126)    -0.077 (0.128)                   
+#> ish     0.119 (0.086)                     0.121 (0.082)   
+#> sed     -0.06 (0.126)    -0.077 (0.127)                   
 #> PMP     0.508            0.206            0.202           
 #> 
 #> Signif. codes: 0.01 '***'  0.05 '**'  0.1 '*'
@@ -328,7 +330,7 @@ bma_obj <- badp::bma(
 
 # 4) Inspect the top 3 models under binomial prior
 best_3 <- badp::best_models(
-  bma_list = bma_obj,
+  x = bma_obj,
   prior = "binomial",
   best = 3
 )
