@@ -29,7 +29,7 @@ permissions:
 
 jobs:
   release:
-    # Only the DESCRIPTION-bump path cuts a release; the cron run only audits.
+    # push on main with a DESCRIPTION bump (and manual workflow_dispatch) can cut a release; the cron run only audits.
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
 
