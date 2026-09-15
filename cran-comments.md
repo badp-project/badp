@@ -90,8 +90,7 @@ There are no downstream dependencies on CRAN.
 
 ## Update
 
-This is an update of the CRAN version 0.4.0.1. Version 0.5.0 was developed but
-never submitted, so this release also carries its changes. The full list is in
+This is an update of the CRAN version 0.5.0. The full list of changes is in
 NEWS.md; the points most relevant to the check results are:
 
 * The SEM likelihood, previously implemented in C++ via `Rcpp` and
