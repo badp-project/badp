@@ -91,7 +91,7 @@ jobs:
 
           # Only the paths that end up in the tarball; cran-comments.md, renv.lock
           # and .github are build-ignored and may legitimately differ.
-          paths="R man data tests inst vignettes NAMESPACE DESCRIPTION NEWS.md"
+          paths="R man data tests inst vignettes NAMESPACE DESCRIPTION NEWS.md README.md LICENSE"
           if git diff --quiet "$submitted_sha" HEAD -- $paths; then
             echo "main matches the submitted tree."
           else
