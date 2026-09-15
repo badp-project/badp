@@ -47,9 +47,9 @@ releases through a large `develop` -> `main` PR.
       written by hand.)
 - [ ] Add a `cran-comments.md` section. State the real check results, and the R
       version and platform the check actually ran on.
-- [ ] `just document` — `man/` and `NAMESPACE` must come out with no diff.
-- [ ] `just test`
-- [ ] `just check` — `R CMD build` + `R CMD check --as-cran`.
+- [ ] `Rscript -e 'roxygen2::roxygenise()'` — `man/` and `NAMESPACE` must come out with no diff.
+- [ ] `Rscript -e 'testthat::test_local()'`
+- [ ] `R CMD build` + `R CMD check --as-cran`.
 - [ ] Re-knit the README if `README.Rmd` or any output it shows changed.
       `README.md` is generated, never hand-edited:
       `Rscript -e 'devtools::build_readme()'`
