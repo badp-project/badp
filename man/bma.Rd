@@ -78,6 +78,9 @@ An object of class \code{badp_bma}, which is a list containing:
 \item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
 \item{weighting}{The approximation to the marginal likelihood used to weight the models.}
 \item{eta}{The learning rate the weighting implies, or \code{NA} for \code{"uip"}, which alters the penalty rather than the rate.}
+\item{loglik}{The maximized log-likelihood of every model, in the order of the model space.}
+\item{n_params}{The number of estimated parameters of every model, in the order of the model space.}
+\item{nobs}{The number of observations used in the estimation.}
 }
 }
 \description{

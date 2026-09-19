@@ -6,7 +6,7 @@ test_that("badp_bma class is properly assigned", {
 test_that("the components of a badp_bma object are reachable by name", {
   bma_results <- bma(small_model_space, round = 3, dilution = 0)
 
-  expect_equal(length(bma_results), 18)
+  expect_equal(length(bma_results), 21)
   expect_true(is.matrix(bma_results$uniform_table))
   expect_true(is.matrix(bma_results$random_table))
   expect_equal(length(bma_results$reg_names), bma_results$R + 1)
@@ -39,7 +39,7 @@ test_that("bma components are reached by name", {
     c("uniform_table", "random_table", "reg_names", "R", "num_of_models",
       "jointness_data", "best_models_data", "EMS", "size_priors", "PMPs",
       "model_priors", "dilution", "alphas", "betas_nonzero", "PMS_table",
-      "omega", "weighting", "eta")
+      "omega", "weighting", "eta", "loglik", "n_params", "nobs")
   )
   expect_equal(anyDuplicated(names(bma_results)), 0L)
   expect_equal(bma_results$PMS_table, bma_results[["PMS_table"]])

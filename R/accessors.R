@@ -320,10 +320,10 @@ convergence.badp_model_space <- function(x, ...) x$convergence
 #' \code{beta_<name>} was estimated in that model. The lagged dependent
 #' variable enters every model and is not counted in \code{size}.
 #'
-#' The log-likelihood is the value maximized by \code{\link{optim_model_space}}.
-#' Unless the model space was estimated with \code{exact_value = TRUE}, it
-#' omits a constant common to all models, so that differences between models
-#' are exact while the level is not.
+#' The log-likelihood is the exact log-likelihood of the model evaluated at the
+#' estimates, including all constants, whatever \code{exact_value} was used
+#' during the optimization. It is also available as a \code{"logLik"} object
+#' from \code{\link{logLik.badp_model_space}}.
 #'
 #' @param x An object of class \code{badp_model_space}.
 #' @param sort_by Ordering of the rows: \code{"none"} (the default) keeps the

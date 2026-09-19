@@ -79,6 +79,7 @@ reference:
       - regressors
       - n_models
       - model_table
+      - logLik.badp
       - weighting
       - convergence
 

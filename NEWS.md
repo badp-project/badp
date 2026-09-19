@@ -8,6 +8,16 @@
   log-likelihood or size and `top` keeps the first rows, so that ranking the
   estimated models no longer requires indexing the parameter and statistics
   matrices.
+* New `logLik()` methods for `badp_model_space` (one model, selected by its
+  position) and for the individual models returned by `best_models()`. They
+  return standard `"logLik"` objects with `df` and `nobs` attributes, so that
+  `AIC()` and `BIC()` apply. The value is the exact log-likelihood at the
+  estimates.
+* `bma()` results gained three components, `loglik`, `n_params` and `nobs`,
+  appended after the existing ones so that no name or position changes.
+  `best_models()` passes them to each model, together with the model's
+  position in the model space (`model`), and `print()` on a single model now
+  reports its log-likelihood.
 
 # badp 0.7.0
 

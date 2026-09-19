@@ -213,6 +213,9 @@ weighting_model_weights <- function(scaled_log_weight, weighting, n_params,
 #'   \item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
 #'   \item{weighting}{The approximation to the marginal likelihood used to weight the models.}
 #'   \item{eta}{The learning rate the weighting implies, or \code{NA} for \code{"uip"}, which alters the penalty rather than the rate.}
+#'   \item{loglik}{The maximized log-likelihood of every model, in the order of the model space.}
+#'   \item{n_params}{The number of estimated parameters of every model, in the order of the model space.}
+#'   \item{nobs}{The number of observations used in the estimation.}
 #' }
 #'
 #' @section Methods:
@@ -564,14 +567,17 @@ bma <- function(
            mb2016 = 1 / n_entities,
            nt     = 1 / (n_entities * n_periods),
            uip    = NA_real_,
-           user   = eta)
+           user   = eta),
+    as.numeric(like_table[1, ]),
+    as.integer(colSums(!is.na(model_space_params))),
+    as.integer(model_space$observations_num)
   )
   names(bma_list) <- c(
     "uniform_table", "random_table", "reg_names", "R",
     "num_of_models", "jointness_data", "best_models_data",
     "EMS", "size_priors", "PMPs", "model_priors", "dilution",
     "alphas", "betas_nonzero", "PMS_table", "omega",
-    "weighting", "eta"
+    "weighting", "eta", "loglik", "n_params", "nobs"
   )
   class(bma_list) <- "badp_bma"
 
