@@ -307,3 +307,118 @@ convergence <- function(x, ...) UseMethod("convergence")
 #' @rdname convergence
 #' @export
 convergence.badp_model_space <- function(x, ...) x$convergence
+
+
+#' Table of the Models in a Model Space
+#'
+#' Returns one row per model of the model space, describing which regressors
+#' the model includes and how well it fits. This is the direct way to rank or
+#' filter the estimated models, for example by their maximized log-likelihood,
+#' without reaching into the parameter and statistics matrices.
+#'
+#' A regressor counts as included in a model when its coefficient
+#' \code{beta_<name>} was estimated in that model. The lagged dependent
+#' variable enters every model and is not counted in \code{size}.
+#'
+#' The log-likelihood is the value maximized by \code{\link{optim_model_space}}.
+#' Unless the model space was estimated with \code{exact_value = TRUE}, it
+#' omits a constant common to all models, so that differences between models
+#' are exact while the level is not.
+#'
+#' @param x An object of class \code{badp_model_space}.
+#' @param sort_by Ordering of the rows: \code{"none"} (the default) keeps the
+#'   order in which the models are held in the model space, \code{"loglik"}
+#'   sorts by decreasing log-likelihood, and \code{"size"} by increasing number
+#'   of regressors, ties broken by decreasing log-likelihood.
+#' @param top Optional number of rows to return, taken after sorting.
+#' @param ... Arguments passed to methods.
+#'
+#' @return A data frame with one row per model and columns
+#' \describe{
+#'   \item{\code{model}}{Position of the model in the model space, the index
+#'     of its column in the parameter matrix.}
+#'   \item{\code{size}}{Number of regressors included.}
+#'   \item{\code{regressors}}{Names of the included regressors, separated by
+#'     commas, or \code{"(none)"} for the model with the lagged dependent
+#'     variable only.}
+#'   \item{\code{loglik}}{Maximized log-likelihood.}
+#'   \item{\code{converged}}{Logical, whether the optimization converged. Only
+#'     present when the model space records convergence diagnostics; see
+#'     \code{\link{convergence}}.}
+#' }
+#'
+#' @seealso \code{\link{optim_model_space}}, \code{\link{convergence}},
+#'   \code{\link{regressors}}, \code{\link{n_models}}
+#'
+#' @examples
+#' data(small_model_space)
+#'
+#' model_table(small_model_space)
+#'
+#' # the five best-fitting models
+#' model_table(small_model_space, sort_by = "loglik", top = 5)
+#'
+#' @export
+model_table <- function(x, ...) UseMethod("model_table")
+
+#' @rdname model_table
+#' @export
+model_table.badp_model_space <- function(x,
+                                         sort_by = c("none", "loglik", "size"),
+                                         top = NULL, ...) {
+  sort_by <- match.arg(sort_by)
+
+  inclusion <- model_inclusion(x)
+  reg <- colnames(inclusion)
+
+  out <- data.frame(
+    model      = seq_len(nrow(inclusion)),
+    size       = as.integer(rowSums(inclusion)),
+    regressors = apply(inclusion, 1, function(included) {
+      if (any(included)) paste(reg[included], collapse = ", ") else "(none)"
+    }),
+    loglik     = as.numeric(x$stats[1, ]),
+    stringsAsFactors = FALSE
+  )
+
+  if (!is.null(x$convergence)) {
+    out$converged <- as.numeric(x$convergence["converged", ]) == 1
+  }
+
+  ord <- switch(sort_by,
+    none   = out$model,
+    loglik = order(-out$loglik),
+    size   = order(out$size, -out$loglik)
+  )
+  out <- out[ord, , drop = FALSE]
+
+  if (!is.null(top)) {
+    out <- utils::head(out, top)
+  }
+
+  rownames(out) <- NULL
+  out
+}
+
+
+#' Regressor Inclusion Matrix of a Model Space
+#'
+#' @param x An object of class \code{badp_model_space}.
+#'
+#' @return A logical matrix with one row per model and one column per
+#'   regressor, \code{TRUE} where the regressor's coefficient was estimated.
+#'
+#' @keywords internal
+#' @noRd
+model_inclusion <- function(x) {
+  reg <- regressors(x)
+  rows <- match(paste0("beta_", reg), rownames(x$params))
+  if (anyNA(rows)) {
+    stop("The parameter matrix lacks the rows ",
+         paste0("beta_", reg[is.na(rows)], collapse = ", "), ".")
+  }
+  betas <- x$params[rows, , drop = FALSE]
+  inclusion <- t(!is.na(betas) & betas != 0)
+  dimnames(inclusion) <- list(NULL, reg)
+  inclusion
+}
