@@ -12,13 +12,13 @@ test_that("bma computes the badp_bma object and all its components", {
 
   bma_results <- bma(small_model_space, round= 3, dilution = 0)
 
-  expect_equal(length(bma_results), 18)
+  expect_equal(length(bma_results), 21)
   expect_identical(
     names(bma_results),
     c("uniform_table", "random_table", "reg_names", "R", "num_of_models",
       "jointness_data", "best_models_data", "EMS", "size_priors", "PMPs",
       "model_priors", "dilution", "alphas", "betas_nonzero", "PMS_table",
-      "omega", "weighting", "eta")
+      "omega", "weighting", "eta", "loglik", "n_params", "nobs")
   )
 
   R <- bma_results$R

@@ -62,7 +62,8 @@ best_models <- function(x, prior = "binomial", best = 5, round = 3) {
   ranking <- if (prior == "binomial") PMP_uniform else PMP_random
 
   Ranking <- cbind(ranking, info)
-  Ranking <- Ranking[order(Ranking[, 1], decreasing = TRUE), , drop = FALSE]
+  ordering <- order(Ranking[, 1], decreasing = TRUE)
+  Ranking <- Ranking[ordering, , drop = FALSE]
 
   models <- vector("list", best)
 
@@ -102,6 +103,11 @@ best_models <- function(x, prior = "binomial", best = 5, round = 3) {
         robust_se = robust_se,
         p_value = p_value,
         p_value_robust = p_value_robust,
+        model = ordering[i],
+        loglik = if (is.null(x$loglik)) NA_real_ else x$loglik[ordering[i]],
+        n_params = if (is.null(x$n_params)) NA_integer_ else
+          x$n_params[ordering[i]],
+        nobs = if (is.null(x$nobs)) NA_integer_ else x$nobs,
         digits = round
       ),
       class = "badp_model"
@@ -223,6 +229,10 @@ coef.badp_model <- function(object, se = FALSE, include_absent = FALSE,
 print.badp_model <- function(x, robust = FALSE, ...) {
   cat("Model No. ", x$rank, " of the ", x$prior, " ranking\n", sep = "")
   cat("Posterior model probability: ", round(x$pmp, x$digits), "\n", sep = "")
+  if (!is.null(x$loglik) && !is.na(x$loglik)) {
+    cat("Log-likelihood: ", round(x$loglik, x$digits),
+        " (df = ", x$n_params, ")\n", sep = "")
+  }
   cat("Regressors included: ",
       if (length(x$included)) paste(x$included, collapse = ", ") else "none",
       "\n\n", sep = "")
