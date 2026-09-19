@@ -422,3 +422,168 @@ model_inclusion <- function(x) {
   dimnames(inclusion) <- list(NULL, reg)
   inclusion
 }
+
+
+#' Estimated Parameters of a Model Space
+#'
+#' Returns the maximum likelihood estimates of the parameters of every model in
+#' the model space, or of a single model.
+#'
+#' Parameters not present in a model are \code{NA}. The rows are labelled as
+#' follows: \code{alpha} is the coefficient on the lagged dependent variable,
+#' \code{beta_<name>} the coefficient on regressor \code{<name>};
+#' \code{phi_0}, \code{err_var} and \code{dep_var_<t>} parametrize the
+#' variance of the dependent variable and its covariance with the initial
+#' condition; \code{phi_1_<name>} the covariance between the initial condition
+#' and the regressors; and \code{phis_<i>} and \code{psis_<i>} are the
+#' remaining covariance parameters of the regressors, numbered in the order in
+#' which \code{\link{sem_sigma_matrix}} consumes them.
+#'
+#' @param object An object of class \code{badp_model_space}.
+#' @param model Optional position of a single model, as reported in the
+#'   \code{model} column of \code{\link{model_table}}. By default all models
+#'   are returned.
+#' @param ... Further arguments, currently unused.
+#'
+#' @return Without \code{model}, a numeric matrix with one row per parameter
+#'   and one column per model, the columns named \code{model_1},
+#'   \code{model_2}, and so on. With \code{model}, a named numeric vector
+#'   holding the parameters estimated in that model.
+#'
+#' @seealso \code{\link{model_stats}}, \code{\link{model_table}},
+#'   \code{\link{optim_model_space}}
+#'
+#' @examples
+#' data(small_model_space)
+#'
+#' coef(small_model_space)[1:10, 1:4]
+#' coef(small_model_space, model = n_models(small_model_space))
+#'
+#' @export
+coef.badp_model_space <- function(object, model = NULL, ...) {
+  out <- object$params
+  rownames(out) <- model_space_param_names(object)
+  colnames(out) <- paste0("model_", seq_len(ncol(out)))
+
+  if (is.null(model)) return(out)
+
+  model <- check_model_index(model, ncol(out))
+  out <- out[, model]
+  out[!is.na(out)]
+}
+
+
+#' Statistics of the Models in a Model Space
+#'
+#' Returns the statistics computed for every model of the model space after
+#' the estimation: the maximized log-likelihood, the approximation to the
+#' marginal likelihood used to weight the models, and the conventional and
+#' robust standard errors of the coefficients, together with the diagnostics
+#' of the robust covariance.
+#'
+#' The rows are
+#' \describe{
+#'   \item{\code{loglik}}{The maximized log-likelihood; see also
+#'     \code{\link{logLik.badp_model_space}}.}
+#'   \item{\code{marg_lik}}{The approximation to the marginal likelihood used
+#'     by \code{\link{bma}} to weight the models,
+#'     \code{exp((loglik - (k/2) * log(N * T)) / N)}. It is not a BIC.}
+#'   \item{\code{se_<name>}}{The standard error of the coefficient on
+#'     \code{<name>}, from the observed information, for the lagged dependent
+#'     variable and each regressor. Zero when the regressor is not in the
+#'     model.}
+#'   \item{\code{robust_se_<name>}}{The corresponding robust (sandwich)
+#'     standard error.}
+#'   \item{\code{trace_HinvJ}, \code{n_params}, \code{rank_J}}{The trace of
+#'     \eqn{H^{-1} J}, the number of estimated parameters and the numerical
+#'     rank of \eqn{J}; see \code{\link{optim_model_space}}. Absent from model
+#'     spaces estimated before these were stored.}
+#' }
+#'
+#' @param x An object of class \code{badp_model_space}.
+#' @param ... Arguments passed to methods.
+#'
+#' @return A numeric matrix with the rows described above and one column per
+#'   model, the columns named \code{model_1}, \code{model_2}, and so on.
+#'
+#' @seealso \code{\link{coef.badp_model_space}}, \code{\link{model_table}},
+#'   \code{\link{logLik.badp_model_space}}
+#'
+#' @examples
+#' data(small_model_space)
+#'
+#' model_stats(small_model_space)[, 1:4]
+#' model_stats(small_model_space)["loglik", ]
+#'
+#' @export
+model_stats <- function(x, ...) UseMethod("model_stats")
+
+#' @rdname model_stats
+#' @export
+model_stats.badp_model_space <- function(x, ...) {
+  out <- x$stats
+  vars <- as.character(x$reg_names)
+  K <- length(vars)
+
+  row_names <- c("loglik", "marg_lik",
+                 paste0("se_", vars), paste0("robust_se_", vars))
+  extra <- nrow(out) - length(row_names)
+  row_names <- c(row_names,
+                 if (extra == 3L) {
+                   c("trace_HinvJ", "n_params", "rank_J")
+                 } else if (extra > 0L) {
+                   paste0("stat_", seq_len(extra))
+                 })
+
+  rownames(out) <- row_names[seq_len(nrow(out))]
+  colnames(out) <- paste0("model_", seq_len(ncol(out)))
+  out
+}
+
+
+#' Row Labels of the Parameter Matrix of a Model Space
+#'
+#' @param x An object of class \code{badp_model_space}.
+#'
+#' @return A character vector with one label per row of \code{x$params}.
+#'
+#' @keywords internal
+#' @noRd
+model_space_param_names <- function(x) {
+  labels <- rownames(x$params)
+  if (is.null(labels)) labels <- rep("", nrow(x$params))
+
+  unnamed <- which(labels == "")
+  if (length(unnamed) == 0L) return(labels)
+
+  R <- length(regressors(x))
+  n_periods <- sum(grepl("^dep_var_", labels))
+  n_phis <- R * (n_periods - 1)
+  n_psis <- R * n_periods * (n_periods - 1) / 2
+
+  if (length(unnamed) == n_phis + n_psis) {
+    labels[unnamed] <- c(paste0("phis_", seq_len(n_phis)),
+                         paste0("psis_", seq_len(n_psis)))
+  } else {
+    labels[unnamed] <- paste0("param_", unnamed)
+  }
+  labels
+}
+
+
+#' Validate the Position of a Model
+#'
+#' @param model Candidate position.
+#' @param n Number of models.
+#'
+#' @return The position as an integer; an error otherwise.
+#'
+#' @keywords internal
+#' @noRd
+check_model_index <- function(model, n) {
+  if (length(model) != 1L || is.na(model) || !is.numeric(model) ||
+      model != round(model) || model < 1 || model > n) {
+    stop("'model' must be a single integer between 1 and ", n, ".")
+  }
+  as.integer(model)
+}
