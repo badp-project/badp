@@ -16,7 +16,7 @@ model_stats(x, ...)
 }
 \value{
 A numeric matrix with the rows described above and one column per
-  model, the columns named \code{model_1}, \code{model_2}, and so on.
+model, the columns named \code{model_1}, \code{model_2}, and so on.
 }
 \description{
 Returns the statistics computed for every model of the model space after
@@ -28,21 +28,21 @@ of the robust covariance.
 \details{
 The rows are
 \describe{
-  \item{\code{loglik}}{The maximized log-likelihood; see also
-    \code{\link{logLik.badp_model_space}}.}
-  \item{\code{marg_lik}}{The approximation to the marginal likelihood used
-    by \code{\link{bma}} to weight the models,
-    \code{exp((loglik - (k/2) * log(N * T)) / N)}. It is not a BIC.}
-  \item{\code{se_<name>}}{The standard error of the coefficient on
-    \code{<name>}, from the observed information, for the lagged dependent
-    variable and each regressor. Zero when the regressor is not in the
-    model.}
-  \item{\code{robust_se_<name>}}{The corresponding robust (sandwich)
-    standard error.}
-  \item{\code{trace_HinvJ}, \code{n_params}, \code{rank_J}}{The trace of
-    \eqn{H^{-1} J}, the number of estimated parameters and the numerical
-    rank of \eqn{J}; see \code{\link{optim_model_space}}. Absent from model
-    spaces estimated before these were stored.}
+\item{\code{loglik}}{The maximized log-likelihood; see also
+\code{\link{logLik.badp_model_space}}.}
+\item{\code{marg_lik}}{The approximation to the marginal likelihood used
+by \code{\link{bma}} to weight the models,
+\code{exp((loglik - (k/2) * log(N * T)) / N)}. It is not a BIC.}
+\item{\code{se_<name>}}{The standard error of the coefficient on
+\code{<name>}, from the observed information, for the lagged dependent
+variable and each regressor. Zero when the regressor is not in the
+model.}
+\item{\code{robust_se_<name>}}{The corresponding robust (sandwich)
+standard error.}
+\item{\code{trace_HinvJ}, \code{n_params}, \code{rank_J}}{The trace of
+\eqn{H^{-1} J}, the number of estimated parameters and the numerical
+rank of \eqn{J}; see \code{\link{optim_model_space}}. Absent from model
+spaces estimated before these were stored.}
 }
 }
 \examples{
@@ -54,5 +54,5 @@ model_stats(small_model_space)["loglik", ]
 }
 \seealso{
 \code{\link{coef.badp_model_space}}, \code{\link{model_table}},
-  \code{\link{logLik.badp_model_space}}
+\code{\link{logLik.badp_model_space}}
 }
