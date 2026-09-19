@@ -1,3 +1,23 @@
+# 0.8.0
+
+## Update
+
+This is a minor update of the CRAN version 0.7.0, made in response to the
+review of the manuscript submitted to the Journal of Statistical Software. All
+changes are additive and listed in NEWS.md:
+
+* New accessor `model_table()` returns one row per model of a model space.
+* New `coef()` and `model_stats()` methods return the parameters and the
+  statistics of a model space with labelled rows.
+* New `logLik()` methods for model spaces and for the models returned by
+  `best_models()` return standard `"logLik"` objects.
+* The object returned by `bma()` gained three components, appended after the
+  existing ones.
+
+## R CMD check results
+
+TODO: fill in from the actual run (R version, platform, errors/warnings/notes).
+
 # 0.7.0
 
 ## Update

@@ -21,7 +21,7 @@ the \code{model} column of \code{\link{model_table}}. A single integer.}
 }
 \value{
 An object of class \code{"logLik"}: a number with attributes
-  \code{df} and \code{nobs}.
+\code{df} and \code{nobs}.
 }
 \description{
 Returns the maximized log-likelihood of a model as an object of class
@@ -60,5 +60,5 @@ logLik(best[[1]])
 }
 \seealso{
 \code{\link{model_table}}, \code{\link{best_models}},
-  \code{\link[stats]{logLik}}
+\code{\link[stats]{logLik}}
 }

@@ -24,16 +24,16 @@ of regressors, ties broken by decreasing log-likelihood.}
 \value{
 A data frame with one row per model and columns
 \describe{
-  \item{\code{model}}{Position of the model in the model space, the index
-    of its column in the parameter matrix.}
-  \item{\code{size}}{Number of regressors included.}
-  \item{\code{regressors}}{Names of the included regressors, separated by
-    commas, or \code{"(none)"} for the model with the lagged dependent
-    variable only.}
-  \item{\code{loglik}}{Maximized log-likelihood.}
-  \item{\code{converged}}{Logical, whether the optimization converged. Only
-    present when the model space records convergence diagnostics; see
-    \code{\link{convergence}}.}
+\item{\code{model}}{Position of the model in the model space, the index
+of its column in the parameter matrix.}
+\item{\code{size}}{Number of regressors included.}
+\item{\code{regressors}}{Names of the included regressors, separated by
+commas, or \code{"(none)"} for the model with the lagged dependent
+variable only.}
+\item{\code{loglik}}{Maximized log-likelihood.}
+\item{\code{converged}}{Logical, whether the optimization converged. Only
+present when the model space records convergence diagnostics; see
+\code{\link{convergence}}.}
 }
 }
 \description{
@@ -63,5 +63,5 @@ model_table(small_model_space, sort_by = "loglik", top = 5)
 }
 \seealso{
 \code{\link{optim_model_space}}, \code{\link{convergence}},
-  \code{\link{regressors}}, \code{\link{n_models}}
+\code{\link{regressors}}, \code{\link{n_models}}
 }

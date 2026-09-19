@@ -1,4 +1,9 @@
-# badp (development version)
+# badp 0.8.0
+
+This release completes the accessor interface in response to the second review
+of the manuscript submitted to the Journal of Statistical Software. All changes
+are additive: no existing function, argument, component name or position was
+changed or removed.
 
 ## Extracting results from a model space
 

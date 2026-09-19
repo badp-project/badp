@@ -17,9 +17,9 @@ are returned.}
 }
 \value{
 Without \code{model}, a numeric matrix with one row per parameter
-  and one column per model, the columns named \code{model_1},
-  \code{model_2}, and so on. With \code{model}, a named numeric vector
-  holding the parameters estimated in that model.
+and one column per model, the columns named \code{model_1},
+\code{model_2}, and so on. With \code{model}, a named numeric vector
+holding the parameters estimated in that model.
 }
 \description{
 Returns the maximum likelihood estimates of the parameters of every model in
@@ -45,5 +45,5 @@ coef(small_model_space, model = n_models(small_model_space))
 }
 \seealso{
 \code{\link{model_stats}}, \code{\link{model_table}},
-  \code{\link{optim_model_space}}
+\code{\link{optim_model_space}}
 }
