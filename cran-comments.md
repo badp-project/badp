@@ -16,7 +16,25 @@ changes are additive and listed in NEWS.md:
 
 ## R CMD check results
 
-TODO: fill in from the actual run (R version, platform, errors/warnings/notes).
+Local check with `R CMD check --as-cran`, including the CRAN incoming checks
+and the PDF manual: R 4.6.1 (2026-06-24), aarch64-apple-darwin23, macOS
+Sequoia 15.7.9.
+
+0 errors | 0 warnings | 2 notes
+
+* checking CRAN incoming feasibility ... NOTE
+  Days since last update: 4
+
+  0.8.0 answers a second round of review of the Journal of Statistical
+  Software manuscript, which follows the interface of the package; the
+  changes are additive.
+
+* checking HTML version of manual ... NOTE
+  Skipping checking HTML validation: 'tidy' doesn't look like recent enough
+  HTML Tidy.
+
+  This comes from the local environment: macOS ships an HTML Tidy from 2006.
+  It does not concern the package.
 
 # 0.7.0
 
