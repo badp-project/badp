@@ -1,3 +1,14 @@
+# badp (development version)
+
+## Extracting results from a model space
+
+* New accessor `model_table()` returns one row per model of a
+  `badp_model_space`: the included regressors, their number, the maximized
+  log-likelihood and the convergence flag. `sort_by` orders the models by
+  log-likelihood or size and `top` keeps the first rows, so that ranking the
+  estimated models no longer requires indexing the parameter and statistics
+  matrices.
+
 # badp 0.7.0
 
 This release reworks the user-facing interface in response to the review of the

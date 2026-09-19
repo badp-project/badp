@@ -78,6 +78,7 @@ reference:
       - model_size_table
       - regressors
       - n_models
+      - model_table
       - weighting
       - convergence
 
