@@ -51,12 +51,7 @@ logLik.badp_model_space <- function(object, model, ...) {
     stop("Specify the model by its position in the model space, for example ",
          "logLik(x, model = 1); model_table(x) lists the positions.")
   }
-  n <- ncol(object$params)
-  if (length(model) != 1L || is.na(model) || model != round(model) ||
-      model < 1 || model > n) {
-    stop("'model' must be a single integer between 1 and ", n, ".")
-  }
-  model <- as.integer(model)
+  model <- check_model_index(model, ncol(object$params))
 
   structure(
     as.numeric(object$stats[1L, model]),

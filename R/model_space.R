@@ -1273,6 +1273,17 @@ compute_model_space_stats <- function(df, dep_var_col, timestamp_col, entity_col
 #' Objects of class \code{badp_model_space} have the following methods available:
 #' \itemize{
 #'   \item \code{\link{print.badp_model_space}} - Display model space information
+#'   \item \code{\link{summary.badp_model_space}} - Dimensions, variables and
+#'     diagnostics of the model space
+#'   \item \code{\link{model_table}} - One row per model: regressors, size,
+#'     log-likelihood and convergence
+#'   \item \code{\link{coef.badp_model_space}} - Estimated parameters
+#'   \item \code{\link{model_stats}} - Log-likelihoods, standard errors and
+#'     other statistics of every model
+#'   \item \code{\link{logLik.badp_model_space}} - Log-likelihood of one model
+#'     as a \code{"logLik"} object
+#'   \item \code{\link{regressors}}, \code{\link{n_models}},
+#'     \code{\link{convergence}} - Further accessors
 #' }
 #'
 #' @examples

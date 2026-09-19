@@ -8,6 +8,12 @@
   log-likelihood or size and `top` keeps the first rows, so that ranking the
   estimated models no longer requires indexing the parameter and statistics
   matrices.
+* New accessors `coef()` and `model_stats()` for `badp_model_space`. `coef()`
+  returns the parameter matrix with every row labelled and the columns named
+  `model_1`, `model_2`, ..., or the parameters of one model with
+  `model = j`. `model_stats()` returns the statistics matrix with named rows
+  (`loglik`, `marg_lik`, `se_<name>`, `robust_se_<name>`, `trace_HinvJ`,
+  `n_params`, `rank_J`), which were previously identified only by position.
 * New `logLik()` methods for `badp_model_space` (one model, selected by its
   position) and for the individual models returned by `best_models()`. They
   return standard `"logLik"` objects with `df` and `nobs` attributes, so that
