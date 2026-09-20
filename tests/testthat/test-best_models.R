@@ -194,3 +194,24 @@ test_that("the methods expected by the JSS review are registered", {
     )
   }
 })
+
+
+test_that("a coefficient estimated at exactly zero is kept in a model", {
+
+  # Absent parameters are stored as zero; which ones are absent is decided by
+  # the model's inclusion vector, so an estimate that happens to be exactly
+  # zero must survive as an estimate rather than become NA.
+  results <- bma(small_model_space, round = 3, dilution = 0)
+
+  zeroed <- results
+  best_row <- which.max(zeroed$best_models_data[, ncol(zeroed$best_models_data) - 1])
+  zeroed$best_models_data[best_row, "ish_coef"] <- 0
+
+  model <- best_models(zeroed, best = 1)[[1]]
+
+  expect_true(model$inclusion[["ish"]])
+  expect_false(is.na(model$coefficients[["ish"]]))
+  expect_equal(unname(model$coefficients[["ish"]]), 0)
+  expect_equal(names(model$coefficients)[is.na(model$coefficients)],
+               names(model$inclusion)[!model$inclusion])
+})

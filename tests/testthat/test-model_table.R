@@ -52,3 +52,21 @@ test_that("model_table works without convergence diagnostics", {
   ms$convergence <- NULL
   expect_false("converged" %in% names(model_table(ms)))
 })
+
+
+test_that("a coefficient estimated at exactly zero counts as included", {
+
+  # NA marks a parameter the model excludes; zero is an estimate like any
+  # other, and a maximum that happens to land on it must not turn the
+  # regressor into an excluded one.
+  ms <- small_model_space
+  full <- n_models(ms)
+  ms$params["beta_ish", full] <- 0
+
+  tab <- model_table(ms)
+
+  expect_equal(tab$size[full], length(regressors(ms)))
+  expect_true(grepl("ish", tab$regressors[full]))
+  expect_equal(tab$size, unname(colSums(!is.na(
+    ms$params[paste0("beta_", regressors(ms)), , drop = FALSE]))))
+})

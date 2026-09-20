@@ -44,8 +44,10 @@ without reaching into the parameter and statistics matrices.
 }
 \details{
 A regressor counts as included in a model when its coefficient
-\code{beta_<name>} was estimated in that model. The lagged dependent
-variable enters every model and is not counted in \code{size}.
+\code{beta_<name>} was estimated in that model, that is, when it is not
+\code{NA}; a coefficient estimated at exactly zero is an estimate like any
+other and counts as included. The lagged dependent variable enters every
+model and is not counted in \code{size}.
 
 The log-likelihood is the exact log-likelihood of the model evaluated at the
 estimates, including all constants, whatever \code{exact_value} was used

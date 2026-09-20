@@ -77,9 +77,14 @@ best_models <- function(x, prior = "binomial", best = 5, round = 3) {
     se <- row[(R + K + 2):(R + 2 * K + 1)]
     robust_se <- row[(R + 2 * K + 2):(R + 3 * K + 1)]
 
-    beta[beta == 0] <- NA
-    se[se == 0] <- NA
-    robust_se[robust_se == 0] <- NA
+    # Parameters absent from the model are stored as zero in
+    # best_models_data; which they are is given by the inclusion vector, not
+    # by the value, so that a coefficient estimated at exactly zero is kept.
+    # The lagged dependent variable enters every model.
+    absent <- !c(TRUE, inclusion)
+    beta[absent] <- NA
+    se[absent] <- NA
+    robust_se[absent] <- NA
 
     names(beta) <- names(se) <- names(robust_se) <- reg_names
 
