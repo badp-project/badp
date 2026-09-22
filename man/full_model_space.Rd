@@ -3,21 +3,27 @@
 \docType{data}
 \name{full_model_space}
 \alias{full_model_space}
-\title{Example output of \code{\link{optim_model_space}}}
+\title{Example Model Space}
 \format{
-A list with 5 elements:
+An object of class \code{badp_model_space}:
 \describe{
 \item{params}{
-A numeric matrix with 40 rows and 512 columns, containing parameter
-values for the full model space. Each column represents a different model.
+A numeric matrix with 106 rows and 512 columns (corresponding to
+\eqn{2^9 = 512} models), containing parameter values for the full model
+space. Each column represents a different model. Entries are \code{NA}
+for parameters absent from a given model.
 }
 \item{stats}{
 A numeric matrix of statistics computed by
-\code{\link{compute_model_space_stats}} based on \code{params}.
-Row 1 contains model likelihoods. Row 2 contains a quantity proportional
-to \code{0.5 * BIC} (cf. Raftery, Bayesian Model Selection in Social Research,
-Eq. 19). Rows 3--7 contain standard deviations, and rows 8--12 contain
-robust standard deviations.
+\code{\link{compute_model_space_stats}} based on \code{params}, with one
+column per model. Row 1 holds the maximized log-likelihood. Row 2 holds
+the marginal likelihood approximation used to weight the models,
+\code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+There follow \code{K} rows of standard deviations and \code{K} rows of
+robust standard deviations, where \code{K} is the number of regressors
+including the lagged dependent variable. The final three rows hold
+\code{tr(H^-1 J)}, the dimension of the parameter vector and the
+numerical rank of \code{J}; see \code{\link{score_rank}}.
 }
 \item{reg_names}{
 A character vector with the names of the variables.
@@ -28,13 +34,20 @@ The total number of observations in the panel (292).
 \item{df}{
 The data frame used in the analysis.
 }
+\item{is_nested}{
+A logical indicating whether the model space uses nested specifications.
+}
+\item{convergence}{
+A matrix of per-model convergence diagnostics; see
+\code{\link{optim_model_space}}.
+}
 }
 }
 \usage{
 full_model_space
 }
 \description{
-A list created with \code{\link{optim_model_space}} using the
+A badp_model_space object created with \code{\link{optim_model_space}} using the
 \code{\link{economic_growth}} dataset.
 }
 \keyword{datasets}

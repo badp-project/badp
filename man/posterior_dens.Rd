@@ -2,9 +2,12 @@
 % Please edit documentation in R/posterior_dens.R
 \name{posterior_dens}
 \alias{posterior_dens}
-\title{Graphs of the posterior densities of the coefficients}
+\title{Kernel Densities of the Coefficients}
+\usage{
+posterior_dens(x, prior = "binomial", SE = "standard")
+}
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{prior}{Parameter indicating which model prior should be used for calculations:
 \enumerate{
@@ -22,7 +25,7 @@
 A list with the graphs of the posterior densities of coefficients for all the considered regressors.
 }
 \description{
-This function draws graphs of the posterior densities of all the coeffcients of interest.
+This function draws graphs of the posterior densities of all the coefficients of interest.
 }
 \examples{
 \donttest{

@@ -3,14 +3,14 @@
 \docType{data}
 \name{full_bma_results}
 \alias{full_bma_results}
-\title{Example output of the bma function}
+\title{Example Bayesian Model Averaging Results}
 \format{
-An object of class \code{list} of length 16.
+An object of class \code{badp_bma}
 }
 \usage{
 full_bma_results
 }
 \description{
-A list with multiple elements summarising the BMA analysis
+A badp_bma object summarising the BMA analysis
 }
 \keyword{datasets}

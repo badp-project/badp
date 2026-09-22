@@ -12,12 +12,13 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+options(useFancyQuotes = FALSE)
 ```
 
 # badp: Bayesian Averaging for Dynamic Panels <img src="man/figures/logo.svg" align="right" height="139" alt="badp hex sticker" />
 
 [![CRAN status badge](http://www.r-pkg.org/badges/version/badp)](https://CRAN.R-project.org/package=badp)
-[![License](https://img.shields.io/badge/license-GPL%20(%3E%3D2)-blue.svg)](https://cran.r-project.org/web/licenses/GPL-2)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://cran.r-project.org/web/licenses/MIT)
 [![R-CMD-check](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml/badge.svg)](https://github.com/badp-project/badp/actions/workflows/R-CMD-check-main.yaml)
 
 
@@ -37,6 +38,9 @@ The package features:
 - Tools to **estimate** the entire model space (via maximum likelihood)
 and calculate **Bayesian information criterion (BIC)** for each variant.
 - Flexible **model priors** (binomial, binomial-beta, optional dilution prior).
+- A selectable **learning rate** for the model weights (`weighting` and `eta`
+in `bma()`), so the sensitivity of a conclusion to the marginal likelihood
+approximation can be checked without re-estimating the model space.
 - Comprehensive **BMA statistics**, including posterior inclusion probabilities
 (PIPs), posterior means, and posterior standard deviations (regular or robust).
 - Functions to **visualize** prior and posterior model probabilities.
@@ -110,16 +114,29 @@ data_prepared <- badp::economic_growth[, 1:5] %>%
 
 The function `optim_model_space()` estimates all possible models
 (each possible subset of regressors) via maximum likelihood,
-storing the results in a list object.
+returning an object of class `badp_model_space`.
+
+**Note:** with strongly correlated regressors, both the estimation and the
+subsequent statistics step may emit warnings (e.g. `NaNs produced`, or a
+message that some models did not converge). The exact reason is
+non-trivial: it is typically connected to degenerate behavior of the
+likelihood function for some of the models, and understanding it for a
+particular dataset requires inspecting the data (e.g. correlations between
+regressors), the behavior of the likelihood, and the per-model
+per-model diagnostics returned by `convergence()`. A good
+starting point is to check which models are affected and how much
+posterior model probability they carry - if it is negligible, the
+warnings can usually be treated as expected behavior.
+
 For small to moderately sized datasets:
 
 ```{r}
 model_space <- badp::optim_model_space(
   df             = data_prepared,
-  dep_var_col    = gdp,      # Dependent variable
+  dep_var_col    = gdp,
   timestamp_col  = year,
   entity_col     = country,
-  init_value     = 0.5,
+  init_value     = function(n) runif(n, -10, 10)
 )
 ```
 
@@ -142,7 +159,7 @@ model_space <- badp::optim_model_space(
   timestamp_col  = year,
   entity_col     = country,
   dep_var_col    = gdp,
-  init_value     = 0.5,
+  init_value     = function(n) runif(n, -10, 10),
   cl             = cl
 )
 
@@ -161,12 +178,15 @@ under the **binomial** and **binomial-beta** model priors:
 ```{r}
 bma_results <- badp::bma(model_space, round = 3)
 
-# Inspect the BMA summary (binomial prior results first, binomial-beta second)
-bma_results[[1]]  # BMA stats under binomial prior
-bma_results[[2]]  # BMA stats under binomial-beta prior
+# BMA statistics under each model prior
+badp::bma_table(bma_results)
+badp::bma_table(bma_results, prior = "beta")
 
-# Posterior model sizes:
-bma_results[[16]]
+# Posterior inclusion probabilities on their own
+sort(badp::pip(bma_results), decreasing = TRUE)
+
+# Prior and posterior model sizes
+badp::model_size_table(bma_results)
 ```
 
 Key columns in the BMA output include:
@@ -184,11 +204,13 @@ ranking models from best to worst.
 is distributed across different model sizes.
 
 ```{r}
-# Plot prior vs. posterior model probabilities
-pmp_graphs <- badp::model_pmp(bma_results, top = 3)  # Show top 3 models
+# Prior vs. posterior model probabilities, three best models.
+# `type = "histogram"` draws bars, which read well for a handful of models;
+# the default `"line"` is better once there are many.
+badp::model_pmp(bma_results, top = 3, type = "histogram")
 
-# Plot probabilities by model size
-size_graphs <- badp::model_sizes(bma_results)
+# Probabilities by model size
+badp::model_sizes(bma_results)
 ```
 
 ### Selecting the Best Models
@@ -197,13 +219,16 @@ Use `best_models()` to extract specific information about the top-ranked models:
 
 ```{r}
 # Retrieve the 5 best models according to binomial prior
-top3_binom <- badp::best_models(bma_results, criterion = 1, best = 3)
+top3_binom <- badp::best_models(bma_results, prior = "binomial", best = 3)
 
-# Print the inclusion matrix for each of the top 3 models
+# Which regressors enter each of the three models
+top3_binom
+
+# Estimates for all three, with robust standard errors
+summary(top3_binom, robust = TRUE)
+
+# A single model on its own
 top3_binom[[1]]
-
-# Retrieve robust standard errors in a knit-friendly table
-top3_binom[[6]]
 ```
 
 ### Jointness Measures
@@ -246,7 +271,7 @@ model_space <- badp::optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value     = 0.5,
+  init_value    = function(n) rep(0.5, n),
 )
 
 # 3) Run Bayesian Model Averaging
@@ -256,12 +281,12 @@ bma_obj <- badp::bma(
 
 # 4) Inspect the top 3 models under binomial prior
 best_3 <- badp::best_models(
-  bma_list = bma_obj,
-  criterion = 1,
+  x = bma_obj,
+  prior = "binomial",
   best = 3
 )
-best_3[[1]]  # Inclusion table
-best_3[[2]]  # Coefficients & standard errors
+best_3                      # inclusion table for the three models
+coef(best_3[[1]], se = TRUE)  # estimates for the best one
 ```
 
 
@@ -288,10 +313,10 @@ With properly configured system environment everything should work fine.
 
 <div id="references"></div>
 
-- Moral-Benito, E. (2016). "Model Averaging in Economics: An Overview." *Journal of Economic Surveys*.
+- Moral-Benito, E. (2016). "Growth Empirics in Panel Data Under Model Uncertainty and Weak Exogeneity." *Journal of Applied Econometrics*.
 - Ley, E. and Steel, M. F. J. (2007). "Jointness in Bayesian Variable Selection with Applications to Growth Regression." *Journal of Macroeconomics*.
 - Doppelhofer, G. and Weeks, M. (2009). "Jointness of Growth Determinants." *Journal of Applied Econometrics*.
-- Hofmarcher, P., Crespo Cuaresma, J., Huber, F., and Moser, M. (2018). "Forecasting with Bayesian Model Averaging: New Classical and Bayesian Perspectives." *Journal of Applied Econometrics*.
+- Hofmarcher, P., Crespo Cuaresma, J., Grün, B., Humer, S., and Moser, M. (2018). "Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum." *Journal of Macroeconomics*.
 
 (Additional references related to the methodology can be found in the package vignette.)
 
@@ -303,7 +328,7 @@ Feel free to open an issue or pull request on
 
 ## License
 
-This package is distributed under the GPL (\(\geq 2\)) license.
+This package is distributed under the MIT license.
 See the [LICENSE](LICENSE) file for details.
 
 ---

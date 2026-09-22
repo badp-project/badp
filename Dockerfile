@@ -1,6 +1,8 @@
 FROM rocker/r-ver:4.5.1
 
-# Install system libraries needed for R package compilation
+# Install system libraries. The package itself contains no compiled code, but
+# a toolchain is still needed to build dependencies (notably TMB/RTMB) from
+# source, and texlive is needed for the vignette.
 RUN apt-get update && apt-get install -y \
     build-essential \
     libcurl4-openssl-dev \
@@ -35,7 +37,7 @@ COPY . /package
 RUN Rscript -e "renv::restore(confirm = FALSE)"
 
 # Install additional R packages required for the package check
-RUN R -e "install.packages(c('rmarkdown', 'spelling', 'testthat', 'RcppArmadillo'), repos = 'https://cloud.r-project.org')"
+RUN R -e "install.packages(c('rmarkdown', 'spelling', 'testthat'), repos = 'https://cloud.r-project.org')"
 
 # Build the R package
 RUN R CMD build --compact-vignettes=both . && \

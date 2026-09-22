@@ -2,9 +2,20 @@
 % Please edit documentation in R/coef_hist.R
 \name{coef_hist}
 \alias{coef_hist}
-\title{Graphs of the distribution of the coefficients over the model space}
+\title{Histograms of the Coefficients over the Model Space}
+\usage{
+coef_hist(
+  x,
+  weight = NULL,
+  bin_method = c("FD", "SC", "vec"),
+  bin_widths = NULL,
+  use_bin_count = 0,
+  bin_counts = NULL,
+  use_kernel = 0
+)
+}
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
 \item{weight}{Parameter indicating whether the coefficients should be weighted by posterior model probabilities:
 \enumerate{
@@ -13,30 +24,30 @@
 \item "beta" - using posterior model probabilities based on binomial-beta model prior
 }}
 
-\item{BW}{Parameter indicating what method should be chosen to find bin widths for the histograms: \cr
-\enumerate{
-\item "FD" Freedman-Diaconis method \cr
-\item "SC" Scott method \cr
-\item "vec" user specified bin widths provided through a vector (parameter: binW)
-}}
+\item{bin_method}{Character string specifying the method for bin widths (default: \code{"FD"}). One of: \cr
+\code{"FD"} - Freedman-Diaconis method; \cr
+\code{"SC"} - Scott method; \cr
+\code{"vec"} - user specified bin widths provided through a vector (parameter: \code{bin_widths}).}
 
-\item{binW}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BW="vec".}
+\item{bin_widths}{A vector with bin widths to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors plus one for the lagged dependent variable. The vector with bin widths is used only if parameter \code{bin_method = "vec"}.}
 
-\item{BN}{Parameter taking the values (default: BN = 0): \cr
-1 - the histogram will be build based on the number of bins specified by the user through parameter num. If BN=1, the function ignores parameters BW. \cr
-0 - the histogram will be build in line with parameter BW}
+\item{use_bin_count}{Parameter taking the values (default: \code{use_bin_count = 0}): \cr
+1 - the histogram will be built based on the number of bins specified by the user through parameter \code{bin_counts}. If \code{use_bin_count = 1}, the function ignores parameter \code{bin_method}. \cr
+0 - the histogram will be built in line with parameter \code{bin_method}.}
 
-\item{num}{A vector with the numbers of bins used to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors. The vector with bin widths is used only if parameter BN=1.}
+\item{bin_counts}{A vector with the numbers of bins to be used to construct histograms for the regressors. The vector must be of the size equal to total number of regressors plus one for the lagged dependent variable. The vector with bin counts is used only if parameter \code{use_bin_count = 1}.}
 
-\item{kernel}{A parameter taking the values (default: kernel = 0):\cr
-1 - the function will build graphs using kernel density for the distribution of coefficients (with kernel=1, the function ignores parameters BW and BN) \cr
+\item{use_kernel}{A parameter taking the values (default: \code{use_kernel = 0}):\cr
+1 - the function will build graphs using kernel density for the distribution of coefficients (with \code{use_kernel = 1}, the function ignores parameters \code{bin_method} and \code{use_bin_count}) \cr
 0 - the function will build regular histogram density for the distribution of coefficients}
 }
 \value{
-A list with the graphs of the distribution of coefficients for all the considered regressors.
+A list with the graphs of the distribution of coefficients for all the considered regressors and the lagged dependent variable.
 }
 \description{
-This function draws graphs of the distribution (in the form of histogram or kernel density) of the coefficients for all the considered regressors over the part of the model space that includes this regressors (half of the model space).
+This function draws graphs of the distribution (in the form of histogram or kernel density) of
+the coefficients for all the considered regressors over the part of the model space that includes
+these regressors (half of the model space).
 }
 \examples{
 \donttest{
@@ -58,6 +69,6 @@ bma_results <- bma(
   dilution    = 0
 )
 
-coef_plots <- coef_hist(bma_results, kernel = 1)
+coef_plots <- coef_hist(bma_results, use_kernel = 1)
 }
 }

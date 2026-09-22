@@ -1,6 +1,6 @@
 Package: badp
 Title: Bayesian Averaging for Dynamic Panels
-Version: 0.4.0.1
+Version: 0.7.0
 Authors@R:
     c(person(given = "Krzysztof",
            family = "Beck",
@@ -17,12 +17,16 @@ Authors@R:
       ),
       person(given = "Mariusz",
            family = "Szczepanczyk",
-           role = "aut"
+           role = "aut",
+           email = "m@mariusz.sh"
       ),
       person(given = "Mateusz",
            family = "Wyszynski",
            role = "aut",
            email = "mat.wyszynski@gmail.com"
+      ),
+      person(given = "badp authors",
+           role = "cph"
       ))
 Description: Implements Bayesian model averaging for dynamic panels with weakly
     exogenous regressors as described in the paper by
@@ -35,8 +39,8 @@ BugReports: https://github.com/badp-project/badp/issues
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Suggests:
+    knitr,
     pkgdown,
     rmarkdown,
     spelling,
@@ -47,23 +51,19 @@ Imports:
     ggplot2,
     grid,
     gridExtra,
-    knitr,
     magrittr,
-    optimbase,
     parallel,
+    patchwork (>= 1.1.0),
     pbapply,
-    Rcpp,
-    RcppArmadillo,
     rje,
     rlang,
-    rootSolve,
+    RTMB (>= 1.6),
     stats,
+    tibble,
     tidyr,
     tidyselect
-LinkingTo:
-    Rcpp,
-    RcppArmadillo
 VignetteBuilder: knitr
 Depends:
-    R (>= 3.5)
+    R (>= 4.4)
 Language: en-US
+Config/roxygen2/version: 8.1.0

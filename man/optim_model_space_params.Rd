@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{optim_model_space_params}
 \alias{optim_model_space_params}
-\title{Finds MLE parameters for each model in the given model space}
+\title{Maximum Likelihood Parameters for Every Model in the Model Space}
 \usage{
 optim_model_space_params(
   df,
@@ -10,10 +10,14 @@ optim_model_space_params(
   entity_col,
   dep_var_col,
   init_value,
-  nested,
+  nested = TRUE,
   exact_value = FALSE,
   cl = NULL,
-  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)
+  control = list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05),
+  max_restarts = 5,
+  restart_tol = 0.001,
+  max_reoptimizations = 5,
+  max_init_attempts = 100
 )
 }
 \arguments{
@@ -25,8 +29,15 @@ optim_model_space_params(
 
 \item{dep_var_col}{Column with the dependent variable.}
 
-\item{init_value}{The value with which the model space will be initialized.
-This will be the starting point for the numerical optimization.}
+\item{init_value}{Function of one argument \code{n} returning \code{n}
+starting values for the numerical optimization (e.g.
+\code{function(n) runif(n, 0.1, 1)}). It is called separately for every
+model, so every model gets its own starting point; with a random generator
+this turns the estimation into a randomized multi-start experiment. A
+single number is also accepted and is used as the starting value for every
+parameter, so that \code{init_value = 0.5} is equivalent to
+\code{function(n) rep(0.5, n)}. Starting values must be non-zero, because
+zeros encode excluded parameters.}
 
 \item{nested}{Logical. If \code{TRUE} (default), compute approximate standard
 deviations using the nested-model approach via
@@ -44,14 +55,91 @@ cluster for parallel processing. If \code{NULL} (the default),
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
-\code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+\code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+
+\item{max_restarts}{Maximum number of times the BFGS optimization is
+restarted from its previous solution for a single model. A restart resets
+the internal curvature approximation of BFGS, which often makes further
+progress on ill-conditioned likelihood ridges where a single run stalls.
+Default is \code{5}.}
+
+\item{restart_tol}{Log-likelihood improvement between restarts below which
+the optimization is considered converged. Improvements of this size are
+immaterial for posterior model probabilities. Default is \code{1e-3}.}
+
+\item{max_reoptimizations}{Maximum number of times a model is re-optimized
+from a fresh starting point drawn from \code{init_value}, when the solution
+reached turns out to be one no standard errors can be computed from. BFGS
+stops wherever the gradient vanishes, which need not be a maximum, and from
+a randomly drawn starting point a model occasionally ends up in a
+degenerate region instead - hundreds of log-likelihood units below its
+maximum, with an observed information matrix so rank-deficient that
+inverting it into standard errors fails with \sQuote{system is
+computationally singular}. Such a solution is therefore discarded and the
+whole optimization repeated from a new starting point. A model whose every
+attempt ends this way keeps the likeliest of them and is reported with
+\code{converged = 0}; no error is raised, so a single model cannot bring
+down the estimation of the whole model space. Default is \code{5}.}
+
+\item{max_init_attempts}{Maximum number of starting points drawn from
+\code{init_value} for a single model. Not every parameter vector is a
+usable starting point: at some of them the covariance matrix implied by
+the parameters is not positive definite, so the likelihood is undefined
+there and the optimization cannot even start (taping the likelihood for
+automatic differentiation fails on the Cholesky factorization with an
+error such as \sQuote{the leading minor of order 13 is not positive}).
+Whether a starting point is usable depends on the model, so it can only be
+checked after the point has been drawn: unusable draws are discarded and
+replaced by fresh draws from \code{init_value}, and only after
+\code{max_init_attempts} unsuccessful draws is an error raised. The number
+of draws each model actually needed is reported in the
+\code{n_init_draws} row of the convergence diagnostics. Default is
+\code{100}.}
 }
 \value{
-List (or matrix) of parameters describing analyzed models.
+List (or matrix) of parameters describing analyzed models. The returned
+matrix carries a \code{"convergence"} attribute: a matrix with one column
+per model and rows \code{converged} (1 if the likelihood value stalled at a
+solution standard errors can be computed from, 0 if the restart budget was
+exhausted while still improving or every re-optimization ended in a
+degenerate region),
+\code{optim_code} (the \link[stats]{optim} convergence code of the final
+run), \code{n_restarts}, \code{max_abs_gradient} and \code{n_init_draws}
+(the number of starting points drawn from \code{init_value} before one at
+which the likelihood is defined was found). A large final
+gradient with \code{converged = 1} indicates parameters on a degenerate
+(nearly collinear) likelihood ridge rather than a failed optimization.
 }
 \description{
-Given a dataset and an initial value for parameters, initializes a model
-space with parameters equal to the initial value for each model. Then for each
+Given a dataset and a generator of starting values, initializes a model
+space by drawing a starting point for each model. Then for each
 model performs a numerical optimization and finds parameters which maximize
 the likelihood.
+}
+\examples{
+\donttest{
+library(magrittr)
+
+data_prepared <- badp::economic_growth[, 1:5] \%>\%
+  badp::feature_standardization(
+    excluded_cols = c(country, year, gdp)
+  ) \%>\%
+  badp::feature_standardization(
+    group_by_col  = year,
+    excluded_cols = country,
+    scale         = FALSE
+  )
+
+# the parameter matrix only; optim_model_space() adds the statistics
+params <- optim_model_space_params(
+  df            = data_prepared,
+  dep_var_col   = gdp,
+  timestamp_col = year,
+  entity_col    = country,
+  init_value    = function(n) rep(0.5, n),
+  nested        = TRUE
+)
+dim(params)
+}
+
 }

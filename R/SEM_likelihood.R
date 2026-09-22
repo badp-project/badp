@@ -1,67 +1,153 @@
-#' @useDynLib badp, .registration = TRUE
-
-# Import C++ dependencies to satisfy CRAN checks.
-# Fixes the following NOTE:
-# Namespace in Imports field not imported from: ‘X’
-#   All declared Imports should be used.
-#' @importFrom Rcpp sourceCpp
-#' @importFrom RcppArmadillo armadillo_version
-
-generate_params_vector <- function(value, timestamps_n, regressors_n,
-                                   lin_related_regressors_n) {
+generate_params_vector <- function(value, n_timestamps, n_regressors,
+                                   n_lin_related_regressors) {
   alpha <- value
   phi_0 <- value
   err_var <- value
-  dep_vars <- rep(value, timestamps_n)
-  beta <- rep(value, lin_related_regressors_n)
-  phi_1 <- rep(value, lin_related_regressors_n)
-  phis_n <- regressors_n*(timestamps_n - 1)
-  phis <- rep(value, phis_n)
-  psis_n <- regressors_n*timestamps_n*(timestamps_n - 1)/2
-  psis <- rep(value, psis_n)
+  dep_vars <- rep(value, n_timestamps)
+  beta <- rep(value, n_lin_related_regressors)
+  phi_1 <- rep(value, n_lin_related_regressors)
+  n_phis <- n_regressors*(n_timestamps - 1)
+  phis <- rep(value, n_phis)
+  n_psis <- n_regressors*n_timestamps*(n_timestamps - 1)/2
+  psis <- rep(value, n_psis)
 
   matrix(c(alpha, phi_0, err_var, dep_vars, phi_1, beta, phis, psis))
 }
 
-sem_params_to_list <- function(params, periods_n, tot_regressors_n,
-                               lin_related_regressors_n) {
-  phis_n <- tot_regressors_n*(periods_n - 1)
-  psis_n <- tot_regressors_n*periods_n*(periods_n - 1)/2
+sem_params_to_list <- function(params, n_periods, n_tot_regressors,
+                               n_lin_related_regressors) {
+  n_phis <- n_tot_regressors*(n_periods - 1)
+  n_psis <- n_tot_regressors*n_periods*(n_periods - 1)/2
 
   alpha <- params[1]
   phi_0 <- params[2]
   err_var <- params[3]
-  dep_vars <- params[4:(4 + periods_n - 1)]
-  betas_first_ind <- 4 + periods_n
-  if (tot_regressors_n == 0) {
+  dep_vars <- params[4:(4 + n_periods - 1)]
+  betas_first_ind <- 4 + n_periods
+  if (n_tot_regressors == 0) {
     beta <- c()
     phi_1 <- c()
     phis <- c()
     psis <- c()
   } else {
-    if (lin_related_regressors_n == 0) {
+    if (n_lin_related_regressors == 0) {
       beta <- c()
       phi_1 <- c()
     } else {
       beta <-
-        params[betas_first_ind:(betas_first_ind + lin_related_regressors_n - 1)]
-      phi_1_first_ind <- betas_first_ind + lin_related_regressors_n
+        params[betas_first_ind:(betas_first_ind + n_lin_related_regressors - 1)]
+      phi_1_first_ind <- betas_first_ind + n_lin_related_regressors
       phi_1 <-
-        params[phi_1_first_ind:(phi_1_first_ind + lin_related_regressors_n - 1)]
+        params[phi_1_first_ind:(phi_1_first_ind + n_lin_related_regressors - 1)]
     }
     phis <-
-      params[(4 + 2*lin_related_regressors_n + periods_n):(3 + 2*lin_related_regressors_n + periods_n + phis_n)]
+      params[(4 + 2*n_lin_related_regressors + n_periods):(3 + 2*n_lin_related_regressors + n_periods + n_phis)]
     psis <-
-      params[(4 + 2*lin_related_regressors_n + periods_n + phis_n):(3 + 2*lin_related_regressors_n + periods_n + phis_n + psis_n)]
+      params[(4 + 2*n_lin_related_regressors + n_periods + n_phis):(3 + 2*n_lin_related_regressors + n_periods + n_phis + n_psis)]
   }
 
   list(alpha = alpha, phi_0 = phi_0, err_var = err_var, dep_vars = dep_vars,
        beta = beta, phi_1 = phi_1, phis = phis, psis = psis)
 }
 
-#' List of matrices for SEM model
+# Core SEM likelihood computation (cf. Moral-Benito, Appendix A.1).
+#
+# AD-generic: parameters may be plain numerics or RTMB AD types, so the same
+# code serves direct evaluation and automatic-differentiation taping.
+#
+# On the plain numeric path, a parameter point whose implied covariance
+# matrices S1 or H are not (numerically) positive definite yields NA: the
+# likelihood is undefined there. On the AD path the Cholesky guards cannot
+# early-return (values flow through the tape), so at such a point chol()
+# throws instead - both while taping and while replaying the tape at a new
+# parameter point. Code optimizing over a tape therefore has to catch that
+# error itself; see optim_with_restarts().
+sem_likelihood_calculate <- function(alpha, phi_0, err_var, dep_vars, Y1, Y2,
+                                     cur_Z, cur_Y2 = NULL, beta = NULL,
+                                     phi_1 = NULL, phis = NULL, psis = NULL,
+                                     per_entity = FALSE, exact_value = TRUE) {
+  res_maker_matrix <- residual_maker_matrix(cur_Z)
+
+  n_entities <- nrow(Y1)
+  n_periods <- length(dep_vars)
+  n_tot_regressors <- ncol(Y2) / (n_periods - 1)
+  n_lin_related_regressors <- length(beta)
+
+  B <- sem_B_matrix(alpha, n_periods, beta)
+  C <- sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1)
+  S <- sem_sigma_matrix(err_var, dep_vars, phis, psis)
+
+  B1 <- B[[1]]
+  S1 <- S[[1]]
+
+  U1 <- if (n_lin_related_regressors == 0) {
+    Y1 %*% t(B1) - cur_Z %*% t(C)
+  } else {
+    cur_Y2 %*% t(B[[2]]) + Y1 %*% t(B1) - cur_Z %*% t(C)
+  }
+
+  taping <- inherits(S1, "advector")
+
+  if (taping) {
+    S1_chol <- chol(S1)
+    S11_inverse <- solve(S1)
+  } else {
+    S1_chol <- tryCatch(chol(S1), error = function(e) NULL)
+    if (is.null(S1_chol)) return(NA_real_)
+    S11_inverse <- chol2inv(S1_chol)
+  }
+  S1_logdet <- 2 * sum(log(diag(S1_chol)))
+  if (!taping && !is.finite(S1_logdet)) return(NA_real_)
+
+  # this term should be 0 if the lagged dependent variable is the only
+  # regressor
+  H_logdet <- 0
+  if (n_tot_regressors >= 1) {
+    S2 <- S[[2]]
+    M <- Y2 - U1 %*% S11_inverse %*% S2
+    # In theory H = M' P M with P a projection matrix (eigenvalues zero or
+    # one), so H is guaranteed to be positive semi-definite. In practice,
+    # when the true H is singular or close to singular, numerical imprecision
+    # can make it singular or non-positive-definite. Cholesky factorization
+    # detects exactly that, in which case the likelihood is undefined at this
+    # parameter point. R's chol() only reads the upper triangle, which
+    # resolves the floating-point asymmetry between the triangles of H.
+    H_scaled <- (t(M) %*% res_maker_matrix %*% M) / n_entities
+    if (taping) {
+      H_chol <- chol(H_scaled)
+    } else {
+      H_chol <- tryCatch(chol(H_scaled), error = function(e) NULL)
+      if (is.null(H_chol)) return(NA_real_)
+    }
+    H_logdet <- 2 * sum(log(diag(H_chol)))
+    if (!taping && !is.finite(H_logdet)) return(NA_real_)
+  }
+
+  likelihood <- -n_entities / 2 * (S1_logdet + H_logdet)
+
+  if (exact_value) {
+    gaussian_normalization_const <- log(2 * pi) * n_entities *
+      (n_periods + (n_periods - 1) * n_tot_regressors) / 2
+    trace_simplification_term <-
+      0.5 * n_entities * (n_periods - 1) * n_tot_regressors
+    likelihood <- likelihood -
+      gaussian_normalization_const - trace_simplification_term
+  }
+
+  if (!per_entity) {
+    # sum(A * B) with symmetric A, B is trace(A %*% B)
+    likelihood - 0.5 * sum(S11_inverse * (t(U1) %*% U1))
+  } else {
+    # row-wise diag(U1 %*% S11_inverse %*% t(U1)) without forming the
+    # n_entities x n_entities product
+    entity_terms <- ((U1 %*% S11_inverse) * U1) %*% matrix(1, n_periods, 1)
+    likelihood / n_entities - 0.5 * entity_terms[, 1]
+  }
+}
+
+#' List of Matrices for the SEM Model
 #'
-#' @param df Dataframe with data for the likelihood computations.
+#' @param df Data frame with data for the likelihood computations.
 #' @param timestamp_col Column which determines time stamps. For now only
 #' natural numbers can be used.
 #' @param entity_col Column which determines entities (e.g. countries, people)
@@ -84,6 +170,8 @@ sem_params_to_list <- function(params, periods_n, tot_regressors_n,
 #' @examples
 #' matrices_from_df(economic_growth, year, country, gdp, c("pop", "sed"),
 #'                  c("Y1", "Y2"))
+#'
+#' @keywords internal
 matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
                              lin_related_regressors = NULL,
                              which_matrices = c("Y1", "Y2", "Z", "cur_Y2",
@@ -140,12 +228,12 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
        res_maker_matrix = res_maker_matrix)
 }
 
-#' Likelihood for the SEM model
+#' Likelihood for the SEM Model
 #'
 #' @param params Parameters describing the model. Can be either a vector or a
 #' list with named parameters. See 'Details'
 #' @param data Data for the likelihood computations. Can be either a list of
-#' matrices or a dataframe. If the dataframe, additional parameters are
+#' matrices or a data frame. If a data frame, additional parameters are
 #' required to build the matrices within the function.
 #' @param timestamp_col Column which determines time stamps. For now only
 #' natural numbers can be used.
@@ -195,32 +283,32 @@ matrices_from_df <- function(df, timestamp_col, entity_col, dep_var_col,
 #' \code{phis} double vector which together with \code{psis} determines upper
 #' right and bottom left part of the covariance matrix; The vector should have
 #' length equal to the number of regressors times number of time stamps minus 1,
-#' i.e. \code{regressors_n * (periods_n - 1)}
+#' i.e. \code{n_regressors * (n_periods - 1)}
 #'
 #' \code{psis} double vector which together with \code{psis} determines upper
 #' right and bottom left part of the covariance matrix; The vector should have
 #' length equal to the number of regressors times number of time stamps minus 1
 #' times number of time stamps divided by 2, i.e.
-#' \code{regressors_n * (periods_n - 1) * periods_n / 2}
+#' \code{n_regressors * (n_periods - 1) * n_periods / 2}
 #'
 #'
 #' @return
 #' The value of the likelihood for SEM model (or a part of interest of the
 #' likelihood)
 #'
+# RTMB exports solve and diag as S4 generics because the base versions cannot
+# dispatch on AD types. They must be imported into the package namespace,
+# otherwise the AD path would silently fall through to base::solve/diag,
+# which treat AD objects as plain doubles. For numeric input the RTMB
+# generics fall back to the base behavior.
+#' @importFrom RTMB solve diag MakeTape ADoverload
+#'
 #' @export
 #'
 #' @examples
-# TODO: sometimes generates NaN and positive values - why?
-#' set.seed(1)
-#' df <- data.frame(
-#'   entities = rep(1:4, 5),
-#'   times = rep(seq(1960, 2000, 10), each = 4),
-#'   dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
-#' )
-#' df <-
-#'   feature_standardization(df, excluded_cols = c(times, entities))
-#' sem_likelihood(0.5, df, times, entities, dep_var)
+#' data(economic_growth)
+#' eg <- feature_standardization(economic_growth, excluded_cols = c(year, country))
+#' sem_likelihood(0.5, eg, year, country, gdp)
 sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
                            lin_related_regressors = NULL,
                            per_entity = FALSE,
@@ -252,27 +340,29 @@ sem_likelihood <- function(params, data, timestamp_col, entity_col, dep_var_col,
                          lin_related_regressors = lin_related_regressors)
     }
     if (!is.list(params)) {
-      periods_n <- ncol(data$Y1)
-      tot_regressors_n <- ncol(data$Y2) / (periods_n - 1)
-      lin_related_regressors_n <- if (is.null(data$cur_Y2)) {
+      n_periods <- ncol(data$Y1)
+      n_tot_regressors <- ncol(data$Y2) / (n_periods - 1)
+      n_lin_related_regressors <- if (is.null(data$cur_Y2)) {
         0
       } else {
-        ncol(data$cur_Y2) / (periods_n - 1)
+        ncol(data$cur_Y2) / (n_periods - 1)
       }
 
-      if (is.double(params)) {
+      # scalar shorthand: expand a single starting value to a full parameter
+      # vector (a full-length vector, numeric or AD, is used as is)
+      if (is.double(params) && length(params) == 1) {
         params <-
           generate_params_vector(
-            value = params, timestamps_n = periods_n,
-            regressors_n = tot_regressors_n,
-            lin_related_regressors_n = lin_related_regressors_n
+            value = params, n_timestamps = n_periods,
+            n_regressors = n_tot_regressors,
+            n_lin_related_regressors = n_lin_related_regressors
             )
       }
 
       params <-
-        sem_params_to_list(params, periods_n = periods_n,
-                           tot_regressors_n = tot_regressors_n,
-                           lin_related_regressors_n = lin_related_regressors_n)
+        sem_params_to_list(params, n_periods = n_periods,
+                           n_tot_regressors = n_tot_regressors,
+                           n_lin_related_regressors = n_lin_related_regressors)
     }
     likelihood <-
       sem_likelihood(params = params, data = data, per_entity = per_entity,

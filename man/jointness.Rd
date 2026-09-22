@@ -2,18 +2,18 @@
 % Please edit documentation in R/jointness.R
 \name{jointness}
 \alias{jointness}
-\title{Calculation of of the jointness measures}
+\title{Bivariate Jointness Measures}
 \usage{
-jointness(bma_list, measure = "HCGHM", rho = 0.5, round = 3)
+jointness(x, measure = c("HCGHM", "LS", "DW", "PPI"), rho = 0.5, round = 3)
 }
 \arguments{
-\item{bma_list}{bma object (the result of the bma function)}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
 
-\item{measure}{Parameter for choosing the measure of jointness: \cr
-HCGHM - for Hofmarcher et al. (2018) measure; \cr
-LS - for Ley & Steel (2007) measure; \cr
-DW - for Doppelhofer & Weeks (2009) measure; \cr
-PPI - for posterior probability of including both variables.}
+\item{measure}{Character string specifying the measure of jointness. One of: \cr
+\code{"HCGHM"} - Hofmarcher et al. (2018) measure (default); \cr
+\code{"LS"} - Ley & Steel (2007) measure; \cr
+\code{"DW"} - Doppelhofer & Weeks (2009) measure; \cr
+\code{"PPI"} - posterior probability of including both variables.}
 
 \item{rho}{The parameter "rho" (\eqn{\rho}) to be used in HCGHM jointness measure (default rho = 0.5). Works only if HCGHM measure is chosen (Hofmarcher et al. 2018).}
 
@@ -33,7 +33,7 @@ The measures under binomial model prior will appear in a table above the diagona
 \cr
 REFERENCES \cr
 Doppelhofer G, Weeks M (2009) Jointness of growth determinants. Journal of Applied Econometrics., 24(2), 209-244. doi: 10.1002/jae.1046 \cr
-Hofmarcher P, Crespo Cuaresma J, Grün B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
+Hofmarcher P, Crespo Cuaresma J, Gr\enc{ü}{u}n B, Humer S, Moser M (2018) Bivariate jointness measures in Bayesian Model Averaging: Solving the conundrum. Journal of Macroeconomics, 57, 150-165. doi: 10.1016/j.jmacro.2018.05.005 \cr
 Ley E, Steel M (2007) Jointness in Bayesian variable selection with applications to growth regression. Journal of Macroeconomics, 29(3), 476-493. doi: 10.1016/j.jmacro.2006.12.002
 }
 }

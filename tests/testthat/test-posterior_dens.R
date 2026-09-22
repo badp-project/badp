@@ -4,7 +4,7 @@ test_that(paste("posterior_dens creates correct lists with graphs"), {
 
   distPlots <- posterior_dens(bma_results, prior = "binomial", SE = "standard")
 
-  expect_equal(class(distPlots), "list")
+  expect_s3_class(distPlots, "badp_plots")
   expect_true(ggplot2::is_ggplot(distPlots[[1]]))
   expect_true(ggplot2::is_ggplot(distPlots[[2]]))
   expect_true(ggplot2::is_ggplot(distPlots[[3]]))

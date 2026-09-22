@@ -17,7 +17,7 @@ small_model_space <- optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5
+  init_value    = function(n) rep(0.5, n)
 )
 
 usethis::use_data(small_model_space, overwrite = TRUE)

@@ -2,8 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{non_nested_optimization_wrapper}
 \alias{non_nested_optimization_wrapper}
-\title{Helper-function - finds parameters minimizing log-likelihood function
-for the non-nested version of the SEM setup, using BFGS method}
+\title{Optimize a Single Model under the Non-Nested SEM Setup}
 \usage{
 non_nested_optimization_wrapper(
   params,
@@ -12,9 +11,14 @@ non_nested_optimization_wrapper(
   entity_col,
   dep_var_col,
   exact_value,
+  init_value,
+  max_init_attempts,
   n_all_regressors,
-  n_timestamp,
-  control
+  n_timestamps,
+  control,
+  max_restarts,
+  restart_tol,
+  max_reoptimizations
 )
 }
 \arguments{
@@ -33,24 +37,47 @@ natural numbers can be used as timestamps}
 computed (\code{TRUE}) or just the proportional part (\code{FALSE}). Check
 \link[badp]{sem_likelihood} for details.}
 
+\item{init_value}{The generator function the starting point in \code{params}
+was drawn from, or a single number standing for the corresponding constant
+generator. It is used to redraw the starting point if the likelihood turns
+out to be undefined at the drawn point. See \link[badp]{optim_model_space}.}
+
+\item{max_init_attempts}{Maximum number of starting points drawn from
+\code{init_value} for this model. See \link[badp]{optim_model_space}.}
+
 \item{n_all_regressors}{Integer. Total number of potential regressors in the
 full (maximal) model space. Used to compute the full parameter dimension
 (for \eqn{\phi} and \eqn{\psi}) so that parameters corresponding to excluded
 regressors can be padded with \code{NA} in the non-nested setup.}
 
-\item{n_timestamp}{Integer. Number of time periods in the panel (i.e. the
+\item{n_timestamps}{Integer. Number of time periods in the panel (i.e. the
 number of distinct values in \code{timestamp_col}). Used to determine the
 required number of \eqn{\phi} and \eqn{\psi} parameters for the current model
 and for the full model.}
 
 \item{control}{a list of control parameters for the optimization which are
 passed to \link[stats]{optim}. Default is
-\code{list(trace = 2, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+\code{list(trace = 0, maxit = 10000, fnscale = -1, REPORT = 100, scale = 0.05)}.}
+
+\item{max_restarts}{Maximum number of times the BFGS optimization is
+restarted from its previous solution for a single model. A restart resets
+the internal curvature approximation of BFGS, which often makes further
+progress on ill-conditioned likelihood ridges where a single run stalls.
+Default is \code{5}.}
+
+\item{restart_tol}{Log-likelihood improvement between restarts below which
+the optimization is considered converged. Improvements of this size are
+immaterial for posterior model probabilities. Default is \code{1e-3}.}
+
+\item{max_reoptimizations}{Maximum number of times this model is
+re-optimized from a fresh starting point when its solution turns out to be
+one no standard errors can be computed from. See
+\link[badp]{optim_model_space}.}
 }
 \value{
 List (or matrix) of parameters describing analyzed models.
 }
 \description{
-Helper-function - finds parameters minimizing log-likelihood function
-for the non-nested version of the SEM setup, using BFGS method
+Optimize a Single Model under the Non-Nested SEM Setup
 }
+\keyword{internal}

@@ -2,8 +2,7 @@
 % Please edit documentation in R/model_space.R
 \name{nested_std_dev_from_params}
 \alias{nested_std_dev_from_params}
-\title{Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for non nested version of SEM likelihood.}
+\title{Log-Likelihood and Standard Deviations for a Single Nested Model}
 \usage{
 nested_std_dev_from_params(
   params,
@@ -13,7 +12,7 @@ nested_std_dev_from_params(
   entity_col,
   dep_var_col,
   n_entities,
-  periods_n
+  n_periods
 )
 }
 \arguments{
@@ -33,18 +32,25 @@ to a model. Each row specifies model parameters. Compare with
 
 \item{n_entities}{Number of entities - passed to save calc. time}
 
-\item{periods_n}{Number of periods - passed to save calc. time}
+\item{n_periods}{Number of periods - passed to save calc. time}
 }
 \value{
-#' Matrix with columns describing likelihood and standard deviations for each
+Matrix with columns describing likelihood and standard deviations for each
 model. The first row is the likelihood for the model (computed using the
-parameters in the provided model space). The second row is almost 1/2 * BIC_k
-as in Raftery's Bayesian Model Selection in Social Research eq. 19 (see TODO
-in the code below). The third row is model posterior probability. Then there
-are rows with standard deviations for each parameter. After that we have rows
-with robust standard deviation (not sure yet what exactly "robust" means).
+parameters in the provided model space). The second row is the marginal
+likelihood approximation used to weight the models, namely
+\code{exp((loglik - (k/2) * log(N * T)) / N)}; note that it is not a BIC.
+Then there are rows with standard deviations for each parameter, followed by
+rows with robust standard deviations. The last three rows hold
+\code{tr(H^-1 J)}, where \code{H} is the observed information and \code{J}
+the outer product of the entity-level scores, the dimension of the
+parameter vector, and the numerical rank of \code{J}. These are the
+ingredients of the magnitude adjustment for misspecified likelihoods,
+whose rate is \code{rank(J) / tr(H^-1 J)}; see \code{\link{score_rank}} for
+why \code{J} is typically rank deficient, and \link[badp]{bma} for why no
+weighting option is built on it.
 }
 \description{
-Helper function - wraps single execution of the log-likelihood & deviation
-parameters calculations. Used for non nested version of SEM likelihood.
+Log-Likelihood and Standard Deviations for a Single Nested Model
 }
+\keyword{internal}

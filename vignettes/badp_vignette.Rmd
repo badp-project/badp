@@ -8,7 +8,7 @@ output:
     toc: true
 bibliography: references.bib
 vignette: >
-  %\VignetteIndexEntry{badp: Bayesian dynamic systems modelling}
+  %\VignetteIndexEntry{badp: Bayesian Model Averaging for Dynamic Panels}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,7 +33,7 @@ The manuscript includes a hands-on tutorial
 accessible to users unfamiliar with this approach.
 In addition to calculating the model space and providing key BMA statistics,
 the package offers flexible options for specifying model priors,
-or including a dilution prior that accounts for multicollinearity.
+including a dilution prior that accounts for multicollinearity.
 It also provides graphical tools
 for visualizing prior and posterior model probabilities,
 as well as functions for plotting histograms
@@ -55,12 +55,12 @@ Bayesian model averaging (BMA) emerged as a preferred method during a period whe
 As a result, BMA became a widely used technique for assessing the robustness of regressors in economics [for a detailed review of BMA applications in economics, see @Moral+2015; @Steel+2020] (e.g., @Liu+2009; @Ductor+2016; @Figini+2017; @Beck+2022; @DAndrea+2022; @Horvath+2024), as well as in other fields (e.g., @Sloughter+2013; @Baran+2015; @Aller+2021; @Guliyev+2024; @Payne+2024; @Beck+2025).
 Moreover, the growing interest in BMA was fueled by the availability of R packages such as `BMA` [@Raftery+2005], `BAS` [@clyde2011bayesian], and `BMS` [@Feldkircher+2015], along with the `gretl` BMA package developed by @Blazejowski+2015.
 
-The primary issue with the Bayesian model averaging in the aforementioned studies was its reliance on the assumption of exogenous regressors.
+The primary issue with Bayesian model averaging in the aforementioned studies was its reliance on the assumption of exogenous regressors.
 In many contexts, particularly in economics, this premise is unsuitable.
 Instead, the assumption of endogenous variables within a simultaneous equations framework is more fitting.
 Consequently, a new line of research relaxed the assumption of exogenous regressors [@Lenkoski+2014; @Leon+2015; @Mirestean+2016; @Moral+2016; @Chen+2018].
 However, these methods have not found their way into mainstream research.
-The code to implement them is only available upon request from the authors and is provided exclusively for `MATLAB` and `GAUSS`.
+The code to implement them is, to the best of our knowledge, available only upon request from the authors and is provided exclusively for `MATLAB` and `GAUSS`.
 
 The `badp` package was developed to address this gap.
 It offers tools for performing Bayesian model averaging on dynamic panels with weakly exogenous regressors.
@@ -90,9 +90,9 @@ This section outlines the model setup, describes the approach to Bayesian model 
 
 @Moral+2016 considers the following model specification:
 
-$$y_{it}=\alpha y_{it-1}+\beta x_{it}+\eta_{i}+\zeta_{t}+v_{it} \tag{1}$$
+$$y_{it}=\alpha y_{it-1}+x'_{it}\beta+\eta_{i}+\zeta_{t}+v_{it} \tag{1}$$
 
-where $y_{it}$ is the dependent variable, $i$ $(=1,...,N)$ indexes entity (ex. country), $t$ $(=1,...,T)$ indexes time, $x_{it}$ is a matrix of growth determinants, $\beta$ is a parameter vector, $\eta_{i}$ is an entity specific fixed effect, $\zeta_{t}$ is a period-specific shock and $v_{it}$ is a shock to the dependent variable.
+where $y_{it}$ is the dependent variable, $i$ $(=1,...,N)$ indexes entity (ex. country), $t$ $(=1,...,T)$ indexes time, $x_{it}$ is a $k \times 1$ vector of growth determinants, $\beta$ is the corresponding parameter vector, $\eta_{i}$ is an entity-specific fixed effect, $\zeta_{t}$ is a period-specific shock and $v_{it}$ is a shock to the dependent variable.
 To address the issue of reverse causality the model is built on the assumption of weak exogeneity, that can be formalized as
 
 $$\mathbb{E}(v_{i,t}|y^{t-1}_{t},x^{t}_{i},\eta_{i})=0 \tag{2}$$
@@ -104,7 +104,7 @@ On the assumption of weakly exogenous regressors, @Moral+2013 augmented equation
 $$x_{it}=\gamma_{t0}y_{i0}+...+\gamma_{tt-1}y_{it-1}+\Lambda_{t1}x_{i1}+...+\Lambda_{tt-1}x_{it-1}+c_{t}\eta_{i}+\vartheta_{it} \tag{3}$$
 
 where $t=2,\dots ,T;$ $c_{t}$ is the $k\times 1$ vector of parameters.
-For $h<t$, $\gamma_{th}$ is a $k\times 1$ vector $(y_{th}^{1},\dots,y_{th}^{k})'$  $h=0,\dots,T-1$; $\Lambda_{th}$ is a $k\times k$ matrix of parameters, and $\vartheta_{it}$ is a $k\times 1$ of prediction errors. The initial observations are defined with
+For $h<t$, $\gamma_{th}$ is a $k\times 1$ vector $(y_{th}^{1},\dots,y_{th}^{k})'$  $h=0,\dots,T-1$; $\Lambda_{th}$ is a $k\times k$ matrix of parameters, and $\vartheta_{it}$ is a $k\times 1$ vector of prediction errors. The initial observations are defined with
 
 $$y_{i0}=c_{0}\eta_{i}+\upsilon_{it} \tag{4}$$
 
@@ -114,7 +114,7 @@ where $c_{0}$ is a scalar, $c_{1}$ and $\gamma_{10}$ are $k\times 1$ vectors and
 
 For the model setup given in equations (1) and (3)-(5), @Moral+2013 derived the log-likelihood function:
 
-$$\log f(data|\theta) \propto \frac{N}{2}\log\det(B^{-1}D\Sigma D'B'^{-1})-\frac{1}{2}\sum_{i=1}^{N}\{R'_{i}(B^{-1}D\Sigma D'B'^{-1})^{-1}R_{i}\} \tag{6}$$
+$$\log f(data|\theta) \propto -\frac{N}{2}\log\det(B^{-1}D\Sigma D'B'^{-1})-\frac{1}{2}\sum_{i=1}^{N}\{R'_{i}(B^{-1}D\Sigma D'B'^{-1})^{-1}R_{i}\} \tag{6}$$
 
 where $\theta$ denotes parameters to be estimated, $R_{i}=(y_{io},x'_{i1},y_{i1},\dots,x'_{iT},y_{iT})'$ are vectors of observed variables, and $\Sigma=diag[\sigma^{2}_{\eta},\sigma^{2}_{\upsilon_{0}},\Sigma_{\vartheta_{1}},\sigma^{2}_{\upsilon_{1}},...,\Sigma_{\vartheta_{T}},\sigma^{2}_{\upsilon_{T}}]$ is the block-diagonal variance-covariance matrix.
 Matrix B is given by:
@@ -137,7 +137,7 @@ $$D=\begin{bmatrix}
  \end{bmatrix}. \tag{8}$$
 
 The model setup in equations (1) and (3)-(5) requires that in addition to the parameters of interest $\alpha$ and $\beta$, the parameters $\gamma_{ij}$ and $\Lambda_{km}$ need to be estimated.
-To make the optimization of likelihood computationally feasible, @Moral+2013 developed Simultaneous Equations Model (SEM) setup where the parameters of non-central interest are incorporated in the variance-covariance matrix.
+To make the optimization of likelihood computationally feasible, @Moral+2013 developed Simultaneous Equations Model (SEM) setup where the nuisance parameters are incorporated in the variance-covariance matrix.
 In the SEM setup, the model is defined by $1 + (T - 1)k + T$ equations:
 
 $$\begin{cases}
@@ -164,9 +164,10 @@ and matrices $B$ and $C$ contain coefficients $\alpha$, $\beta$, $\phi_0$, $\phi
 Since these matrices are not connected to the error, we simply note that they are defined in such a way that the equation (10) is equivalent to the SEM setup.
 The main difference of the SEM setup is that equations for $x_{it}$ now depend only on $y_{i0}$ and $x_{i1}$ and not on $y_{is}$ and $x_{is}$ for other periods $s$.
 
-Following @Moral+2013, we can then define the likelihood function as:
+Following @Moral+2013, and writing $\ell(\theta) = \log L(\theta)$ for the
+log-likelihood throughout, we can then define the log-likelihood function as:
 
-$$L \propto - \frac{N}{2} \log \det \Omega(\theta) - \frac{1}{2} tr \{ \Omega(\theta)^{-1} (R - Z \Pi(\theta))' (R - Z \Pi(\theta)) \} \tag{14}$$
+$$\ell(\theta) \propto - \frac{N}{2} \log \det \Omega(\theta) - \frac{1}{2} tr \{ \Omega(\theta)^{-1} (R - Z \Pi(\theta))' (R - Z \Pi(\theta)) \} \tag{14}$$
 
 where $R$ and $Z$ are matrices containing vectors $R_i$ and $z_i$ respectively and:
 
@@ -176,10 +177,10 @@ $$U^*_i(\theta) = B^{-1} U_i \tag{16}$$
 
 $$\Omega(\theta) = Var(U^*_i) = B^{-1} \cdot Var(U_i) \cdot  B'^{-1} = B^{-1} \Sigma B'^{-1} \tag{17}$$
 
-It is possible to find analytical solution for MLE for some of the parameters.
-Then the formula for the likelihood function can be simplified to:
+It is possible to obtain analytical solutions for the MLEs of some parameters.
+Then the formula for the log-likelihood function can be simplified to:
 
-$$L(\theta) \propto - \frac{N}{2} \log \det \Sigma_{11} - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \frac{N}{2} \log \det (\frac{H}{N}) \tag{18}$$
+$$\ell(\theta) \propto - \frac{N}{2} \log \det \Sigma_{11} - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \frac{N}{2} \log \det (\frac{H}{N}) \tag{18}$$
 
 where $U_1$ is a matrix of errors connected only to dependent variables, $\Sigma_{11}$ is a part of the $\Sigma$ matrix:
 
@@ -284,15 +285,26 @@ $$\mathbb{E}(\beta_k|\text{data})=\sum_{j=1}^{2^K}\widehat{\beta_k}_{j} \cdot \m
 
 where $\widehat{\beta_k}_{j}$ is the value of the coefficient $\beta_k$ in model $j$.
 It tells us what is the mean (or expected) value for the parameter taking into account all considered models.
-Note that if $\beta_k$ is not present in the given model $j$ we can assign any value to $\widehat{\beta_k}_{j}$,
-because the probability $\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ will be zero anyway.
+Note that in equation (33) the value assigned to $\widehat{\beta_k}_{j}$ for models in which $\beta_k$ is not
+present is immaterial, because the probability $\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ is zero for
+those models anyway. In the posterior variance below this is no longer the case, and the coefficient of an
+excluded regressor must be set to zero.
 
 The posterior variance of the parameter $\beta_k$ is equal to:
 
-$$Var(\beta_k|\text{data}) = \sum_{j=1}^{2^K}Var(\beta_{k,j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) + \sum_{j=1}^{2^K}\left[\widehat{\beta}_{k,j}-\mathbb{E}(\beta_k|\text{data})\right]^{2} \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) \tag{34}$$
+$$Var(\beta_k|\text{data}) = \sum_{j=1}^{2^K}Var(\beta_{k,j}|\text{data},M_{j}) \cdot \mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data}) + \sum_{j=1}^{2^K}\left[\widehat{\beta}_{k,j}-\mathbb{E}(\beta_k|\text{data})\right]^{2} \cdot \mathbb{P}(M_{j}|\text{data}) \tag{34}$$
 
 where $Var(\beta_{k,j}|\text{data},M_{j})$ denotes the conditional variance of the coefficient $\beta_k$ in model $M_{j}$
-(in other words assuming that the model $M_j$ is the true model).
+(in other words assuming that the model $M_j$ is the true model), and where $\widehat{\beta}_{k,j} \equiv 0$ whenever
+$\beta_k$ is not included in model $M_{j}$.
+The first sum is the expected within-model variance and the second is the between-model variance of the coefficient
+estimates. Note the difference between the weights in the two sums. Models that exclude $\beta_k$ contribute nothing
+to the first sum, because the coefficient is known to be zero in those models and its conditional variance vanishes.
+They do, however, contribute $[0-\mathbb{E}(\beta_k|\text{data})]^{2}\,\mathbb{P}(M_{j}|\text{data})$ to the second
+sum: exclusion is treated as the point mass $\beta_k = 0$, and the distance between that point mass and the posterior
+mean is a genuine source of posterior uncertainty. Weighting the second sum by
+$\mathbb{P}(M_{j}, \pi_{\beta_k} = 1 |\text{data})$ instead would omit these terms and understate the posterior
+variance, the more so the lower the posterior inclusion probability of the regressor.
 Posterior standard deviation (PSD) of $\beta_k$ is then defined as the square root of the variance:
 
 $$SD(\beta_k | \text{data}) = \sqrt{ Var(\beta_k | \text{data}) } \tag{35}$$
@@ -474,12 +486,29 @@ full_model_space <- optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5
+  init_value    = function(n) rep(0.5, n)
 )
 ```
 
-The function returns a list with five named arguments
-which are explained in the subsections below.
+A random generator such as `function(n) runif(n, 0.1, 1)` may be supplied to
+`init_value` instead, which turns the estimation into a randomized multi-start
+experiment. The estimation is then stochastic, and reproducing a model space
+requires fixing the random number stream: `set.seed()` suffices in the current
+session, but the per-model optimization runs on the workers when a cluster is
+supplied, so use `clusterSetRNGStream()` in that case.
+
+The function returns an object of class `badp_model_space`.
+Its components are explained in the subsections below.
+The quantities most often needed are also returned by accessor functions,
+so that no analysis has to depend on how the object is laid out internally:
+
+```{r}
+n_models(full_model_space)
+regressors(full_model_space)
+```
+
+`regressors()` omits the lagged dependent variable, which enters every model
+by construction; `regressors(full_model_space, include_lagged = TRUE)` keeps it.
 A progress bar is displayed to easily track the ongoing computation.
 
 Since the MLEs for the parameters are found through numerical optimization,
@@ -496,16 +525,32 @@ model_space_nonnested <- optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5,
+  init_value    = function(n) rep(0.5, n),
   nested = FALSE
 )
 ```
 
 In the remainder of the manuscript, we use the results obtained under the nested approach. However, all functionalities in the package operate in the same way under the non-nested approach.
 
+Because every model in the space is fitted by numerical optimization, some of
+them may fail to converge. Such models are kept rather than dropped, so that
+they can be inspected, and `convergence()` reports what happened for each one:
+whether it converged, the code returned by `optim()`, how many restarts and
+initial draws were needed, and the largest absolute gradient at the reported
+optimum.
+
+```{r}
+convergence(full_model_space)[, 1:5]
+```
+
+A large final gradient together with `converged = 1` indicates parameters on a
+nearly collinear likelihood ridge: the likelihood value is trustworthy but the
+standard errors of the affected coordinates are not. `summary()` on the model
+space reports the same information in aggregate.
+
 ### Model space parameters
 
-The first element of the list contains the estimated MLEs of the parameters
+The `params` component contains the estimated MLEs of the parameters
 for each considered model.
 Each column represents a single model, and rows correspond to the parameters.
 For example, to display the first 10 parameters for 5 models we can call:
@@ -519,13 +564,20 @@ in the given model.
 
 ### Model space statistics
 
-The second element of the list provides:
+The `stats` component provides, with one column per model:
 
-- the values of the likelihood function at the estimated MLE (first row),
-- the Bayesian information criterion (second row),
-- and the standard errors for the parameters describing linear relations,
-  i.e. the beta parameters from equation (9),
-  for each model (remaining rows).
+- the maximized log-likelihood (first row);
+- the approximation to the marginal likelihood used to weight the models
+  (second row), $\exp\{(\hat{\ell}_j - \frac{k_j}{2}\log(NT))/N\}$ under the
+  default weighting. Despite its form this is not a BIC, and the weighting
+  actually used is reported by `weighting()`;
+- $K$ rows of standard errors and then $K$ rows of robust standard errors for
+  the parameters describing linear relations, i.e. the beta parameters from
+  equation (9), where $K$ counts the regressors including the lagged
+  dependent variable;
+- and three final rows holding $\operatorname{tr}(H^{-1}J)$, the dimension of
+  the parameter vector, and the numerical rank of $J$, which are the
+  ingredients of the magnitude adjustment discussed below.
 
 ```{r}
 full_model_space$stats[, 1:5]
@@ -538,12 +590,12 @@ both derived from the Hessian of the maximized log-likelihood function.
 The first type consists of the regular standard errors,
 calculated using the inverse of the observed information matrix:
 
-$$I(\hat{\theta}) = -\frac{\partial^2 l(\hat{\theta})}{\partial \theta \partial \theta'} \tag{45}$$
+$$I(\hat{\theta}) = -\frac{\partial^2 \ell(\hat{\theta})}{\partial \theta \partial \theta'} \tag{45}$$
 
 where $\hat{\theta}$ are the estimated MLE parameters,
 $I(\hat{\theta})$ is the information matrix
-and $l(\hat{\theta}) = \log L(\hat{\theta})$
-is the natural logarithm of the likelihood function.
+and $\ell(\hat{\theta}) = \log L(\hat{\theta})$
+is the log-likelihood.
 The variance covariance matrix is given by:
 
 $$Var(\hat{\theta}) = I(\hat{\theta})^{-1}, \tag{46}$$
@@ -561,7 +613,7 @@ we first have to rewrite the equation (18) in a form
 which will display the contribution of each entity on the likelihood value.
 First note that:
 
-$$L(\theta) \propto - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \sum_{i=1}^{N} \frac{1}{2} \log \det \Sigma_{11} - \frac{1}{2} \log \det (\frac{H}{N}) \tag{48}$$
+$$\ell(\theta) \propto - \frac{1}{2} tr \{ \Sigma_{11}^{-1} U_1' U_1 \} - \sum_{i=1}^{N} \frac{1}{2} \left( \log \det \Sigma_{11} + \log \det (\frac{H}{N}) \right) \tag{48}$$
 
 Now,
 because of the cyclic property of the trace we can rewrite the first term as:
@@ -575,25 +627,53 @@ corresponding to the data relating to the single entity $i$.
 Hence, the entire likelihood function can be rewritten
 as a sum of contributions from each entity:
 
-$$L(\theta) \propto \sum_{i=1}^{N} -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i') \tag{50}$$
+$$\ell(\theta) \propto \sum_{i=1}^{N} -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i') \tag{50}$$
 
 From there we can see that the contribution of a single entity $i$ is:
 
-$$l_i(\theta) \propto -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i'). \tag{51}$$
+$$\ell_i(\theta) \propto -\frac{1}{2} (\log \det \Sigma_{11} + \log \det (\frac{H}{N}) + u_i \Sigma_{11}^{-1} u_i'). \tag{51}$$
 
-Now if we consider a multivariate function $\mathbf{l}(\theta)$
+Now if we consider a multivariate function $\boldsymbol{\ell}(\theta)$
 of all such contributions (with single contributions as its coordinates),
 we can find its gradient at the MLE:
-$G(\hat{\theta}) = \frac{\mathbf{l}(\hat{\theta})}{\partial \theta}$.
+$G(\hat{\theta}) = \frac{\partial \boldsymbol{\ell}(\hat{\theta})}{\partial \theta}$.
 Then the robust variance is:
 
 $$Var_{R}(\hat{\theta}) = I(\hat{\theta})^{-1} \cdot G'(\hat{\theta}) G(\hat{\theta}) \cdot I(\hat{\theta})^{-1} \tag{52}$$
 
 and the robust standard errors are given by:
 
-$$\text{SE}_{R}(\hat{\theta}) = \sqrt{\text{diag}(\hat{V}_{R}(\hat{\theta}))}. \tag{53}$$
+$$\text{SE}_{R}(\hat{\theta}) = \sqrt{\text{diag}(Var_{R}(\hat{\theta}))}. \tag{53}$$
 
 where the square root is again applied to each coordinate separately.
+
+The structure of equation (51) has a consequence worth noting. Splitting it as
+$\ell_i(\theta) = c(\theta) + b_i(\theta)$, with
+$c = -\frac{1}{2}(\log \det \Sigma_{11} + \log \det (H/N))$ the same for every
+entity and $b_i = -\frac{1}{2} u_i \Sigma_{11}^{-1} u_i'$ specific to entity
+$i$, the scores are $s_i = c' + b_i'$. They sum to zero at the maximum, so
+$\sum_i b_i' = -N c'$ and
+
+$$G'(\hat{\theta}) G(\hat{\theta}) = \sum_{i=1}^{N} s_i s_i'
+= \sum_{i=1}^{N} (b_i' - \bar{b}')(b_i' - \bar{b}')' \tag{54}$$
+
+The common component cancels: the matrix depends only on how the scores vary
+across entities. Any parameter entering the likelihood only through
+$c(\theta)$ therefore contributes nothing, and
+$G'(\hat{\theta}) G(\hat{\theta})$ is rank deficient however many entities are
+observed. In the model spaces bundled with the package the scores span between
+8% and 29% of the parameter directions; `summary()` reports the proportion for
+a fitted model space.
+
+Because the matrix vanishes outside the directions it spans, the sandwich
+restricted to that block equals the profile variance obtained by profiling the
+remaining parameters out, so the reported robust standard errors, those of
+$\alpha$ and the $\beta$ parameters, are well defined. What the construction
+discards is the score covariance involving the unspanned directions, which is
+set to zero rather than estimated. The standard errors based on
+$I(\hat{\theta})$ alone do not involve
+$G'(\hat{\theta}) G(\hat{\theta})$ and are unaffected; they rest instead on
+the likelihood being correctly specified.
 
 
 ### Parallelization
@@ -609,23 +689,24 @@ model_space <- optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5
+  init_value    = function(n) rep(0.5, n)
 )
 ```
 
 However, for larger datasets,
 it is better to take advantage of parallel computing.
 Then the numerical optimization used to find MLEs
-can be computed on separate threads for each model.
+can be carried out in separate parallel processes, one model at a time per worker.
 To do this, first load the `parallel` package and set up a cluster.
 
 ```{r eval=FALSE}
 library(parallel)
-# Here we try to use all available cores on the system.
-# You might want to lower the number of cores depending on your needs.
-cores <- detectCores()
+# Leave one core free so the session remains responsive.
+cores <- max(1, detectCores() - 1)
 cl <- makeCluster(cores)
-setDefaultCluster(cl)
+# Only needed when init_value draws at random; set.seed() does not reach
+# the workers, where the per-model optimization runs.
+clusterSetRNGStream(cl, 20240812)
 ```
 
 Then the user just needs to provide this cluster to the function:
@@ -636,16 +717,18 @@ model_space <- optim_model_space(
   dep_var_col   = gdp,
   timestamp_col = year,
   entity_col    = country,
-  init_value    = 0.5,
+  init_value    = function(n) rep(0.5, n),
   cl            = cl
 )
+
+stopCluster(cl)
 ```
 
 
 ### Precomputed model spaces
 
 Even with parallelization, `optim_model_space` call may be time-consuming.
-Hence, for users who want to quickly start practicing using the `badp`,
+Hence, for users who wish to explore `badp` without recomputing the model space,
 we provide already computed model space objects included with the package:
 
 - `full_model_space` is the model space built with the entire data
@@ -667,13 +750,101 @@ to which the BMA statistics should be rounded in the results.
 bma_results <- bma(full_model_space, round = 3)
 ```
 
-The `bma` function returns a list containing 16 elements.
-However, most of these elements are only required for other functions.
-The main objects of interest are the two tables with the BMA statistics.
-The results obtained with binomial model prior are first on the list.
+The `weighting` parameter selects the approximation to the marginal likelihood
+$L(\text{data}|M_j)$ used to weight the models. Writing
+
+$$A_j = \hat{\ell}_j - \frac{k_j}{2}\log(NT),$$
+
+where $\hat{\ell}_j$ is the maximized log-likelihood of model $M_j$, $k_j$ its
+number of linear parameters, $N$ the number of entities and $T$ the number of
+periods, three of the four available options are the same construction with
+different learning rates $\eta$, namely
+$L(\text{data}|M_j) \propto \exp(\eta A_j)$:
+
+- `"mb2016"` (the default), $\eta = 1/N$. This is the approximation computed by
+  the implementation accompanying @Moral+2016, and the option that
+  reproduces the results published there.
+- `"mb2012"`, $\eta = 1$, i.e. $\exp\{-\text{BIC}_j/2\}$ with the $NT$
+  entity-period observations treated as the sample, as stated in equations
+  (24)-(30) of @Moral+2012.
+- `"nt"`, $\eta = 1/(NT)$, averaging over entity-periods rather than entities.
+  This is the rate that would be internally consistent with the $\log(NT)$
+  penalty, and it tempers $T$ times more strongly than `"mb2016"`.
+
+The fourth option, `"uip"`, instead alters the penalty rather than the rate,
+setting $L(\text{data}|M_j) \propto \exp\{\hat{\ell}_j - \frac{k_j}{2}\log(N)\}$
+and so taking the entity rather than the entity-period as the unit of
+information. The unit information prior underlying the approximation
+[@Kass+1995b] is defined through the Fisher information for a
+single observation, and the likelihood factorizes over entities, so the entity
+is the natural unit.
+
+The choice matters. Any $\eta \neq 1$ yields a tempered posterior over the model
+space, proportional to $L(\text{data}|M_j)^{\eta}$, which lies outside the BIC
+approximation that motivates the criterion. A rate held fixed as the sample
+grows rescales all log weights by a common factor, so the posterior still
+concentrates on the best model in the space, only more slowly for $\eta < 1$
+and faster for $\eta > 1$. A rate that shrinks with the sample is different in
+kind: under $\eta = 1/N$ the log weight of a model at Kullback-Leibler distance
+$c_j$ per entity satisfies $\eta A_j = A_j/N \rightarrow -c_j$, so the weights
+converge to the fixed positive constants $\exp(-c_j)$ and the posterior does
+not concentrate however large $N$ becomes. Conversely $\eta = 1$ concentrates the posterior
+sharply, and on likelihoods of this kind it can place nearly all of the
+posterior mass on a single model, in which case model averaging reduces to
+model selection. We retain `"mb2016"` as the default so that results remain
+comparable with the published literature, and recommend that users examine the
+sensitivity of their conclusions to this choice. Switching between the options
+requires no re-estimation, because all of them are recovered from the same
+fitted model space:
+
+```{r, eval = FALSE}
+bma_results_mb2012 <- bma(full_model_space, round = 3, weighting = "mb2012")
+```
+
+Any other rate can be supplied through the `eta` argument, which overrides
+`weighting`. This is the intended way to check how much a conclusion depends
+on the rate:
+
+```{r, eval = FALSE}
+bma_results_eta <- bma(full_model_space, round = 3, eta = 0.1)
+```
+
+The package deliberately offers no option that estimates $\eta$ from the data.
+The magnitude adjustment developed for misspecified and composite likelihoods
+[@Chandler+2007; @Ribatet+2012] would set
+$\eta = \operatorname{rank}(J)/\operatorname{tr}(H^{-1}J)$, where
+$J = \sum_{i=1}^{N} s_i s_i'$ is the outer product of the entity-level scores.
+For this likelihood $J$ is substantially rank deficient, because parameters
+entering it only through terms common to every entity contribute nothing; in
+the bundled model spaces the scores span between 8% and 29% of the parameter
+directions, which `summary()` reports. The adjustment would then be calibrated
+on a small part of the parameter space with no way to assess what the rest
+contributes. The ingredients are stored with every fitted model space, so the
+rate can be computed and inspected directly by anyone who wants it.
+
+The `bma` function returns an object of class `badp_bma`.
+It stores everything the other functions in the package need, but none of that
+has to be reached by hand: the quantities of interest are returned by accessor
+functions, and the model prior is selected with an argument rather than by
+picking out a different component.
 
 ```{r}
-bma_results[[1]]
+n_models(bma_results)
+weighting(bma_results)
+learning_rate(bma_results)
+```
+
+`weighting()` reports which approximation to the marginal likelihood was used
+and `learning_rate()` the rate it implies, so a fitted object always carries a
+record of the choice discussed above. `learning_rate()` is `NA` for `"uip"`,
+which alters the penalty rather than the rate.
+
+The main objects of interest are the two tables of BMA statistics, one under
+each model prior. `bma_table()` returns them, with the binomial prior as the
+default.
+
+```{r}
+bma_table(bma_results)
 ```
 
 PIP denotes the posterior inclusion probability, PM denotes the posterior mean, PSD denotes the posterior standard deviation, and PSDR denotes the posterior standard deviation calculated using robust standard errors.
@@ -688,14 +859,26 @@ A value of $\%(+)$ equal to $0\%$ or $100\%$ indicates coefficient sign stabilit
 
 The PIP for all the regressors shows that none of them can be considered very strong according to the classification by @Raftery+1995.
 This also applies to the population variable (`pop`), which has a PIP of 0.990 due solely to approximation.
-These results are corroborated by the ratios of PM to PSD and PSDR.
+The ratios of PM to PSD and PSDR give a broadly similar ordering.
 In particular, for the absolute value of the PM to PSDR ratio, only the population variable exceeds 1.3, while investment (`ish`) and the democracy index (`polity`) are above 1.
 This finding led @Moral+2016 to emphasize the fragility of economic growth determinants.
 The only variable that can be considered robust across all metrics is the lagged GDP (`gdp_lag`).
-However, the results change when using the binomial-beta model prior, which is included as the second object in the `bma` list.
+When only the inclusion probabilities are wanted, `pip()` returns them on
+their own, which makes them easy to rank:
 
 ```{r}
-bma_results[[2]]
+sort(pip(bma_results), decreasing = TRUE)
+```
+
+The lagged dependent variable is omitted, since it enters every model by
+construction and therefore has no inclusion probability; `include_lagged = TRUE`
+keeps it, with the value `NA`.
+
+However, the results change when using the binomial-beta model prior, which
+`bma_table()` returns when asked for it.
+
+```{r}
+bma_table(bma_results, prior = "beta")
 ```
 
 In the case of the binomial-beta model prior, the PIPs for all the regressors increase.
@@ -706,39 +889,62 @@ However, these results are less pronounced when using robust standard errors, wi
 Consequently, the results are not robust with respect to the choice of prior model specification.
 The reasons behind these differences will become clear once other functionalities of the package are explored.
 
-The last object in the list is a table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.
+`model_size_table()` returns the prior and posterior expected model sizes under the binomial and binomial-beta model priors.
 Importantly, these numbers reflect only the number of regressors in a model and do not include the lagged dependent variable, which is present in every model by construction.
 
 ```{r}
-bma_results[[16]]
+model_size_table(bma_results)
 ```
 
-The results show that, after observing the data, the researcher should expect around seven and eight and a half regressors in the model under the binomial and binomial-beta model priors, respectively.
+The results show that, after observing the data, the posterior expected number of included regressors is around seven under the binomial model prior and eight and a half under the binomial-beta model prior.
 These numbers may seem high; however, they are driven by relatively substantial PIPs.
 This illustrates the importance of focusing on both posterior inclusion probabilities and the ratios of posterior mean to posterior standard deviation when assessing the robustness of the regressors.
 
 ### Prior and posterior model probabilities
 
+The posterior probability of every model in the space is returned by `pmp()`.
+The probabilities sum to one over the whole space, and `top` returns the most
+probable models in decreasing order:
+
+```{r}
+sum(pmp(bma_results))
+pmp(bma_results, top = 5)
+```
+
 The `model_pmp` function allows the user to compare prior and posterior model probabilities over the entire model space in the form of a graph.
 The models are ranked from the one with the highest to the one with the lowest posterior model probability.
-The function returns a list with three objects:
+The function returns a `badp_plots` collection of three named graphs:
 
 1. a graph for the binomial model prior;
 2. a graph for the binomial-beta model prior;
 3. a combined graph for both binomial and binomial-beta model priors.
 
-The user can retrieve each graph separately from the list; however, the function automatically displays a combined graph.
+The elements are named `binomial`, `beta` and `combined`, so each graph can be retrieved separately by name; printing the object displays the combined graph.
 
 ```{r fig=TRUE}
-for_models <- model_pmp(bma_results)
+model_pmp(bma_results)
 ```
 
 The graphs demonstrate that most of the posterior probability mass is concentrated within just a couple of models.
 To view the results for only the best models, the user can use the `top` parameter.
 
 ```{r fig=TRUE}
-for_models <- model_pmp(bma_results, top = 10)
+model_pmp(bma_results, top = 16)
 ```
+
+The prior and the posterior are drawn as lines by default.
+Once attention narrows to the best handful of models, `type = "histogram"`
+draws them as side-by-side bars instead, which makes the individual models
+easy to compare.
+
+```{r fig=TRUE}
+model_pmp(bma_results, top = 3, type = "histogram")
+```
+
+The choice between the two is a matter of how many models are on the graph:
+bars separate a few models cleanly, but become too narrow to tell apart once
+there are many, where the lines stay legible. The same argument is available
+in `model_sizes`, where bars suit a model space with few regressors.
 
 The last graph for the binomial-beta prior is particularly illuminating in terms of explaining the very high values of posterior inclusion probabilities.
 Almost 70% of the posterior probability mass is concentrated in just one model; therefore, variables included in this model will have very high PIP values.
@@ -748,16 +954,16 @@ Nevertheless, the results from the graph suggest that the best model is the one 
 
 The `model_sizes` function displays prior and posterior model probabilities on a graph for models of different sizes.
 The graphs exclude the lagged dependent variable; therefore, the model with zero regressors still includes the lagged dependent variable.
-Similarly to the `model_pmp` function it returns a list with three objects:
+Similarly to the `model_pmp` function it returns a `badp_plots` collection of three named graphs:
 
 1. a graph for the binomial model prior;
 2. a graph for the binomial-beta model prior;
 3. a combined graph for both binomial and binomial-beta model priors.
 
-Again, the user can retrieve each graph separately from the list; however, the function automatically displays a combined graph.
+Again the elements are named, so each graph can be retrieved separately; printing the object displays the combined graph.
 
 ```{r fig=TRUE}
-size_graphs <- model_sizes(bma_results)
+model_sizes(bma_results)
 ```
 
 The graph in panel b) again explains why PIPs are so high in the case of the binomial-beta model prior.
@@ -768,55 +974,53 @@ This graph clearly illustrates the impact of changes in the model prior on poste
 
 ### Selecting the best models
 
-The `best_models` function allows the user to view a chosen number of the best models in terms of posterior model probability.
-The function returns a list containing nine objects:
+The `best_models` function returns the highest ranked models as a list of individual model objects, ordered by posterior model probability.
+Each element carries the regressors entering that model, its posterior model probability, and its coefficients together with conventional and robust standard errors.
+The parameter `prior` determines whether the models are ranked according to posterior model probabilities calculated using the binomial (`prior = "binomial"`) or the binomial-beta (`prior = "beta"`) model prior.
 
-1. An inclusion table stored as an array object;
-2. A table with estimation results using regular standard errors, stored as an array object;
-3. A table with estimation results using robust standard errors, stored as an array object;
-4. An inclusion table stored as a knitr object;
-5. A table with estimation results using regular standard errors, stored as a knitr object;
-6. A table with estimation results using robust standard errors, stored as a knitr object;
-7. An inclusion table stored as a gTree object;
-8. A table with estimation results using regular standard errors, stored as a gTree object;
-9. A table with estimation results using robust standard errors, stored as a gTree object;
-
-The parameters `estimate` and `robust` pertain only to the results that will be automatically displayed after running the function.
-The parameter `criterion` determines whether the models should be ranked according to posterior model probabilities calculated using the binomial (1) or binomial-beta (2) model prior.
-To obtain the inclusion array for the 10 best models ranked with the binomial model prior, the user needs to run:
+Printing the collection shows which regressors enter each of the selected models:
 
 ```{r}
-best_8_models <- best_models(bma_results, criterion = 1, best = 8)
-best_8_models[[1]]
+best_8_models <- best_models(bma_results, prior = "binomial", best = 8)
+best_8_models
 ```
 
-1 indicates the presence of a given regressor in a model, while the last row displays the posterior model probability of that model.
-To obtain a knitr table with estimation output with regular standard errors for best 3 models ranked with binomial-beta model prior, the user needs to run:
+An `x` marks the presence of a given regressor in a model, while the last row displays the posterior model probability of that model.
+The `summary` method adds the estimates, with standard errors in parentheses and the usual significance stars:
 
 ```{r}
-best_3_models <- best_models(bma_results, criterion = 2, best = 3)
-best_3_models[[5]]
+best_3_models <- best_models(bma_results, prior = "beta", best = 3)
+summary(best_3_models)
 ```
 
 The comparison of the last two tables further highlights the importance of the model prior.
 The best model under the binomial model prior accounts for around 9% of the posterior probability mass,
 while the best model under the binomial-beta model prior accounts for over 69%.
-Finally, to obtain a gTree table with estimation output using robust standard errors for the top 3 models ranked by the binomial-beta model prior,
-the user needs to run:
+
+The `plot` method draws the same table as a graphic, and `robust = TRUE` switches to robust standard errors:
 
 ```{r fig=TRUE}
-best_3_models <- best_models(bma_results, criterion = 2, best = 3)
-best_3_models[[9]]
+plot(best_3_models, robust = TRUE)
 ```
 
-The comparison of the last two tables and the estimation outputs with regular and robust standard errors demonstrates
+The comparison of the estimation outputs with regular and robust standard errors demonstrates
 how the results change when switching between these two variance estimators.
+
+Individual models are reached by position, and each has its own methods:
+
+```{r}
+best_3_models[[1]]
+```
+
+```{r}
+coef(best_3_models[[1]], se = TRUE)
+```
 
 ### Calculating jointness measures
 
 Within the BMA framework, it is possible to establish the nature of the relationship between pairs of examined regressors using the jointness measures.
 This can be accomplished using the `jointness` function.
-The latest jointness measure, introduced by @Hofmarcher+2018, has been shown to outperform older alternatives developed by @Ley+2007 and @Doppelhofer+2009 [see Section [Model priors and jointness](#model-priors-and-jointness) for the interpretations of jointness measures].
+The latest jointness measure, introduced by @Hofmarcher+2018, has been shown to address shortcomings of the earlier measures of @Ley+2007 and @Doppelhofer+2009 [see Section [Model priors and jointness](#model-priors-and-jointness) for the interpretations of jointness measures].
 Therefore, the @Hofmarcher+2018 measure is the default option in the `jointness` function.
 
 ```{r}
@@ -834,7 +1038,7 @@ To obtain the results for the @Ley+2007 measure, the user should run:
 jointness(bma_results, measure = "LS")
 ```
 
-The values corroborate the results obtained using the @Hofmarcher+2018 measure.
+The values are consistent with those obtained using the @Hofmarcher+2018 measure.
 All the regressors exhibit complementary relationships, which are visibly stronger under the binomial-beta model prior.
 
 However, the @Doppelhofer+2009 measure yields a slightly different outcome:
@@ -850,45 +1054,47 @@ Once again, the values for the binomial-beta model prior are higher, demonstrati
 ### Visualizing model coefficients and posterior distributions
 
 The `coef_hist` function allows the user to plot the distribution of estimated coefficients.
-It returns a list containing a number of objects equal to the number of regressors plus one.
-The first object in the list is a graph of the coefficients for the lagged dependent variable, while the remaining objects are graphs of the coefficients for the other regressors.
-The graph for the lagged dependent variable collects coefficients from the entire model space, whereas the graphs for the other regressors only collect coefficients from the models that include the given regressor (half of the model space).
+It returns a `badp_plots` collection holding one plot per variable, named after the variable it shows, so an individual plot is reached by name rather than by position.
+There is one plot for the lagged dependent variable and one for each regressor.
+The plot for the lagged dependent variable collects coefficients from the entire model space, whereas the plots for the other regressors only collect coefficients from the models that include the given regressor (half of the model space).
+Printing the collection itself draws every plot in one figure.
 
-There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The `coef_hist` function provides the user with options for controlling the bin widths of the histogram (`BW`, `binW`, `BN`, and `num`).
-The default is `BW = FD`, which selects bin widths using the Freedman-Diaconis method.
+There are two main options for visualizing the coefficient distributions. The first option uses a histogram. The `coef_hist` function provides the user with options for controlling the bin widths of the histogram (`bin_method`, `bin_widths`, `use_bin_count`, and `bin_counts`).
+The default is `bin_method = "FD"`, which selects bin widths using the Freedman-Diaconis method.
 
 ```{r fig=TRUE}
 coef_plots <- coef_hist(bma_results)
-coef_plots[[1]]
+coef_plots[["gdp_lag"]]
 ```
 
 The second option allows the user to plot kernel densities.
 
 ```{r fig=TRUE}
-coef_plots2 <- coef_hist(bma_results, kernel = 1)
-coef_plots2[[1]]
+coef_plots2 <- coef_hist(bma_results, use_kernel = 1)
+coef_plots2[["gdp_lag"]]
 ```
 
 The choice of appropriate plotting options is left to the user's preferences regarding the style of presentation and the size of the model space.
 
 ```{r fig=TRUE}
 library(gridExtra)
-grid.arrange(coef_plots[[1]], coef_plots[[2]], coef_plots2[[1]],
-             coef_plots2[[2]], nrow = 2, ncol = 2)
+grid.arrange(coef_plots[["gdp_lag"]], coef_plots[["ish"]],
+             coef_plots2[["gdp_lag"]], coef_plots2[["ish"]],
+             nrow = 2, ncol = 2)
 ```
 
 One additional option available to the user with the `coef_hist` function is weighting coefficients by posterior model probabilities. This can be accomplished using the `weight` parameter, whose default value is set to `NULL`. Setting `weight` to `"binomial"` or `"beta"` results in plotting histograms based on the binomial or binomial-beta model prior, respectively. For example, in the case of the binomial-beta model prior, it can be observed that the value of the posterior mean is mainly driven by the model characterized by the highest posterior model probability.
 
 ```{r fig=TRUE}
 coef_plots3 <- coef_hist(bma_results, weight = "beta")
-coef_plots3[[1]]
+coef_plots3[["gdp_lag"]]
 ```
 
-The `posterior_dens` allows the user to plot posterior distributions of coefficients. Similarly to the `coef_hist` function, `posterior_dens` returns a list containing a number of objects equal to the number of regressors plus one. The first object in the list is a graph of the posterior distribution for the lagged dependent variable, while the remaining objects are graphs of the posterior distribution for the other regressors. The user needs to specify whether to plot posterior distributions based on the binomial (`prior = "binomial"`) or binomial-beta (`prior = "beta"`) model prior, as well as whether to use regular (`SE = "standard"`) or robust (`SE = "robust"`) standard errors used in the calculation of posterior objects.
+The `posterior_dens` allows the user to plot posterior distributions of coefficients. Like `coef_hist`, it returns a `badp_plots` collection named after the variables: one posterior distribution for the lagged dependent variable and one for each regressor. The user needs to specify whether to plot posterior distributions based on the binomial (`prior = "binomial"`) or binomial-beta (`prior = "beta"`) model prior, as well as whether to use regular (`SE = "standard"`) or robust (`SE = "robust"`) standard errors used in the calculation of posterior objects.
 
 ```{r fig=TRUE}
 distPlots <- posterior_dens(bma_results, prior = "binomial", SE = "standard")
-grid.arrange(distPlots[[2]], distPlots[[3]], nrow = 2, ncol = 1)
+grid.arrange(distPlots[["ish"]], distPlots[["sed"]], nrow = 2, ncol = 1)
 ```
 
 ## Changes in model priors
@@ -913,14 +1119,14 @@ bma_results2 <- bma(full_model_space, round = 3, EMS = 2)
 Before turning to the main BMA results, let us focus on the changes in the posterior probability mass with respect to model sizes.
 
 ```{r}
-bma_results2[[16]]
+model_size_table(bma_results2)
 ```
 
 The results show that decreasing the prior expected model size led to a considerable decline in the posterior expected model size.
 The consequences of this change in the prior expected model size are best illustrated using the prior and posterior probability mass over model sizes.
 
 ```{r fig=TRUE}
-size_graphs2 <- model_sizes(bma_results2)
+model_sizes(bma_results2)
 ```
 
 For both the binomial and binomial-beta model priors, the prior probability mass is more concentrated on small model sizes.
@@ -929,7 +1135,7 @@ Nevertheless, the posterior model probability for the model with all regressors 
 There are also substantial changes in the distribution of the posterior probability mass over the model space.
 
 ```{r fig=TRUE}
-model_graphs2 <- model_pmp(bma_results2)
+model_pmp(bma_results2)
 ```
 
 Both panels of the graph show that the prior and posterior model probabilities have substantially decoupled from each other.
@@ -938,7 +1144,7 @@ The tall blue spike represents the model with no regressors.
 The main BMA posterior statistic for the binomial model prior also experienced a significant change.
 
 ```{r}
-bma_results2[[1]]
+bma_table(bma_results2)
 ```
 
 Posterior inclusion probabilities drop considerably for all the regressors, except for population, which remains almost unchanged.
@@ -948,7 +1154,7 @@ This outcome indicates that population performs relatively better in smaller mod
 The results for binomial-beta model prior are given below.
 
 ```{r}
-bma_results2[[2]]
+bma_table(bma_results2, prior = "beta")
 ```
 
 The change in PIPs is again significant, though not as pronounced as in the case of the binomial model prior.
@@ -969,14 +1175,14 @@ Next, to consider the consequences of concentrating prior probability mass on la
 
 ```{r}
 bma_results8 <- bma(full_model_space, round = 3, EMS = 8)
-bma_results8[[16]]
+model_size_table(bma_results8)
 ```
 
 The posterior model size increased for the binomial prior; however, it remained almost unchanged for the binomial-beta model prior.
 The most interesting aspect is the new graphs of prior and posterior probability mass over the model sizes.
 
 ```{r fig=TRUE}
-size_graphs8 <- model_sizes(bma_results8)
+model_sizes(bma_results8)
 ```
 
 In both cases, the posterior probability mass has concentrated near the models with all the regressors.
@@ -984,7 +1190,7 @@ However, in the case of the binomial-beta model prior, the model with all the re
 This conclusion is further supported by the graphs of posterior model probability across the entire model space.
 
 ```{r fig=TRUE}
-model_graphs8 <- model_pmp(bma_results8)
+model_pmp(bma_results8)
 ```
 
 Panel (a) demonstrates that the change in the expected model size led to a substantial increase in the posterior model probability for the model with all regressors under the binomial model prior.
@@ -992,7 +1198,7 @@ It now accounts for over 70% of the total posterior probability mass.
 The increase in the expected model size also influenced the main BMA statistics.
 
 ```{r}
-bma_results8[[1]]
+bma_table(bma_results8)
 ```
 
 The PIPs increased considerably.
@@ -1001,7 +1207,7 @@ Interestingly, all the ratios have improved as well, except for population.
 The change in the results for the binomial-beta model prior is less pronounced.
 
 ```{r}
-bma_results8[[2]]
+bma_table(bma_results8, prior = "beta")
 ```
 
 With the increase in expected model size, population is classified as very strong,
@@ -1027,7 +1233,7 @@ Although @Moral+2013 and @Moral+2016 addressed this issue to some extent, resear
 
 To apply the dilution prior, the user must set `dilution = 1` in the `bma` function.
 The user can also manipulate the dilution parameter $\omega$.
-The default option is `dil.Par = 0.5`, as recommended by @George+2010.
+The default option is `omega = 0.5`, as recommended by @George+2010.
 
 ```{r}
 bma_results_dil <- bma(
@@ -1040,36 +1246,36 @@ bma_results_dil <- bma(
 The effect of implementing the dilution prior is well depicted by the distribution of prior probability mass over the model sizes.
 
 ```{r fig=TRUE}
-size_graphs_dil <- model_sizes(bma_results_dil)
+model_sizes(bma_results_dil)
 ```
 
 The change in the prior distribution is more visible for the binomial-beta model prior.
 In panel b, the prior probability mass has decreased for larger models and increased for smaller models.
 However, this change is not uniform, as models characterized by the highest degree of multicollinearity are subject to the greatest penalty in terms of prior probability mass.
 
-Before moving to the BMA statistics, it is instructive to examine the change in the `dil.Par` parameter.
+Before moving to the BMA statistics, it is instructive to examine the change in the `omega` parameter.
 
 ```{r fig=TRUE}
 bma_results_dil01 <- bma(
   model_space = full_model_space,
   round       = 3,
   dilution    = 1,
-  dil.Par     = 0.1
+  omega     = 0.1
 )
-size_graphs_dil01 <- model_sizes(bma_results_dil01)
+model_sizes(bma_results_dil01)
 ```
 
 As we can see, decreasing the value of $\omega$ diminishes the impact of dilution on the model prior.
-Conversely, raising the `dil.Par` parameter increases the degree of dilution.
+Conversely, raising the `omega` parameter increases the degree of dilution.
 
 ```{r fig=TRUE}
 bma_results_dil2 <- bma(
   model_space = full_model_space,
   round       = 3,
   dilution    = 1,
-  dil.Par     = 2
+  omega     = 2
 )
-size_graphs_dil2 <- model_sizes(bma_results_dil2)
+model_sizes(bma_results_dil2)
 ```
 
 An especially strong impact can be seen for the binomial-beta prior.
@@ -1078,7 +1284,7 @@ However, even after giving such priority to the penalty for multicollinearity,
 the main BMA statistics remain stable.
 
 ```{r}
-bma_results_dil2[[2]]
+bma_table(bma_results_dil2, prior = "beta")
 ```
 
 Hence, we see that @Moral+2016's claim about the fragility of growth regressors withstands the test of various manipulations in the model prior.
@@ -1086,7 +1292,7 @@ Hence, we see that @Moral+2016's claim about the fragility of growth regressors 
 ## Concluding remarks
 
 This manuscript introduces the `badp` package, which enables Bayesian model averaging for dynamic panels with weakly exogenous regressors — a methodology developed by @Moral+2012, @Moral+2013, @Moral+2016.
-This package allows researchers to simultaneously address model uncertainty and reverse causality and is the only R package offering these capabilities.
+This package allows researchers to simultaneously address model uncertainty and reverse causality and is, to the best of our knowledge, the first R package implementing this approach.
 It provides flexible options for specifying model priors, including dilution prior that accounts for multicollinearity.
 The package also includes graphical tools for visualizing prior and posterior model probabilities across model space and model sizes, as well as functions for plotting histograms and kernel densities of the estimated coefficients.
 Additionally, it allows researchers to compute jointness measures introduced by @Doppelhofer+2009, @Ley+2007, @Hofmarcher+2018 to assess whether pairs of regressors act as substitutes or complements.
@@ -1097,7 +1303,7 @@ Users unfamiliar with this approach can easily learn to apply it through the han
 The package's functionalities are illustrated using the original dataset from @Moral+2016 in the context of analyzing the determinants of economic growth.
 The results of the examination illustrate that fragility of growth determinants is a persistent feature of the data, confirming @Moral+2016 claims.
 The various empirical exercises underscore two important aspects of any BMA analysis.
-First, the results should always be validated through extensive changes in prior specifications.
+First, prior sensitivity should be routinely examined.
 Second, the robustness of the regressors must be evaluated using both
 posterior inclusion probabilities and the ratios of the posterior mean to the posterior standard deviation,
 as these measures can often lead to differing conclusions.

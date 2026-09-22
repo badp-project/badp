@@ -36,8 +36,8 @@ test_that(paste("sem_regressors_matrix uses all regressors if",
 })
 
 test_that("sem_B_matrix computes proper matrix", {
-  periods_n <- 4
-  B <- sem_B_matrix(3, periods_n, 4:6)
+  n_periods <- 4
+  B <- sem_B_matrix(3, n_periods, 4:6)
   B11_expected_data <- c(
     1, 0, 0, 0,
     -3, 1, 0, 0,
@@ -55,8 +55,8 @@ test_that("sem_B_matrix computes proper matrix", {
     0, 0, 0, -5,
     0, 0, 0, -6
   )
-  B11_expected <- matrix(B11_expected_data, nrow = periods_n, byrow = TRUE)
-  B12_expected <- matrix(B12_expected_data, nrow = periods_n)
+  B11_expected <- matrix(B11_expected_data, nrow = n_periods, byrow = TRUE)
+  B12_expected <- matrix(B12_expected_data, nrow = n_periods)
   expect_equal(B[[1]], B11_expected, ignore_attr = TRUE)
   expect_equal(as.matrix(B[[2]]), B12_expected, ignore_attr = TRUE)
 })
@@ -66,35 +66,35 @@ test_that("sem_C_matrix computes proper matrix", {
   phi_0 <- 19
   beta <- 11:15
   phi_1 <- 21:25
-  periods_n <- 4
-  C <- as.matrix(sem_C_matrix(alpha, phi_0, periods_n, beta, phi_1))
+  n_periods <- 4
+  C <- as.matrix(sem_C_matrix(alpha, phi_0, n_periods, beta, phi_1))
 
   C_expected_data <- c(
-    alpha + phi_0, rep(phi_0, periods_n-1),
-    beta[1] + phi_1[1], rep(phi_1[1], periods_n-1),
-    beta[2] + phi_1[2], rep(phi_1[2], periods_n-1),
-    beta[3] + phi_1[3], rep(phi_1[3], periods_n-1),
-    beta[4] + phi_1[4], rep(phi_1[4], periods_n-1),
-    beta[5] + phi_1[5], rep(phi_1[5], periods_n-1)
+    alpha + phi_0, rep(phi_0, n_periods-1),
+    beta[1] + phi_1[1], rep(phi_1[1], n_periods-1),
+    beta[2] + phi_1[2], rep(phi_1[2], n_periods-1),
+    beta[3] + phi_1[3], rep(phi_1[3], n_periods-1),
+    beta[4] + phi_1[4], rep(phi_1[4], n_periods-1),
+    beta[5] + phi_1[5], rep(phi_1[5], n_periods-1)
   )
-  C_expected <- matrix(C_expected_data, periods_n, 1 + length(beta))
+  C_expected <- matrix(C_expected_data, n_periods, 1 + length(beta))
   expect_equal(C, C_expected, ignore_attr = TRUE)
 })
 
 test_that("sem_psi_matrix computes proper matrix", {
   psis <- c(101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112)
-  timestamps_n <- 3
-  feature_n <- 4
+  n_timestamps <- 3
+  n_features <- 4
 
-  psi_m <- sem_psi_matrix(psis = psis, timestamps_n = timestamps_n,
-                          features_n = feature_n)
+  psi_m <- sem_psi_matrix(psis = psis, n_timestamps = n_timestamps,
+                          n_features = n_features)
 
   psi_m_expected_data <- c(
     psis[1], psis[2], psis[3], psis[4], psis[5], psis[6], psis[7], psis[8],
     0, 0, 0, 0, psis[9], psis[10], psis[11], psis[12],
     0, 0, 0, 0, 0, 0, 0, 0
   )
-  psi_m_expected <- matrix(psi_m_expected_data, timestamps_n, byrow = TRUE)
+  psi_m_expected <- matrix(psi_m_expected_data, n_timestamps, byrow = TRUE)
   expect_equal(psi_m, psi_m_expected)
 })
 
