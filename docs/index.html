@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bdsm: Bayesian Dynamic Systems Modeling</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-r.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>bdsm: Bayesian Dynamic Systems Modeling</h1>
+        <p>Implements methods for building and analyzing models based on panel data as described in the paper by Moral-Benito (2013).</p>
+    </header>
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>The <strong>bdsm</strong> package implements Bayesian model averaging (BMA) for dynamic panels with weakly exogenous regressors, addressing model uncertainty and reverse causality.</p>
+            <ul>
+                <li>Tools to estimate the entire model space and calculate Bayesian information criterion (BIC).</li>
+                <li>Flexible model priors and comprehensive BMA statistics.</li>
+                <li>Functions to visualize prior and posterior model probabilities.</li>
+                <li>Support for parallel computing to handle large model spaces.</li>
+            </ul>
+        </section>
+        <section id="installation">
+            <h2>Installation</h2>
+            <p>You can install the released version of bdsm from CRAN with:</p>
+            <pre><code class="language-r">install.packages("bdsm")</code></pre>
+            <p>Or the development version from GitHub with:</p>
+            <pre><code class="language-r"># install.packages("devtools")
+devtools::install_github("mateuszwyszynski/bdsm")</code></pre>
+        </section>
+        <section id="getting-started">
+            <h2>Getting Started</h2>
+            <p>Prepare your data in the required format and use the package functions to estimate model spaces, perform Bayesian model averaging, and visualize results.</p>
+        </section>
+        <section id="examples">
+            <h2>Examples</h2>
+            <h3>Data Preparation</h3>
+            <p>Your data should be in the following format:</p>            install.packages("hexSticker")
+            <ul>
+                <li>A <strong>time</strong> column (e.g., <code>year</code>).</li>
+                <li>An <strong>entity</strong> column (e.g., <code>country</code>).</li>
+                <li>A <strong>dependent variable</strong> column (e.g., <code>gdp</code>).</li>
+                <li>Remaining columns as potential <strong>regressors</strong>.</li>
+            </ul>
+            <pre><code class="language-r">library(magrittr)
+
+set.seed(20)
+
+# Features are scaled and demeaned,
+# then centralized around the mean within cross-sections (fixed time effects)
+data_prepared &lt;- bdsm::economic_growth[, 1:5] %&gt;%
+  bdsm::feature_standardization(
+    excluded_cols = c(country, year, gdp)
+  ) %&gt;%
+  bdsm::feature_standardization(
+    group_by_col  = year,
+    excluded_cols = country,
+    scale         = FALSE
+  )</code></pre>
+
+            <h3>Estimating the Model Space</h3>
+            <p>The function <code>optim_model_space()</code> estimates all possible models (each possible subset of regressors) via maximum likelihood:</p>
+            <pre><code class="language-r">model_space &lt;- bdsm::optim_model_space(
+  df             = data_prepared,
+  dep_var_col    = gdp,      # Dependent variable
+  timestamp_col  = year,
+  entity_col     = country,
+  init_value     = 0.5
+)</code></pre>
+
+            <h3>Performing Bayesian Model Averaging</h3>
+            <p>Run <code>bma()</code> to obtain posterior model probabilities, posterior inclusion probabilities (PIPs), and other BMA statistics:</p>
+            <pre><code class="language-r">bma_results &lt;- bdsm::bma(model_space, df = data_prepared, round = 3)
+
+# Inspect the BMA summary
+bma_results[[1]]  # BMA stats under binomial prior</code></pre>
+
+            <h3>Visualizing Prior and Posterior Probabilities</h3>
+            <p>Use <code>model_pmp()</code> to show prior vs. posterior model probabilities:</p>
+            <pre><code class="language-r">pmp_graphs &lt;- bdsm::model_pmp(bma_results, top = 3)  # Show top 3 models</code></pre>
+        </section>
+        <section id="contributions">
+            <h2>Contributions and Issues</h2>
+            <p>We welcome bug reports, feature requests, and contributions. Feel free to open an issue or pull request on <a href="https://github.com/mateuszwyszynski/bdsm">GitHub</a>.</p>
+        </section>
+        <footer>
+            <p>&copy; 2025 Mateusz Wyszynski, Marcin Dubel, Krzysztof Beck. Distributed under the MIT License.</p>
+        </footer>
+    </main>
+</body>
+</html>
