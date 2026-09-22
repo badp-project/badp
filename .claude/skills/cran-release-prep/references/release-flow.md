@@ -4,13 +4,18 @@ Read this once the branch is verified clean. It covers what happens after the
 package itself is ready: submitting, merging, tagging, and keeping the repo's
 record of releases honest.
 
-## Submit
+## Submit — the maintainer's job, not yours
+
+CRAN sends a confirmation e-mail to the maintainer address, so the submission
+has to be run by the person who can answer it. Prepare the branch, push it, and
+hand off with the command rather than running it:
 
 ```r
 devtools::submit_cran()
 ```
 
-This writes `CRAN-SUBMISSION`:
+Once they confirm it is submitted, commit and push the `CRAN-SUBMISSION` file it
+writes:
 
 ```
 Version: 0.7.0
@@ -18,8 +23,8 @@ Date: 2026-09-14 18:56:48 UTC
 SHA: 722736ed6598abff399ce6fab1b598cb7b23d51d
 ```
 
-**Commit and push that file.** It is the only record of which tree went to CRAN,
-and it is what lets anyone later prove what was submitted. In one repo the
+Pushing it is the part people skip. It is the only record of which tree went to
+CRAN, and what lets anyone later prove what was submitted. In one repo the
 commits submitted for two consecutive releases had never been pushed — those
 trees existed on a single laptop, and reconstructing them meant downloading the
 published tarballs and content-matching against rebased copies.

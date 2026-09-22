@@ -19,9 +19,68 @@ Nearly every real defect found in this kind of work has the same shape:
 
 A worked example: in one release, `README.md` documented `best_models(bma_list = x, ...)` — an argument that release had *renamed*. The `.Rmd` was correct; the `.md` had been hand-edited and never re-knitted. It passed `R CMD check` cleanly, because check never runs the README. It would have shipped a copy-pasteable example that errors.
 
+## The lifecycle, and the two places you stop
+
+A release is not one task. It is three stretches of work separated by two waits
+on the maintainer, and both waits are on things no agent can do: CRAN requires a
+confirmation e-mail sent to the maintainer's address, and an acceptance decision
+arrives hours or days later. Running past either one is the way this goes wrong.
+
+```
+  YOU                          MAINTAINER
+  1 confirm version
+  2 cut release-<version>
+  3 prep + verify  ............. (SKILL.md sequence below)
+  4 commit + push
+  5 hand off  --------------->   submits to CRAN (e-mail confirmation)
+  6 commit + push CRAN-SUBMISSION
+     ..........................  waits for CRAN's decision
+  7 back-merge to develop  <---  says CRAN accepted
+  8 promote to main
+                                 automation cuts the tag + GitHub release
+```
+
+**1. Confirm the version before creating anything.** Read what `develop`
+carries — the bump often already happened there — and say which version you are
+about to release. Do not infer it; a wrong guess names the branch, the NEWS
+heading and the tag.
+
+```sh
+git show origin/develop:DESCRIPTION | sed -n 's/^Version:[[:space:]]*//p'
+```
+
+**2. Cut `release-<version>` from `develop`**, e.g. `release-0.8.0`. The delivery
+branch used later is then `release-<version>-to-main`, which reads as an obvious
+pair.
+
+**3–4. Prep, verify, then commit and push.** Work the sequence below, commit the
+result, and push the branch. Pushing matters beyond backup: the GitHub Actions
+check matrix is the cross-platform evidence `cran-comments.md` claims, so it has
+to have run on this commit before anyone submits.
+
+**5. Stop and hand off.** Do not run `devtools::submit_cran()`. Submission
+triggers a confirmation e-mail to the maintainer, so it is theirs to run. Report
+that the branch is ready, what the check produced, and the command to run.
+
+**6. When they say it is submitted**, commit and push `CRAN-SUBMISSION`. It
+records the exact submitted SHA and is the only durable record of which tree
+went to CRAN. Then stop again — CRAN has not decided yet.
+
+**7–8. Only once CRAN accepts**, back-merge to `develop` and promote to `main`.
+
+Two reasons the order matters. Merging to `main` fires the release automation,
+so promoting before acceptance publishes a GitHub release for a version CRAN may
+still reject. And the back-merge is not optional: the `cran-comments.md` section,
+NEWS edits, regenerated docs and `CRAN-SUBMISSION` exist only on the release
+branch, so skipping it means the next release is cut from a `develop` that has
+silently lost a version's history.
+
+Promotion to `main` has its own failure mode under branch rules — read
+`references/release-flow.md` before attempting it.
+
 ## Sequence
 
-Work in order. Later steps assume earlier ones are clean.
+This is step 3 above. Work in order; later steps assume earlier ones are clean.
 
 ### 0. Orient before changing anything
 

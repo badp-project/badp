@@ -44,8 +44,10 @@ releases through a large `develop` -> `main` PR.
 
 **On the release branch**
 
-- [ ] Cut the branch from `develop`.
-- [ ] Bump `Version:` in `DESCRIPTION`.
+- [ ] Cut `release-<version>` from `develop`, e.g. `release-0.8.0`. The delivery
+      branch used later is then `release-<version>-to-main`.
+- [ ] Confirm `Version:` in `DESCRIPTION`. The bump often already happened on
+      `develop` - check before changing it rather than assuming.
 - [ ] Add the `NEWS.md` section. The heading must be exactly `# badp <version>` —
       the workflow uses that section verbatim as the release notes and fails
       without it. (0.4.0.1 has no section, which is why its notes had to be
@@ -69,16 +71,22 @@ releases through a large `develop` -> `main` PR.
       the only record of which tree went to CRAN. The trees submitted for 0.6.0
       and 0.6.1 were never pushed anywhere.
 
-**Merge — both targets, from the release branch**
+**Merge — both targets, once CRAN has accepted**
 
-- [ ] PR the release branch into `develop`.
+Wait for the acceptance e-mail. Merging to `main` cuts the GitHub release, so
+promoting earlier publishes a release for a version CRAN may still reject.
+
+- [ ] PR the release branch into `develop`. This is not optional: the
+      `cran-comments.md` section, NEWS edits, regenerated docs and
+      `CRAN-SUBMISSION` exist only on the release branch, so skipping it means
+      the next release is cut from a `develop` missing a version's history.
 - [ ] Promote the release branch to `main` through a delivery branch — see
       [Promoting a release branch to `main`](#promoting-a-release-branch-to-main).
       Merging that PR cuts the tag and the GitHub release automatically.
 - [ ] Do **not** reach `main` via a `develop` -> `main` PR. That is what broke
       the correspondence between `main` and CRAN.
 
-**After CRAN accepts**
+**After both merges**
 
 - [ ] Confirm the release exists and `main` shows the published version.
 - [ ] If CRAN asks for changes, fix them on the release branch, bump to the next
