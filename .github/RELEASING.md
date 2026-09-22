@@ -20,16 +20,21 @@ number while carrying 0.7.0's code.
 
 ## The flow
 
-The release branch is merged into **both** `main` and `develop`.
+The release branch reaches **both** `main` and `develop`.
 
 ```
-                 +--> main      (release merge only; tagged; == CRAN)
+                 +--> release-<version>-to-main --> main  (tagged; == CRAN)
 release branch --|
-                 +--> develop   (back-merge, so develop keeps release fixes)
+                 +--> develop                             (back-merge, keeps release fixes)
 ```
 
-`main` only ever receives release merges, so its tree is the tree that went to
+`main` only ever receives release content, so its tree is the tree that went to
 CRAN. `develop` carries on as the integration branch.
+
+`main` is reached through a short-lived delivery branch rather than by opening a
+PR from the release branch straight into `main`. That detour is forced by the
+branch rules, not a matter of taste — see
+[Promoting a release branch to `main`](#promoting-a-release-branch-to-main).
 
 The release -> `main` PR is small and reviewable — it is one release, not
 months of accumulated integration work — which is the other reason not to route
@@ -66,9 +71,10 @@ releases through a large `develop` -> `main` PR.
 
 **Merge — both targets, from the release branch**
 
-- [ ] PR the release branch into `main`. Merging it cuts the tag and the GitHub
-      release automatically.
 - [ ] PR the release branch into `develop`.
+- [ ] Promote the release branch to `main` through a delivery branch — see
+      [Promoting a release branch to `main`](#promoting-a-release-branch-to-main).
+      Merging that PR cuts the tag and the GitHub release automatically.
 - [ ] Do **not** reach `main` via a `develop` -> `main` PR. That is what broke
       the correspondence between `main` and CRAN.
 
@@ -77,6 +83,90 @@ releases through a large `develop` -> `main` PR.
 - [ ] Confirm the release exists and `main` shows the published version.
 - [ ] If CRAN asks for changes, fix them on the release branch, bump to the next
       patch version, and submit again. Do not amend a published release.
+
+## Promoting a release branch to `main`
+
+### Why the release branch cannot be PRed into `main` directly
+
+`main` and `develop` are both covered by rulesets (`main-branch-rules`,
+`develop-branch-rules`) that require a PR, require linear history, block force
+pushes, and list **no bypass actors**. Required linear history means no merge
+commit can ever land on either branch, so every release PR into `main` has been
+squashed.
+
+A squash produces a commit with no ancestry link to the branch it came from.
+`main` has therefore never been an ancestor of `develop`, and the two have not
+shared a merge base since `09b9a28` (0.3.0, October 2025). `main` carries one
+squash commit; a branch cut from `develop` carries every commit since 0.3.0.
+Git replays both sides against that ancient base, so the two sets of changes
+collide: roughly 53 conflicting files, including the binary `data/*.rda` objects
+that can never auto-merge.
+
+Cutting the release branch from `develop` does not avoid this. The release
+branch inherits the divergence.
+
+There is no merge button that fixes it. "Create a merge commit" is disabled by
+the linear-history rule, and "Rebase and merge" rewrites commit SHAs, so the
+rebased copies are not the release branch's commits either.
+
+What remains is a single rule:
+
+> A PR into `main` is conflict-free if and only if its head branch is a
+> descendant of `main`.
+
+### The recipe
+
+Build a branch off `main` and set its tree to the release branch's tree:
+
+```sh
+git fetch origin
+git checkout -b release-<version>-to-main origin/main
+git read-tree -u --reset origin/<release branch>
+git commit -m "Version <version> release"
+git push -u origin release-<version>-to-main
+gh pr create --base main --head release-<version>-to-main \
+  --title "Version <version> release"
+```
+
+The result is one single-parent commit, on top of `main`, whose tree is
+byte-identical to the release branch. Linear history is satisfied, the PR shows
+no conflicts, and the diff GitHub renders is the real release diff. The guard
+passes by construction, because the tree being compared *is* the submitted tree.
+
+### Things that will bite
+
+- **Use `read-tree`, not `merge`.** `git merge` reports conflicts that are all
+  spurious — the release tree is strictly newer than `main`'s — and a merge
+  commit would be rejected by the linear-history rule anyway.
+- **`read-tree -u --reset` handles deletions.** `git checkout <branch> -- .`
+  copies files in but never removes files that the release dropped, which would
+  leave `main` with stale leftovers and fail the guard.
+- **Do not delete the release branch after merging.** The guard resolves the SHA
+  recorded in `CRAN-SUBMISSION`; if that commit becomes unreachable, every later
+  release job fails.
+- **The release branch must carry `.github/workflows/`.** Two files matter:
+  `R-CMD-check-main.yaml` provides the five status checks `main` requires, and
+  `release.yaml` is what cuts the tag. A `push` workflow runs from the file on
+  the branch that was pushed, so if `release.yaml` is not on `main`, no release
+  is ever cut. Both arrive automatically in any branch cut from `develop` after
+  September 2026; the 0.7.0 branch predated them and had to have them added by
+  hand.
+- **`git switch` does not exist before git 2.23.** Use `git checkout -b`.
+- **Old git may fail the push with `RPC failed; HTTP 400`.** git 2.22 with a
+  modern curl negotiates HTTP/2 and GitHub rejects the upload. Fix with
+  `git config --global http.version HTTP/1.1`, or upgrade git.
+
+### What this does not fix
+
+`main` and `develop` still share no ancestry, and they never will while both
+require linear history. That is fine: nothing depends on it once releases reach
+`main` this way, and `git diff main origin/<release branch>` stays the honest
+check of whether `main` is what shipped.
+
+If the constraint is ever relaxed — dropping `required_linear_history` from
+`main-branch-rules` alone — release branches could be merged into `main` as true
+merge commits and the delivery branch would no longer be needed. That is a
+repository-settings decision and needs an admin.
 
 ## The guard
 
