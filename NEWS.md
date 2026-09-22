@@ -14,7 +14,7 @@ changed or removed.
   estimated models no longer requires indexing the parameter and statistics
   matrices.
 * New accessors `coef()` and `model_stats()` for `badp_model_space`. `coef()`
-  returns the parameter matrix with every row labelled and the columns named
+  returns the parameter matrix with every row labeled and the columns named
   `model_1`, `model_2`, ..., or the parameters of one model with
   `model = j`. `model_stats()` returns the statistics matrix with named rows
   (`loglik`, `marg_lik`, `se_<name>`, `robust_se_<name>`, `trace_HinvJ`,

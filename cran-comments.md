@@ -8,7 +8,7 @@ changes are additive and listed in NEWS.md:
 
 * New accessor `model_table()` returns one row per model of a model space.
 * New `coef()` and `model_stats()` methods return the parameters and the
-  statistics of a model space with labelled rows.
+  statistics of a model space with labeled rows.
 * New `logLik()` methods for model spaces and for the models returned by
   `best_models()` return standard `"logLik"` objects.
 * The object returned by `bma()` gained three components, appended after the
@@ -17,17 +17,10 @@ changes are additive and listed in NEWS.md:
 ## R CMD check results
 
 Local check with `R CMD check --as-cran`, including the CRAN incoming checks
-and the PDF manual: R 4.6.1 (2026-06-24), aarch64-apple-darwin23, macOS
-Sequoia 15.7.9.
+and the PDF manual: R 4.5.1 (2025-06-13), aarch64-apple-darwin20, macOS
+Tahoe 26.6.2.
 
-0 errors | 0 warnings | 2 notes
-
-* checking CRAN incoming feasibility ... NOTE
-  Days since last update: 4
-
-  0.8.0 answers a second round of review of the Journal of Statistical
-  Software manuscript, which follows the interface of the package; the
-  changes are additive.
+0 errors | 0 warnings | 1 note
 
 * checking HTML version of manual ... NOTE
   Skipping checking HTML validation: 'tidy' doesn't look like recent enough
@@ -35,6 +28,13 @@ Sequoia 15.7.9.
 
   This comes from the local environment: macOS ships an HTML Tidy from 2006.
   It does not concern the package.
+
+The CRAN incoming feasibility check reports no problems, and the reference
+manual and the vignette both build without error.
+
+## Downstream dependencies
+
+There are no reverse dependencies on CRAN.
 
 # 0.7.0
 
