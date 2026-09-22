@@ -15,11 +15,15 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
   model_graphs <- model_pmp(bma_results, top = 16)
 
   # Basic structure
-  expect_equal(class(model_graphs), "list")
+  expect_s3_class(model_graphs, "badp_plots")
   expect_equal(length(model_graphs), 3)
-  expect_equal(class(model_graphs[[1]]), c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg"))
-  expect_equal(class(model_graphs[[2]]), c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg"))
-  expect_equal(class(model_graphs[[3]]), c("gtable", "gTree", "grob", "gDesc"))
+  expect_true(inherits(model_graphs[[1]], "ggplot"))
+  expect_true(inherits(model_graphs[[2]], "ggplot"))
+  # Combined plot is now a patchwork object (which also inherits from
+  # ggplot, so it draws when printed at the console). This replaces the
+  # previous gtable/TableGrob return type from gridExtra::grid.arrange.
+  expect_true(inherits(model_graphs[[3]], "patchwork"))
+  expect_true(inherits(model_graphs[[3]], "ggplot"))
 
   # Individual ggplots have correct data and aesthetics
   g1_data <- ggplot2::ggplot_build(model_graphs[[1]])$data[[1]]
@@ -35,20 +39,35 @@ test_that(paste("model_pmp creates correct lists with graphs"), {
   expect_equal(g2_labels$y, "Prior, Posterior")
   expect_equal(g2_labels$x, "Model number in the ranking")
 
-  # Combined plot structure: 3 rows x 1 column (plot, plot, legend)
+  # Combined plot still contains two subplots with the labelled titles.
+  # patchwork stores the first sub-plot in $patches$plots and the last
+  # one at the top level of the patchwork object, so we collect both
+  # titles before checking.
   combined <- model_graphs[[3]]
-  expect_equal(nrow(combined$layout), 3)
-  expect_equal(max(combined$layout$l), 1) # single column
+  subplot_titles <- c(
+    combined$patches$plots[[1]]$labels$title,
+    combined$labels$title
+  )
+  expect_true(any(grepl("^a\\)", subplot_titles)))
+  expect_true(any(grepl("^b\\)", subplot_titles)))
+})
 
-  # Panel labels "a)" and "b)" are embedded in the plot titles
-  grob_classes <- vapply(combined$grobs, function(g) {
-    cl <- class(g)
-    if ("gtable" %in% cl) "gtable" else cl[1]
-  }, character(1))
-  # Two plot gtables + one legend gtable
-  expect_equal(sum(grob_classes == "gtable"), 3)
 
-  # Legend grob is present (guide-box)
-  grob_names <- vapply(combined$grobs, function(g) g$name, character(1))
-  expect_true(any(grepl("guide-box", grob_names)))
+test_that("model_pmp draws bars when type = \"histogram\"", {
+
+  bma_results <- bma(small_model_space, round = 3, dilution = 0)
+
+  lines <- model_pmp(bma_results, top = 5, type = "line")
+  bars  <- model_pmp(bma_results, top = 5, type = "histogram")
+
+  expect_s3_class(bars, "badp_plots")
+  expect_equal(names(bars), names(lines))
+
+  # the bar form uses a different ggplot layer from the line form
+  layer_of <- function(p) class(p$layers[[1]]$geom)[1]
+  expect_equal(layer_of(lines$binomial), "GeomLine")
+  expect_equal(layer_of(bars$binomial),  "GeomCol")
+  expect_equal(layer_of(bars$beta),      "GeomCol")
+
+  expect_error(model_pmp(bma_results, top = 5, type = "nonsense"))
 })

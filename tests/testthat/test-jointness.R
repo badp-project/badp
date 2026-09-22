@@ -14,8 +14,8 @@ test_that(paste("jointness computes correct jointness table"), {
 
   jointness_table <- jointness(bma_results, measure = "HCGHM", rho = 0.5, round= 3)
 
-  expect_equal(nrow(jointness_table), bma_results[[4]])
-  expect_equal(ncol(jointness_table), bma_results[[4]])
+  expect_equal(nrow(jointness_table), bma_results$R)
+  expect_equal(ncol(jointness_table), bma_results$R)
   expect_equal(class(jointness_table), c("matrix","array"))
   expect_equal(is.na(jointness_table[[1]]), TRUE)
 })

@@ -2,7 +2,7 @@
 % Please edit documentation in R/data_preparation.R
 \name{join_lagged_col}
 \alias{join_lagged_col}
-\title{Dataframe with no lagged column}
+\title{Merge a Lagged Column into a Single Column}
 \usage{
 join_lagged_col(
   df,
@@ -14,7 +14,7 @@ join_lagged_col(
 )
 }
 \arguments{
-\item{df}{Dataframe with data with a column with lagged values}
+\item{df}{Data frame with a column holding lagged values}
 
 \item{col}{Column with quantity not lagged}
 
@@ -28,13 +28,26 @@ are lagged in time}
 \item{timestep}{Difference between timestamps (e.g. 10)}
 }
 \value{
-A dataframe with two columns merged, i.e. just one column with the desired
+A data frame with two columns merged, i.e. just one column with the desired
 quantity is left.
 }
 \description{
-This function allows to turn data in the format with lagged values for a
-chosen column (i.e. there are two columns with the same quantity, but one
-column is lagged in time) into the format with just one column
+Turns data in which a quantity is stored twice, once in levels and once
+lagged in time, into the single-column form the rest of the package
+expects.
+}
+\details{
+Some panel data sets ship the dependent variable in two columns, the value
+at time \eqn{t} and the value at time \eqn{t-1}, held side by side in the
+same row. The functions in \pkg{badp} build the lags themselves from the
+panel structure, so they need the quantity only once. This function
+performs that reduction: the two columns are merged into one and the rows
+are re-indexed so that no observation is lost.
+
+The step is conditional. Data that already store the quantity once, as
+\code{\link{economic_growth}} and \code{\link{migration_data}} do, pass
+straight to \code{\link{feature_standardization}} and do not need this
+function at all.
 }
 \examples{
 df <- data.frame(
@@ -46,4 +59,7 @@ df <- data.frame(
 
 join_lagged_col(df, gdp, gdp_lagged, year, country, 1)
 
+}
+\seealso{
+\code{\link{feature_standardization}}
 }

@@ -2,15 +2,9 @@
 % Please edit documentation in R/model_space.R
 \name{init_model_space_params}
 \alias{init_model_space_params}
-\title{Initialize model space matrix}
+\title{Initialize the Model Space Matrix}
 \usage{
-init_model_space_params(
-  df,
-  timestamp_col,
-  entity_col,
-  dep_var_col,
-  init_value = 1
-)
+init_model_space_params(df, timestamp_col, entity_col, dep_var_col, init_value)
 }
 \arguments{
 \item{df}{Data frame with data for the SEM analysis.}
@@ -22,15 +16,20 @@ natural numbers can be used as timestamps}
 
 \item{dep_var_col}{Column with dependent variable}
 
-\item{init_value}{Initial value for parameters present in the model. Default
-is \code{1}.}
+\item{init_value}{A function of one argument \code{n} returning \code{n}
+starting values (e.g. \code{function(n) runif(n, 0.1, 1)}). It generates the
+starting point for every parameter of every model and thus enables, e.g.,
+grid or randomized multi-start experiments. A constant starting point is
+obtained with \code{function(n) rep(0.5, n)}, or equivalently by passing
+the single number \code{0.5}. Starting values must be non-zero, because
+zeros encode excluded parameters.}
 }
 \value{
 matrix of model parameters
 }
 \description{
 This function builds a representation of the model space, by creating a
-dataframe where each column represents values of the parameters for a given
+data frame where each column represents values of the parameters for a given
 model. Real value means that the parameter is included in the model. A
 parameter not present in the model is marked as \code{NA}.
 }
@@ -56,5 +55,7 @@ data_prepared <- badp::economic_growth[, 1:5] \%>\%
     scale         = FALSE
   )
 
-init_model_space_params(data_prepared, year, country, gdp)
+init_model_space_params(data_prepared, year, country, gdp,
+                        init_value = function(n) runif(n, 0.1, 1))
 }
+\keyword{internal}

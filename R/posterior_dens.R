@@ -1,10 +1,10 @@
-#' Graphs of the posterior densities of the coefficients
+utils::globalVariables(".data")
+
+#' Kernel Densities of the Coefficients
 #'
-#' This function draws graphs of the posterior densities of all the coeffcients of interest.
+#' This function draws graphs of the posterior densities of all the coefficients of interest.
 #'
-#' @name posterior_dens
-#'
-#' @param bma_list bma object (the result of the bma function)
+#' @param x An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.
 #' @param prior Parameter indicating which model prior should be used for calculations:
 #' 1) "binomial" - using binomial model prior (default option) \cr
 #' 2) "beta" - using binomial-beta model prior
@@ -38,27 +38,24 @@
 #'
 #' posterior_graphs <- posterior_dens(bma_results, prior = "binomial", SE = "robust")
 #' }
-
-utils::globalVariables(".data")
-
-posterior_dens <- function(bma_list, prior = "binomial", SE = "standard"){
+posterior_dens <- function(x, prior = "binomial", SE = "standard"){
 
   if (!(prior %in% c("binomial", "beta"))) {
     stop("prior is wrongly specified: please use 'binomial' or 'beta'")
   }
 
   if (!(SE %in% c("standard", "robust"))) {
-    stop("weight is wrongly specified: 'standard', or 'robust'")
+    stop("SE is wrongly specified: 'standard', or 'robust'")
   }
 
   if (prior=="binomial"){
-    post_table <- bma_list[[1]]
+    post_table <- x$uniform_table
   }else{
-    post_table <- bma_list[[2]]
+    post_table <- x$random_table
   }
 
   post_table <- post_table[,c(2:4)]
-  x_names <- bma_list[[3]] # names of variables
+  x_names <- x$reg_names # names of variables
   K <- length(x_names)
 
   if (SE=="standard"){
@@ -112,6 +109,6 @@ posterior_dens <- function(bma_list, prior = "binomial", SE = "standard"){
     names(distPlots)[[i]] <- x_names[[i]]
   }
 
-return(distPlots)
+structure(distPlots, class = "badp_plots")
 
 }

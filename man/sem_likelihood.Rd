@@ -2,7 +2,7 @@
 % Please edit documentation in R/SEM_likelihood.R
 \name{sem_likelihood}
 \alias{sem_likelihood}
-\title{Likelihood for the SEM model}
+\title{Likelihood for the SEM Model}
 \usage{
 sem_likelihood(
   params,
@@ -20,7 +20,7 @@ sem_likelihood(
 list with named parameters. See 'Details'}
 
 \item{data}{Data for the likelihood computations. Can be either a list of
-matrices or a dataframe. If the dataframe, additional parameters are
+matrices or a data frame. If a data frame, additional parameters are
 required to build the matrices within the function.}
 
 \item{timestamp_col}{Column which determines time stamps. For now only
@@ -54,7 +54,7 @@ The value of the likelihood for SEM model (or a part of interest of the
 likelihood)
 }
 \description{
-Likelihood for the SEM model
+Likelihood for the SEM Model
 }
 \details{
 The \code{params} argument is a list that should contain the following
@@ -83,22 +83,16 @@ The vector should have length equal to the number of regressors.
 \code{phis} double vector which together with \code{psis} determines upper
 right and bottom left part of the covariance matrix; The vector should have
 length equal to the number of regressors times number of time stamps minus 1,
-i.e. \code{regressors_n * (periods_n - 1)}
+i.e. \code{n_regressors * (n_periods - 1)}
 
 \code{psis} double vector which together with \code{psis} determines upper
 right and bottom left part of the covariance matrix; The vector should have
 length equal to the number of regressors times number of time stamps minus 1
 times number of time stamps divided by 2, i.e.
-\code{regressors_n * (periods_n - 1) * periods_n / 2}
+\code{n_regressors * (n_periods - 1) * n_periods / 2}
 }
 \examples{
-set.seed(1)
-df <- data.frame(
-  entities = rep(1:4, 5),
-  times = rep(seq(1960, 2000, 10), each = 4),
-  dep_var = stats::rnorm(20), a = stats::rnorm(20), b = stats::rnorm(20)
-)
-df <-
-  feature_standardization(df, excluded_cols = c(times, entities))
-sem_likelihood(0.5, df, times, entities, dep_var)
+data(economic_growth)
+eg <- feature_standardization(economic_growth, excluded_cols = c(year, country))
+sem_likelihood(0.5, eg, year, country, gdp)
 }

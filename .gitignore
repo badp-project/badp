@@ -68,3 +68,7 @@ inst/doc
 *.o
 *.so
 *.tmp
+
+# Claude
+.claude/*.local.*
+.positai

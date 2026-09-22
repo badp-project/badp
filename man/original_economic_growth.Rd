@@ -3,7 +3,7 @@
 \docType{data}
 \name{original_economic_growth}
 \alias{original_economic_growth}
-\title{Economic Growth Data in the original format}
+\title{Economic Growth Data in the Original Format}
 \format{
 \subsection{\code{original_economic_growth}}{
 

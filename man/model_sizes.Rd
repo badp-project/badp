@@ -2,22 +2,32 @@
 % Please edit documentation in R/model_sizes.R
 \name{model_sizes}
 \alias{model_sizes}
-\title{Graphs of the prior and posterior model probabilities of the model sizes}
+\title{Graphs of the Prior and Posterior Probabilities of Model Sizes}
+\usage{
+model_sizes(x, type = c("line", "histogram"))
+}
 \arguments{
-\item{bma_list}{bma_list object (the result of the bma function)}
+\item{x}{An object of class \code{badp_bma}, typically returned by \code{\link{bma}}.}
+
+\item{type}{Character, either \code{"line"} (the default) for the prior and
+posterior drawn as lines against model size, or \code{"histogram"} for
+them drawn as side-by-side bars. Bars read well when there are few model
+sizes; with many regressors the line form stays legible where the bars
+become crowded.}
 }
 \value{
 A list with three graphs with prior and posterior model probabilities for model sizes:\cr
 \enumerate{
-\item The results with binomial model prior (based on PMP - posterior model probability) \cr
-\item The results with binomial-beta model prior (based on PMP - posterior model probability) \cr
+\item The results with binomial model prior \cr
+\item The results with binomial-beta model prior  \cr
 \item One graph combining all the aforementioned graphs
 }
 }
 \description{
-This function draws four graphs of prior and posterior model probabilities: \cr
-a) The results with binomial model prior (based on PMP - posterior model probability) \cr
-b) The results with binomial-beta model prior (based on PMP - posterior model probability)
+This function draws two graphs of prior and posterior model probabilities: \cr
+a) The results with binomial model prior \cr
+b) The results with binomial-beta model prior \cr
+c) One graph combining all the aforementioned graphs
 }
 \examples{
 \donttest{
@@ -40,6 +50,8 @@ bma_results <- bma(
 )
 
 size_graphs <- model_sizes(bma_results)
-}
 
+# bars instead of lines
+model_sizes(bma_results, type = "histogram")
+}
 }

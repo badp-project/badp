@@ -2,47 +2,188 @@
 % Please edit documentation in R/bma.R
 \name{bma}
 \alias{bma}
-\title{Calculation of the bma object}
+\title{Bayesian Model Averaging over a Model Space}
 \usage{
-bma(model_space, round = 4, EMS = NULL, dilution = 0, dil.Par = 0.5)
+bma(
+  model_space,
+  round = 4,
+  EMS = NULL,
+  dilution = 0,
+  omega = 0.5,
+  weighting = c("mb2016", "mb2012", "nt", "uip"),
+  eta = NULL
+)
 }
 \arguments{
-\item{model_space}{List with params and stats from the model space}
+\item{model_space}{An object of class \code{badp_model_space}, typically returned by \code{\link{optim_model_space}}.}
 
-\item{round}{Parameter indicating the decimal place to which number in the BMA tables and prior and posterior model sizes should be rounded (default round = 4)}
+\item{round}{Integer indicating the decimal place to which numbers in the BMA tables and prior and posterior model sizes should be rounded (default: 4).}
 
-\item{EMS}{Expected model size for model binomial and binomial-beta model prior}
+\item{EMS}{Numeric. Expected model size for binomial and binomial-beta model prior (default: R/2, where R is the number of regressors).}
 
-\item{dilution}{Binary parameter: 0 - NO application of a dilution prior; 1 - application of a dilution prior (George 2010).}
+\item{dilution}{Integer. Use 0 for no dilution prior (default), or 1 to apply a dilution prior (George 2010).}
 
-\item{dil.Par}{Parameter associated with dilution prior - the exponent of the determinant (George 2010). Used only if parameter dilution = 1.}
+\item{omega}{Numeric. The exponent of the determinant for the dilution prior (George 2010). Only used when \code{dilution = 1}. Default: 0.5.}
+
+\item{weighting}{Character string selecting the approximation to the
+marginal likelihood used to weight the models. One of: \cr
+\code{"mb2016"} (default) - the approximation computed by the
+implementation accompanying Moral-Benito (2016), namely
+\eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/N\}}, where \eqn{\ell_j} is the
+maximized log-likelihood of model \eqn{j}, \eqn{k_j} its number of linear
+parameters, \eqn{N} the number of entities and \eqn{T} the number of
+periods. This is the Schwarz approximation raised to the power \eqn{1/N} and
+is the option that reproduces the results published in Moral-Benito (2016);
+\cr
+\code{"mb2012"} - the Schwarz criterion as stated in equations (24)-(30) of
+Moral-Benito (2012), \eqn{\exp\{\ell_j - (k_j/2)\log(NT)\}}, treating the
+\eqn{NT} entity-period observations as the sample; \cr
+\code{"nt"} - as \code{"mb2016"} but averaging over entity-periods rather
+than entities, \eqn{\exp\{(\ell_j - (k_j/2)\log(NT))/(NT)\}}. This is the
+scaling that would be internally consistent with the \eqn{\log(NT)} penalty,
+and it tempers \eqn{T} times more strongly than \code{"mb2016"}; \cr
+\code{"uip"} - the Schwarz criterion with the entity as the unit of
+information, \eqn{\exp\{\ell_j - (k_j/2)\log(N)\}}. The unit information
+prior underlying the approximation (Kass and Wasserman 1995) is defined
+through the Fisher information for a single observation, and the likelihood
+factorizes over entities, so the entity is the natural unit.}
+
+\item{eta}{Optional single positive number giving the learning rate
+directly, as in \eqn{f(y|M_j) \propto \exp(\eta A_j)} with
+\eqn{A_j = \ell_j - (k_j/2)\log(NT)}. Supplying it overrides
+\code{weighting}, which is the intended way to examine how sensitive
+conclusions are to the rate. \code{eta = 1} reproduces \code{"mb2012"} and
+\code{eta = 1/N} reproduces \code{"mb2016"}. Default \code{NULL}, meaning
+the rate implied by \code{weighting}.}
 }
 \value{
-A list with 16 elements.
+An object of class \code{badp_bma}, which is a list containing:
 
 \describe{
-\item{uniform_table}{A table containing the results based on the binomialmodel prior.}
+\item{uniform_table}{A table containing the results based on the binomial model prior.}
 \item{random_table}{A table containing the results based on the binomial-beta model prior.}
 \item{reg_names}{A vector containing the names of the regressors, used by the functions.}
 \item{R}{The total number of regressors.}
 \item{num_of_models}{The number of models present in the model space.}
-\item{forJointnes}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
-\item{forBestModels}{A table containing model IDs, PMPs, coefficients, standard deviations,and standardized regression coefficients (stdRs) for the best_models function.}
+\item{jointness_data}{A table containing model IDs and posterior model probabilities (PMPs) for the jointness function.}
+\item{best_models_data}{A table containing model IDs, PMPs, coefficients, standard errors and robust standard errors, used by the \code{best_models} function.}
 \item{EMS}{The expected model size for the binomial and binomial-beta model priors, as specified by the user (default is EMS = R/2).}
-\item{sizePriors}{A table of uniform and random model priors distributed over model sizes for the model_sizes function.}
+\item{size_priors}{A table of binomial and binomial-beta model priors distributed over model sizes, used by the \code{model_sizes} function.}
 \item{PMPs}{A table containing the posterior model probabilities for use in the model_sizes function.}
-\item{modelPriors}{A table containing the model priors, used by the model_pmp function.}
+\item{model_priors}{A table containing the model priors, used by the model_pmp function.}
 \item{dilution}{A parameter indicating whether the priors were diluted, used in the model_sizes function.}
-\item{alphas}{A vector of coefficients for the lagged dependent variable in the coef_hist function.}
-\item{betas_nonzero}{A vector of nonzero coefficients for the regressors in the coef_hist function.}
-\item{d_free}{A table containing the degrees of freedom for the estimated models in the best_models function.}
-\item{PMStable}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+\item{alphas}{A matrix of coefficients for the lagged dependent variable across all models, used in the coef_hist function.}
+\item{betas_nonzero}{A matrix of nonzero coefficients for the regressors, used in the coef_hist function.}
+\item{PMS_table}{A table containing the prior and posterior expected model sizes for the binomial and binomial-beta model priors.}
+\item{omega}{The dilution parameter used (the exponent of the determinant). Relevant only when \code{dilution = 1}.}
+\item{weighting}{The approximation to the marginal likelihood used to weight the models.}
+\item{eta}{The learning rate the weighting implies, or \code{NA} for \code{"uip"}, which alters the penalty rather than the rate.}
 }
 }
 \description{
 This function calculates BMA statistics based on the provided model space.
-Other objects for furhter analysis are also returned.
+Other objects for further analysis are also returned.
 }
+\details{
+Writing \eqn{A_j = \ell_j - (k_j/2)\log(NT)}, three of the four options are
+the same construction with different learning rates \eqn{\eta}:
+\eqn{\log w_j = \eta A_j}, with \eqn{\eta = 1} for \code{"mb2012"},
+\eqn{1/N} for \code{"mb2016"} and \eqn{1/(NT)} for \code{"nt"}. Only
+\code{"uip"} alters the penalty instead of the rate. The \code{eta}
+argument supplies any other rate.
+
+Any \eqn{\eta \neq 1} produces a tempered (power) posterior over models,
+proportional to \eqn{f(y|M_j)^\eta}, which lies outside the approximation
+that motivates the criterion. What follows from that depends on how the rate
+is set. A rate held fixed as the sample grows rescales every log weight by
+the same factor, so differences between models still diverge with \eqn{N}
+and the posterior continues to concentrate, more slowly when
+\eqn{\eta < 1} and faster when \eqn{\eta > 1}.
+
+A rate that shrinks with the sample behaves differently. Under
+\eqn{\eta = 1/N}, a model at Kullback-Leibler distance \eqn{c_j} per entity
+has \eqn{\eta A_j = A_j/N \to -c_j}, so the weights converge to the fixed
+positive constants \eqn{\exp(-c_j)} and the posterior never concentrates,
+however large \eqn{N} becomes. The complexity penalty
+\eqn{(k_j/2)\log(NT)/N} vanishes in the same limit, so overfitted models are
+not eventually rejected. Conversely \eqn{\eta = 1} concentrates the
+posterior sharply, which on likelihoods of this kind can place essentially
+all mass on a single model.
+
+No option estimates \eqn{\eta} from the data. The magnitude ("omnibus")
+adjustment for misspecified and composite likelihoods (Chandler and Bate
+2007; Ribatet, Cooley and Davison 2012) would set
+\eqn{\eta = \mathrm{rank}(J)/\mathrm{tr}(H^{-1}J)}, matching the mean of the
+adjusted log-likelihood ratio to its limiting distribution. It is not
+offered here because \eqn{J} is substantially rank deficient for this
+likelihood: parameters entering it only through terms common to every
+entity contribute nothing, and in the model spaces bundled with the package
+the entity-level scores span between 8\\% and 29\\% of the parameter
+directions (see \code{\link{score_rank}}). The adjustment would then be
+calibrated on a small part of the parameter space, with no way to assess
+what the remainder contributes. The ingredients are nonetheless stored with
+every fitted model space, so the rate can be computed and inspected
+directly if wanted.
+
+The default is retained for compatibility with the published literature;
+users are encouraged to check the sensitivity of their conclusions to this
+choice, which is what \code{eta} is for. Switching between the options
+requires no re-estimation, since all are recovered from the same fitted
+model space.
+}
+\section{Identification of the robust standard deviations}{
+
+The columns \code{PSDR} and \code{PSDRcon} are derived from the
+sandwich covariance \eqn{H^{-1} J H^{-1}}, where
+\eqn{J = \sum_{i=1}^{N} s_i s_i'} is the outer product of the entity-level
+score vectors. The per-entity scores share a component that is identical
+across entities, and at the maximum they sum to zero, so \eqn{J} is
+unchanged by centering them: only the variation of the scores across
+entities contributes. Parameters entering the log-likelihood solely through
+terms common to every entity have no such variation, and \eqn{J} is
+consequently rank deficient however many entities are observed. See
+\code{\link{score_rank}}.
+
+The directions \eqn{J} does span include the lagged dependent variable and
+the regressors, so the reported \code{PSDR} and \code{PSDRcon} are well
+defined: because \eqn{J} vanishes outside that block, the sandwich
+restricted to it equals the profile sandwich obtained by profiling the
+remaining parameters out. What the construction does discard is the score
+covariance involving those remaining directions, which is set to zero
+rather than estimated.
+
+The deficiency is the normal state of this likelihood rather than a symptom
+of a poor fit, so it is not warned about; \code{summary()} of a model space
+reports the fraction of parameter directions the scores span. The
+likelihood, the posterior means (\code{PM}, \code{PMcon}) and the posterior
+inclusion probabilities (\code{PIP}) do not involve \eqn{J} and are
+unaffected, as are the Hessian-based standard deviations \code{PSD} and
+\code{PSDcon}, which rest on correct specification rather than on \eqn{J}
+and are the more defensible choice for this likelihood.
+}
+
+\section{Methods}{
+
+Objects of class \code{badp_bma} have the following methods available:
+\itemize{
+\item \code{\link{print.badp_bma}} - Display results
+\item \code{\link{summary.badp_bma}} - Detailed statistical summary
+\item \code{\link{coef.badp_bma}} - Extract coefficients
+\item \code{\link{plot.badp_bma}} - Visualize results
+}
+
+The quantities of interest are returned by accessor functions, so that no
+analysis needs to depend on the internal layout of the object:
+\itemize{
+\item \code{\link{bma_table}} - Statistics under either model prior
+\item \code{\link{pip}} - Posterior inclusion probabilities
+\item \code{\link{pmp}} - Posterior model probabilities
+\item \code{\link{model_size_table}} - Prior and posterior model sizes
+\item \code{\link{regressors}}, \code{\link{n_models}} - Size of the problem
+\item \code{\link{weighting}}, \code{\link{learning_rate}} - Marginal likelihood used
+}
+}
+
 \examples{
 \donttest{
 library(magrittr)

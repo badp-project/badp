@@ -1,6 +1,6 @@
-#' Extraction of names of the variables
+#' Extract the Names of the Variables
 #'
-#' The function extract the names of the variables from the data set used in the analysis and
+#' The function extracts the names of the variables from the data set used in the analysis and
 #' places them in a vector.
 #'
 #'
@@ -17,6 +17,7 @@
 #'  reg_names <- extract_names(df)
 #'
 #' }
+#' @keywords internal
 extract_names <- function(df){
   reg_names <- colnames(df)
   reg_names <- reg_names[-(1:2)]

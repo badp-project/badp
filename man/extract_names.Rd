@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract_names.R
 \name{extract_names}
 \alias{extract_names}
-\title{Extraction of names of the variables}
+\title{Extract the Names of the Variables}
 \usage{
 extract_names(df)
 }
@@ -13,7 +13,7 @@ extract_names(df)
 A vector with names of the variables.
 }
 \description{
-The function extract the names of the variables from the data set used in the analysis and
+The function extracts the names of the variables from the data set used in the analysis and
 places them in a vector.
 }
 \examples{
@@ -24,3 +24,4 @@ places them in a vector.
 
 }
 }
+\keyword{internal}
