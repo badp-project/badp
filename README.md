@@ -266,6 +266,7 @@ summary(top3_binom, robust = TRUE)
 top3_binom[[1]]
 #> Model No. 1 of the binomial ranking
 #> Posterior model probability: 0.508
+#> Log-likelihood: -35.154 (df = 29)
 #> Regressors included: ish, sed
 #> 
 #>         Estimate Std. Error Pr(>|z|)    

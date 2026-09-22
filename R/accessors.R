@@ -431,10 +431,10 @@ model_inclusion <- function(x) {
 #' Returns the maximum likelihood estimates of the parameters of every model in
 #' the model space, or of a single model.
 #'
-#' Parameters not present in a model are \code{NA}. The rows are labelled as
+#' Parameters not present in a model are \code{NA}. The rows are labeled as
 #' follows: \code{alpha} is the coefficient on the lagged dependent variable,
 #' \code{beta_<name>} the coefficient on regressor \code{<name>};
-#' \code{phi_0}, \code{err_var} and \code{dep_var_<t>} parametrize the
+#' \code{phi_0}, \code{err_var} and \code{dep_var_<t>} parameterize the
 #' variance of the dependent variable and its covariance with the initial
 #' condition; \code{phi_1_<name>} the covariance between the initial condition
 #' and the regressors; and \code{phis_<i>} and \code{psis_<i>} are the
