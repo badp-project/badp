@@ -168,6 +168,27 @@ If the constraint is ever relaxed — dropping `required_linear_history` from
 merge commits and the delivery branch would no longer be needed. That is a
 repository-settings decision and needs an admin.
 
+## Tooling
+
+`.claude/skills/cran-release-prep/` holds this process in a form Claude Code
+picks up automatically: open the repo, ask it to prepare the release, and it
+works through the checklist above. It is checked in so everyone gets the same
+process rather than each of us remembering a different half of it.
+
+Two of its scripts are plain bash and useful on their own:
+
+```sh
+# README.md vs README.Rmd, and man/ + NAMESPACE vs the roxygen comments.
+# Catches drift that R CMD check cannot see, because check never reads the README.
+.claude/skills/cran-release-prep/scripts/check_generated_in_sync.sh
+
+# Which commit's content matches a version published on CRAN.
+# Use when anchoring a tag, or to prove what was actually submitted.
+.claude/skills/cran-release-prep/scripts/match_cran_tarball.sh badp 0.6.0 origin/develop
+```
+
+`.claude/` is in `.Rbuildignore`, so none of it reaches the tarball.
+
 ## The guard
 
 Before publishing, the release job compares `main` against the commit recorded in
